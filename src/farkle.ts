@@ -68,6 +68,10 @@ export class FarkleGame {
 		this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
 		this.canvas.addEventListener('mouseleave', this.handleMouseUp.bind(this));
 
+		this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
+		this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+		this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this));
+
 		window.addEventListener('resize', () => this.handleResize());
 		this.handleResize();
 
@@ -461,12 +465,42 @@ export class FarkleGame {
 		}
 	}
 
+	private handleTouchStart(e: TouchEvent) {
+		if (e.touches.length > 0) {
+			e.preventDefault(); // Prevent scrolling
+			this.onInputStart(e.touches[0].clientX, e.touches[0].clientY);
+		}
+	}
+
+	private handleTouchMove(e: TouchEvent) {
+		if (e.touches.length > 0) {
+			e.preventDefault(); // Prevent scrolling
+			this.onInputMove(e.touches[0].clientX, e.touches[0].clientY);
+		}
+	}
+
+	private handleTouchEnd(_e: TouchEvent) {
+		this.onInputEnd();
+	}
+
 	private handleMouseDown(e: MouseEvent) {
+		this.onInputStart(e.clientX, e.clientY);
+	}
+
+	private handleMouseMove(e: MouseEvent) {
+		this.onInputMove(e.clientX, e.clientY);
+	}
+
+	private handleMouseUp(_e: MouseEvent) {
+		this.onInputEnd();
+	}
+
+	private onInputStart(clientX: number, clientY: number) {
 		if (this.isRolling) return;
 
 		const rect = this.canvas.getBoundingClientRect();
-		const x = e.clientX - rect.left;
-		const y = e.clientY - rect.top;
+		const x = clientX - rect.left;
+		const y = clientY - rect.top;
 
 		const clickedIndex = this.dice3D.getIntersectedDice(x, y);
 
@@ -486,12 +520,12 @@ export class FarkleGame {
 		}
 	}
 
-	private handleMouseMove(e: MouseEvent) {
+	private onInputMove(clientX: number, clientY: number) {
 		if (!this.isDragging || this.draggedDieIndex === -1) return;
 
 		const rect = this.canvas.getBoundingClientRect();
-		const x = e.clientX - rect.left;
-		const y = e.clientY - rect.top;
+		const x = clientX - rect.left;
+		const y = clientY - rect.top;
 
 		const intersection = this.dice3D.getPlaneIntersection(x, y);
 		if (intersection) {
@@ -507,7 +541,7 @@ export class FarkleGame {
 		}
 	}
 
-	private handleMouseUp(_e: MouseEvent) {
+	private onInputEnd() {
 		if (!this.isDragging) return;
 
 		const die = this.dice.find((d) => d.diceIndex === this.draggedDieIndex);
