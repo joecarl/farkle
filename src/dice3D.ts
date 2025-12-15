@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import tableTextureUrl from './assets/table.jpg';
+import tableTextureUrl from './assets/table.png';
 
 interface DiceMeshData {
 	mesh: THREE.Mesh;
@@ -48,11 +48,11 @@ export class Dice3D {
 		}
 
 		// Add lighting
-		const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+		const ambientLight = new THREE.AmbientLight(0xffffbf, 0.6);
 		this.scene.add(ambientLight);
 
-		const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-		directionalLight.position.set(5, 10, 7);
+		const directionalLight = new THREE.DirectionalLight(0xffcfcf, 0.8);
+		directionalLight.position.set(3, 10, -6);
 		directionalLight.castShadow = true;
 		directionalLight.shadow.mapSize.width = 2048;
 		directionalLight.shadow.mapSize.height = 2048;
@@ -79,8 +79,8 @@ export class Dice3D {
 		texture.repeat.set(1, 1);
 		texture.colorSpace = THREE.SRGBColorSpace;
 
-		const size = 4.5;
-		const geometry = new THREE.PlaneGeometry(size * 6.12, size * 4.08);
+		const size = 22.5;
+		const geometry = new THREE.PlaneGeometry(size * 1.5, size * 1.0);
 		const material = new THREE.MeshStandardMaterial({
 			map: texture,
 			color: 0xffffff, // Base color white to multiply with texture
