@@ -6,6 +6,7 @@ export class FarkleLogic {
 	private accumulatedTurnScore: number = 0;
 	private dice: DieState[];
 	private isFarkleState: boolean = false;
+	private isStartOfTurn: boolean = true;
 
 	constructor() {
 		this.players = [
@@ -34,7 +35,7 @@ export class FarkleLogic {
 
 		// Roll button logic
 		// 1. Start of turn (no locked, no selected)
-		const isStartOfTurn = this.dice.every((d) => !d.locked && !d.selected);
+		const isStartOfTurn = this.isStartOfTurn;
 
 		// 2. Mid-turn: Must have valid selection to roll again
 		const hasValidSelection = selectedDice.length > 0 && scoring.score > 0 && scoring.usedDice.length === selectedDice.length;
@@ -64,6 +65,7 @@ export class FarkleLogic {
 	}
 
 	public rollDice(): number[] {
+		this.isStartOfTurn = false;
 		// Commit score from selection if any
 		const selectionScore = this.calculateScore(this.getSelectedDiceValues()).score;
 		if (selectionScore > 0) {
@@ -197,6 +199,7 @@ export class FarkleLogic {
 	private nextTurn() {
 		this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
 		this.isFarkleState = false;
+		this.isStartOfTurn = true;
 	}
 
 	public resetDice() {

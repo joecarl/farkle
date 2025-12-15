@@ -183,11 +183,13 @@ export class FarkleGame {
 			const row = Math.floor(i / 3);
 
 			// Posición 3D en la escena (distribuir dados en grid)
-			const position3D = new THREE.Vector3(
-				(col - 1) * 1.5, // -1.5, 0, 1.5
-				0,
-				(row - 0.5) * 1.5 // -0.75, 0.75
-			);
+			// const position3D = new THREE.Vector3(
+			// 	(col - 1) * 1.5, // -1.5, 0, 1.5
+			// 	0,
+			// 	(row - 0.5) * 1.5 // -0.75, 0.75
+			// );
+
+			const position3D = new THREE.Vector3(0, 0, 10);
 
 			const diceIndex = this.dice3D.addDice(position3D);
 
