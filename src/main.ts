@@ -13,8 +13,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 	<div>
 		<div class="top-bar">
 			<div class="left-section">
-				<button id="infoBtn" type="button" title="Información">ℹ️</button>
-				<button id="debugBtn" type="button" title="Herramientas de Debug">🛠️</button>
+				<button id="infoBtn" class="icon-btn" type="button" title="Información"></button>
+				<button id="debugBtn" class="icon-btn" type="button" title="Herramientas de Debug"></button>
 				<div class="score-display">
 					<span id="topBarPlayerName">Player 1</span>: <span id="topBarTotalScore">0</span>
 					<span class="separator">|</span>
@@ -22,7 +22,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 				</div>
 			</div>
 			<div class="top-controls">
-				<button id="newGameBtn" type="button" title="Nuevo Juego">🆕</button>
+				<button id="newGameBtn" class="icon-btn" type="button" title="Nuevo Juego"></button>
 			</div>
 		</div>
 		
@@ -76,14 +76,16 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 				<div id="playersListContainer" style="margin-bottom: 20px; text-align: left; max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px;">
 					<ul id="newGamePlayersList" style="list-style: none; padding: 0; margin: 0;"></ul>
 				</div>
-				<input type="text" id="newGamePlayerName" placeholder="Nombre del jugador" style="padding: 10px; font-size: 16px; margin-bottom: 10px; width: 80%; color: black; border-radius: 5px; border: none;">
-				<button id="addPlayerToGameBtn" type="button" style="margin-bottom: 20px;">Añadir Jugador</button>
+				<div class="add-player-group">
+					<input type="text" id="newGamePlayerName" placeholder="Nombre del jugador">
+					<button id="addPlayerToGameBtn" type="button">+</button>
+				</div>
 				
 				<div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 0 -30px 20px -30px;"></div>
 
 				<div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-					<button id="startGameBtn" type="button" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);" disabled>Empezar Juego</button>
-					<button id="cancelNewGameBtn" type="button" style="background: #666;">Cancelar</button>
+					<button id="startGameBtn" class="btn-primary" type="button" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);" disabled>Empezar Juego</button>
+					<button id="cancelNewGameBtn" class="btn-primary" type="button" style="background: #666;">Cancelar</button>
 				</div>
 			</div>
 		</div>
@@ -121,8 +123,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 				</div>
 			</div>
 			<div class="controls">
-				<button id="rollBtn" type="button" title="Tirar Dados">🎲</button>
-				<button id="bankBtn" type="button" disabled title="Terminar turno">🛑</button>
+				<button id="rollBtn" class="icon-btn" type="button" title="Tirar Dados"></button>
+				<button id="bankBtn" class="icon-btn" type="button" disabled title="Terminar turno"></button>
 			</div>
 		</div>
 	</div>

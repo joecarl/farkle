@@ -11,11 +11,11 @@
 
 .controls button {
   pointer-events: auto;
-  font-size: 30px;
-  padding: 4px 18px;
+  width: 6vw;
+  height: 6vw;
 }
 
-button {
+.btn-primary {
   border-radius: 8px;
   border: 2px solid transparent;
   padding: 12px 24px;
@@ -26,36 +26,26 @@ button {
   color: white;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 4px 12px rgba(27, 26, 22, 0.3);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-button:hover:not(:disabled) {
+.btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+  box-shadow: 0 6px 16px rgba(15, 13, 11, 0.8);
   background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
 }
 
-button:active:not(:disabled) {
+.btn-primary:active:not(:disabled) {
   transform: translateY(0);
 }
 
-button:disabled {
+.btn-primary:disabled {
   background: #666;
   cursor: not-allowed;
   opacity: 0.5;
   box-shadow: none;
-}
-
-#newGameBtn {
-  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
-}
-
-#newGameBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #f57c00 0%, #ff9800 100%);
-  box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
 }
 
 .score-display {
@@ -72,27 +62,6 @@ button:disabled {
   font-weight: normal;
 }
 
-.top-bar button {
-  font-size: 2em;
-  padding: 5px 20px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  line-height: 1;
-}
-
-.top-bar button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.4);
-  transform: scale(1.1);
-}
-
-.top-bar button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  filter: grayscale(1);
-}
 
 .players-overlay {
   position: absolute;
@@ -126,4 +95,63 @@ button:disabled {
 .players-overlay li {
   padding: 5px 0;
   font-size: 0.9em;
+}
+
+.top-bar button {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.top-bar button:hover:not(:disabled) {
+  transform: scale(1.1);
+}
+
+.top-bar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.icon-btn {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 6vw;
+  height: 6vw;
+  padding: 0 !important;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain !important;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.icon-btn:hover {
+  transform: scale(1.1);
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
+}
+
+#infoBtn {
+  background-image: url('../assets/icons/scroll.png');
+}
+
+#newGameBtn {
+  background-image: url('../assets/icons/beer.png');
+}
+
+#debugBtn {
+  background-image: url('../assets/icons/harp.png');
+}
+
+#rollBtn {
+  background-image: url('../assets/icons/dice.png');
+}
+
+#bankBtn {
+  background-image: url('../assets/icons/end.png');
 }
