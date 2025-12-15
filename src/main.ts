@@ -2,6 +2,14 @@ import './style.css';
 import { FarkleGame } from './farkle.ts';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
+	<div id="pwaInstallOverlay" class="pwa-overlay hidden">
+		<div class="pwa-content">
+			<h1>Farkle</h1>
+			<p>Para jugar, instala la aplicación.</p>
+			<button id="installBtn" class="pwa-btn">Instalar App 📲</button>
+			<p id="iosInstructions" class="hidden small-text">Pulsa <span class="share-icon">⎋</span> y luego "Añadir a inicio"</p>
+		</div>
+	</div>
 	<div>
 		<div class="top-bar">
 			<div class="left-section">
@@ -177,4 +185,69 @@ rotZSlider.addEventListener('input', (e) => {
 	const degrees = parseInt((e.target as HTMLInputElement).value);
 	rotZValue.textContent = degrees.toString();
 	game.setTestDiceRotation(parseInt(rotXSlider.value), parseInt(rotYSlider.value), degrees);
+});
+
+// PWA Install Logic
+let deferredPrompt: any;
+const installBtn = document.getElementById('installBtn') as HTMLButtonElement;
+const pwaOverlay = document.getElementById('pwaInstallOverlay') as HTMLDivElement;
+const iosInstructions = document.getElementById('iosInstructions') as HTMLParagraphElement;
+
+// Detect Mobile
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+// Detect iOS
+const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+// Check if running in standalone mode (already installed)
+const isInStandaloneMode =
+	window.matchMedia('(display-mode: standalone)').matches ||
+	window.matchMedia('(display-mode: fullscreen)').matches ||
+	window.matchMedia('(display-mode: minimal-ui)').matches ||
+	('standalone' in window.navigator && (window.navigator as any).standalone === true);
+
+// If mobile and not standalone, show overlay
+if (isMobile && !isInStandaloneMode) {
+	pwaOverlay.classList.remove('hidden');
+	if (isIos) {
+		iosInstructions.classList.remove('hidden');
+	}
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+	// Prevent the mini-infobar from appearing on mobile
+	e.preventDefault();
+	// Stash the event so it can be triggered later.
+	deferredPrompt = e;
+	// If we are on mobile, the overlay is already visible.
+});
+
+installBtn.addEventListener('click', async () => {
+	if (deferredPrompt) {
+		// Show the install prompt
+		deferredPrompt.prompt();
+		// Wait for the user to respond to the prompt
+		const { outcome } = await deferredPrompt.userChoice;
+		console.log(`User response to the install prompt: ${outcome}`);
+		// We've used the prompt, and can't use it again, throw it away
+		deferredPrompt = null;
+	} else if (isIos) {
+		// Instructions are already visible
+		alert('Sigue las instrucciones en pantalla: Pulsa Compartir y Añadir a inicio.');
+	} else {
+		// Fallback for other browsers
+		alert('Usa la opción "Añadir a pantalla de inicio" o "Instalar" del menú de tu navegador.');
+	}
+});
+
+window.addEventListener('appinstalled', () => {
+	// Do NOT hide the overlay in the browser.
+	// Instead, tell the user to open the app.
+	const pwaContent = pwaOverlay.querySelector('.pwa-content')!;
+	pwaContent.innerHTML = `
+		<h1>¡Instalada!</h1>
+		<p>La aplicación se ha instalado correctamente.</p>
+		<p>Por favor, ciérrala aquí y ábrela desde tu pantalla de inicio para jugar.</p>
+	`;
+	// Clear the deferredPrompt so it can be garbage collected
+	deferredPrompt = null;
+	console.log('PWA was installed');
 });
