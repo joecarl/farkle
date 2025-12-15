@@ -9,7 +9,7 @@ interface VisualDie extends DieState {
 	y: number;
 	rolling: boolean;
 	targetValue: number;
-	rollFrame: number;
+	rollTime: number;
 	rotationX: number;
 	rotationY: number;
 	rotationZ: number;
@@ -53,6 +53,7 @@ export class FarkleGame {
 	private isDragging = false;
 	private draggedDieIndex = -1;
 	private dragOffset = new THREE.Vector3();
+	private lastTime: number = 0;
 
 	constructor(canvas: HTMLCanvasElement) {
 		this.canvas = canvas;
@@ -198,7 +199,7 @@ export class FarkleGame {
 				y: startY + row * (this.DIE_SIZE + this.DIE_PADDING),
 				rolling: false,
 				targetValue: 1,
-				rollFrame: 0,
+				rollTime: 0,
 				rotationX: 0,
 				rotationY: 0,
 				rotationZ: 0,
@@ -256,7 +257,7 @@ export class FarkleGame {
 		// Start rolling animation with 3D effect
 		diceToRoll.forEach((die) => {
 			die.rolling = true;
-			die.rollFrame = 0;
+			die.rollTime = 0;
 			// Target value is already set in logic, but we need to grab it
 			// Wait, logic.rollDice() set the values.
 			// We need to read them from logic.
@@ -320,15 +321,28 @@ export class FarkleGame {
 		});
 	}
 
-	private animate() {
+	private animate(time: number = 0) {
+		if (this.lastTime === 0) {
+			this.lastTime = time;
+		}
+		const deltaTime = Math.min((time - this.lastTime) / 1000, 0.1);
+		this.lastTime = time;
+
 		let needsUpdate = false;
+
+		// Time-based constants
+		const ROLL_DURATION = 1.0;
+		// Calculate lerp factors: 1 - (1 - factor)^ (deltaTime * 60)
+		const lerpFactor = 1 - Math.pow(1 - 0.1, deltaTime * 60);
+		const dragLerpFactor = 1 - Math.pow(1 - 0.2, deltaTime * 60);
+		const collectLerpFactor = 1 - Math.pow(1 - 0.05, deltaTime * 60);
 
 		this.dice.forEach((die) => {
 			// Rolling Animation
 			if (die.rolling) {
 				needsUpdate = true;
-				die.rollFrame++;
-				const progress = Math.min(die.rollFrame / 120, 1);
+				die.rollTime += deltaTime;
+				const progress = Math.min(die.rollTime / ROLL_DURATION, 1);
 				const easeProgress = 1 - Math.pow(1 - progress, 3);
 
 				die.rotationX = die.targetRotationX * easeProgress;
@@ -367,22 +381,7 @@ export class FarkleGame {
 				needsUpdate = true;
 				// Target Y is 0.5 when dragging
 				const targetY = 0.5;
-				die.currentPosition.y += (targetY - die.currentPosition.y) * 0.2;
-
-				// X and Z are set directly by mouse move, but we update Y here
-				// Actually handleMouseMove sets position directly.
-				// To make it smooth, handleMouseMove should set targetPosition or we just lerp Y here.
-				// But handleMouseMove updates X/Z instantly.
-				// Let's assume handleMouseMove updates currentPosition X/Z and we smooth Y here.
-				// Wait, handleMouseMove calls setPosition.
-				// We should let handleMouseMove update a 'targetDragPosition' and lerp here?
-				// Or just lerp Y.
-
-				// Let's make handleMouseMove update die.targetPosition and we lerp everything here?
-				// That would make drag smooth too.
-				// For now, let's just smooth Y.
-				// We need to read the current position from Dice3D or trust die.currentPosition?
-				// We should trust die.currentPosition.
+				die.currentPosition.y += (targetY - die.currentPosition.y) * dragLerpFactor;
 
 				this.dice3D.setPosition(die.diceIndex, die.currentPosition);
 				this.updateDieScreenPosition(die);
@@ -390,7 +389,7 @@ export class FarkleGame {
 			// Settling Animation (Drop & Collision Avoidance)
 			else if (die.settling && die.targetPosition) {
 				needsUpdate = true;
-				die.currentPosition.lerp(die.targetPosition, 0.1);
+				die.currentPosition.lerp(die.targetPosition, lerpFactor);
 				this.dice3D.setPosition(die.diceIndex, die.currentPosition);
 				this.updateDieScreenPosition(die);
 
@@ -403,7 +402,7 @@ export class FarkleGame {
 			// Collecting Animation
 			else if (die.collecting && die.targetPosition) {
 				needsUpdate = true;
-				die.currentPosition.lerp(die.targetPosition, 0.05);
+				die.currentPosition.lerp(die.targetPosition, collectLerpFactor);
 				this.dice3D.setPosition(die.diceIndex, die.currentPosition);
 				this.updateDieScreenPosition(die);
 
@@ -416,7 +415,7 @@ export class FarkleGame {
 			// Idle - Ensure Y is 0
 			else if (!die.locked && !die.selected && Math.abs(die.currentPosition.y) > 0.01) {
 				needsUpdate = true;
-				die.currentPosition.y += (0 - die.currentPosition.y) * 0.2;
+				die.currentPosition.y += (0 - die.currentPosition.y) * dragLerpFactor;
 				this.dice3D.setPosition(die.diceIndex, die.currentPosition);
 			}
 		});
@@ -425,7 +424,7 @@ export class FarkleGame {
 			this.draw();
 		}
 
-		requestAnimationFrame(() => this.animate());
+		requestAnimationFrame((t) => this.animate(t));
 	}
 
 	private updateDieScreenPosition(die: VisualDie) {
@@ -630,7 +629,7 @@ export class FarkleGame {
 		// Target position: Bottom-left corner (off-screen)
 		// Camera is at (1, 12, 6), looking at (0, 0, 0).
 		// Moving to negative X (left) and positive Z (down/forward).
-		const collectionPoint = new THREE.Vector3(-6, 0, 9);
+		const collectionPoint = new THREE.Vector3(-5, 0, 14);
 
 		this.dice.forEach((die) => {
 			die.collecting = true;
