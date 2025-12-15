@@ -1,157 +1,155 @@
 .controls {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  pointer-events: none; /* Let clicks pass through container */
+	position: absolute;
+	bottom: 20px;
+	right: 20px;
+	display: flex;
+	gap: 15px;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	pointer-events: none; /* Let clicks pass through container */
 }
 
 .controls button {
-  pointer-events: auto;
-  width: 6vw;
-  height: 6vw;
+	pointer-events: auto;
+	width: 6vw;
+	height: 6vw;
 }
 
 .btn-primary {
-  border-radius: 8px;
-  border: 2px solid transparent;
-  padding: 12px 24px;
-  font-size: 16px;
-  font-weight: 600;
-  font-family: inherit;
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(27, 26, 22, 0.3);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+	border-radius: 8px;
+	border: 2px solid transparent;
+	padding: 12px 24px;
+	font-size: 16px;
+	font-weight: 600;
+	font-family: inherit;
+	background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+	color: white;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 12px rgba(27, 26, 22, 0.3);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
 }
 
 .btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(15, 13, 11, 0.8);
-  background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
+	transform: translateY(-2px);
+	box-shadow: 0 6px 16px rgba(15, 13, 11, 0.8);
+	background: linear-gradient(135deg, #45a049 0%, #4caf50 100%);
 }
 
 .btn-primary:active:not(:disabled) {
-  transform: translateY(0);
+	transform: translateY(0);
 }
 
 .btn-primary:disabled {
-  background: #666;
-  cursor: not-allowed;
-  opacity: 0.5;
-  box-shadow: none;
+	background: #666;
+	cursor: not-allowed;
+	opacity: 0.5;
+	box-shadow: none;
 }
 
 .score-display {
-  font-size: 1.2em;
-  font-weight: bold;
-  color: white;
-  display: flex;
-  align-items: center;
-  gap: 15px;
+	font-size: 1.2em;
+	font-weight: bold;
+	color: white;
+	display: flex;
+	align-items: center;
+	gap: 15px;
 }
 
 .score-display .separator {
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: normal;
+	color: rgba(255, 255, 255, 0.5);
+	font-weight: normal;
 }
 
-
 .players-overlay {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 15px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  text-align: left;
-  min-width: 150px;
-  font-size: clamp(12px, 1.5vw, 24px);
-  pointer-events: none; /* Allow clicks to pass through to canvas */
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	background: rgba(0, 0, 0, 0.6);
+	padding: 15px;
+	border-radius: 0 10px 0 0;
+	color: white;
+	text-align: left;
+	min-width: 150px;
+	font-size: clamp(14px, 1.6vw, 24px);
+	pointer-events: none; /* Allow clicks to pass through to canvas */
 }
 
 .players-overlay h3 {
-  margin: 0 0 10px 0;
-  font-size: 1.1em;
-  color: #4CAF50;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 5px;
+	margin: 0 0 10px 0;
+	font-size: 1.1em;
+	color: #4caf50;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+	padding-bottom: 5px;
 }
 
 .players-overlay ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+	list-style: none;
+	padding: 0;
+	margin: 0;
 }
 
 .players-overlay li {
-  padding: 5px 0;
-  font-size: 0.9em;
+	padding: 0.6vh 0;
+	font-size: 0.9em;
 }
 
 .top-bar button {
-  cursor: pointer;
-  transition: all 0.2s;
+	cursor: pointer;
+	transition: all 0.2s;
 }
 
 .top-bar button:hover:not(:disabled) {
-  transform: scale(1.1);
+	transform: scale(1.1);
 }
 
 .top-bar button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  filter: grayscale(1);
+	opacity: 0.5;
+	cursor: not-allowed;
+	filter: grayscale(1);
 }
 
 .icon-btn {
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  width: 6vw;
-  height: 6vw;
-  padding: 0 !important;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain !important;
-  cursor: pointer;
-  transition: transform 0.2s ease;
+	background-color: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	width: 6vw;
+	height: 6vw;
+	padding: 0 !important;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: contain !important;
+	cursor: pointer;
+	transition: transform 0.2s ease;
 }
 
 .icon-btn:hover {
-  transform: scale(1.1);
-  background-color: transparent !important;
-  box-shadow: none !important;
+	transform: scale(1.1);
+	background-color: transparent !important;
+	box-shadow: none !important;
 }
 
 .icon-btn:active {
-  transform: scale(0.95);
+	transform: scale(0.95);
 }
 
 #infoBtn {
-  background-image: url('../assets/icons/scroll.png');
+	background-image: url('../assets/icons/scroll.png');
 }
 
 #newGameBtn {
-  background-image: url('../assets/icons/beer.png');
+	background-image: url('../assets/icons/beer.png');
 }
 
 #debugBtn {
-  background-image: url('../assets/icons/harp.png');
+	background-image: url('../assets/icons/harp.png');
 }
 
 #rollBtn {
-  background-image: url('../assets/icons/dice.png');
+	background-image: url('../assets/icons/dice.png');
 }
 
 #bankBtn {
-  background-image: url('../assets/icons/end.png');
+	background-image: url('../assets/icons/end.png');
 }

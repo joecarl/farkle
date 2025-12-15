@@ -91,41 +91,44 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 		</div>
 
 		<div class="game-container">
-			<div class="canvas-wrapper">
-				<canvas id="gameCanvas"></canvas>
-				<div class="players-overlay">
-					<h3>Jugadores</h3>
-					<ul id="playersList"></ul>
+			
+			<canvas id="gameCanvas"></canvas>
+
+			<div class="players-overlay">
+				<h3>Jugadores</h3>
+				<ul id="playersList"></ul>
+			</div>
+
+			<div class="rotation-test hidden">
+				<h4>Prueba de Rotación (Dado 0):</h4>
+				<div>
+				<label>
+					Rotación X: 
+					<input type="range" id="rotXSlider" min="0" max="360" value="0" />
+					<span id="rotXValue">0</span>°
+				</label>
 				</div>
-				<div class="rotation-test hidden">
-					<h4>Prueba de Rotación (Dado 0):</h4>
-					<div>
-					<label>
-						Rotación X: 
-						<input type="range" id="rotXSlider" min="0" max="360" value="0" />
-						<span id="rotXValue">0</span>°
-					</label>
-					</div>
-					<div>
-					<label>
-						Rotación Y: 
-						<input type="range" id="rotYSlider" min="0" max="360" value="0" />
-						<span id="rotYValue">0</span>°
-					</label>
-					</div>
-					<div>
-					<label>
-						Rotación Z: 
-						<input type="range" id="rotZSlider" min="0" max="360" value="0" />
-						<span id="rotZValue">0</span>°
-					</label>
-					</div>
+				<div>
+				<label>
+					Rotación Y: 
+					<input type="range" id="rotYSlider" min="0" max="360" value="0" />
+					<span id="rotYValue">0</span>°
+				</label>
+				</div>
+				<div>
+				<label>
+					Rotación Z: 
+					<input type="range" id="rotZSlider" min="0" max="360" value="0" />
+					<span id="rotZValue">0</span>°
+				</label>
 				</div>
 			</div>
+
 			<div class="controls">
 				<button id="rollBtn" class="icon-btn" type="button" title="Tirar Dados"></button>
 				<button id="bankBtn" class="icon-btn" type="button" disabled title="Terminar turno"></button>
 			</div>
+			
 		</div>
 	</div>
 `;
