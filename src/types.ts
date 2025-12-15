@@ -1,0 +1,26 @@
+export interface DieState {
+	value: number;
+	selected: boolean;
+	locked: boolean;
+}
+
+export interface ScoringResult {
+	score: number;
+	usedDice: number[];
+	description: string;
+}
+
+export interface Player {
+	name: string;
+	score: number;
+}
+
+export interface GameState {
+	players: Player[];
+	currentPlayerIndex: number;
+	turnScore: number;
+	isFarkle: boolean;
+	canBank: boolean;
+	canRoll: boolean;
+	dice: DieState[];
+}
