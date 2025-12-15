@@ -670,6 +670,8 @@ export class FarkleGame {
 	}
 
 	private draw() {
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
 		// Update dice state
 		this.dice.forEach((die) => {
 			this.drawDie(die);

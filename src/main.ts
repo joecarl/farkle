@@ -14,8 +14,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 				</div>
 			</div>
 			<div class="top-controls">
-				<button id="rollBtn" type="button" title="Tirar Dados">🎲</button>
-				<button id="bankBtn" type="button" disabled title="Terminar turno">🛑</button>
+				<button id="newGameBtn" type="button" title="Nuevo Juego">🆕</button>
 			</div>
 		</div>
 		
@@ -114,7 +113,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 				</div>
 			</div>
 			<div class="controls">
-				<button id="newGameBtn" type="button">Nuevo Juego</button>
+				<button id="rollBtn" type="button" title="Tirar Dados">🎲</button>
+				<button id="bankBtn" type="button" disabled title="Terminar turno">🛑</button>
 			</div>
 		</div>
 	</div>
