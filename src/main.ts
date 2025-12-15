@@ -57,7 +57,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 							</ul>
 						</p>
 						<p>4. <strong>Farkle:</strong> Si en una tirada no obtienes puntos, ¡pierdes todo lo acumulado en el turno!</p>
-						<p>5. <strong>Hot Dice:</strong> Si usas los 6 dados, ¡puedes volver a tirar los 6 y seguir sumando!</p>
+						<p>5. <strong>Mesa limpia:</strong> Si usas los 6 dados, ¡puedes volver a tirar los 6 y seguir sumando!</p>
 					</div>
 				</div>
 			</div>
