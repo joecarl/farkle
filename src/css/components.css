@@ -1,0 +1,129 @@
+.controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  pointer-events: none; /* Let clicks pass through container */
+}
+
+.controls button {
+  pointer-events: auto;
+  font-size: 30px;
+  padding: 4px 18px;
+}
+
+button {
+  border-radius: 8px;
+  border: 2px solid transparent;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+  background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+button:disabled {
+  background: #666;
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+#newGameBtn {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
+#newGameBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f57c00 0%, #ff9800 100%);
+  box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
+}
+
+.score-display {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.score-display .separator {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: normal;
+}
+
+.top-bar button {
+  font-size: 2em;
+  padding: 5px 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.top-bar button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
+
+.top-bar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.players-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  text-align: left;
+  min-width: 150px;
+  font-size: clamp(12px, 1.5vw, 24px);
+  pointer-events: none; /* Allow clicks to pass through to canvas */
+}
+
+.players-overlay h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.1em;
+  color: #4CAF50;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 5px;
+}
+
+.players-overlay ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.players-overlay li {
+  padding: 5px 0;
+  font-size: 0.9em;
+}
