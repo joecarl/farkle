@@ -22,7 +22,7 @@
 	font-size: 16px;
 	font-weight: 600;
 	font-family: inherit;
-	background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+	background: var(--p-color-1);
 	color: white;
 	cursor: pointer;
 	transition: all 0.3s ease;
@@ -34,7 +34,7 @@
 .btn-primary:hover:not(:disabled) {
 	transform: translateY(-2px);
 	box-shadow: 0 6px 16px rgba(15, 13, 11, 0.8);
-	background: linear-gradient(135deg, #45a049 0%, #4caf50 100%);
+	background: var(--p-color-1);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -58,13 +58,21 @@
 	text-shadow: 0px 0 10px rgba(0, 0, 0, 1);
 	background-color: rgba(65, 50, 18, 0.556);
 	padding: 0.8vw 1.6vw;
-	border: 2px solid rgba(218, 194, 102, 0.8);
+	border: 2px solid var(--p-color-1);
 	border-radius: 0.8em;
 }
 
 .score-display .separator {
 	color: rgba(255, 255, 255, 0.5);
 	font-weight: normal;
+}
+
+#topBarTotalScore {
+	min-width: 3em;
+}
+
+#topBarTurnScore {
+	min-width: 2em;
 }
 
 .players-overlay {
@@ -84,7 +92,7 @@
 .players-overlay h3 {
 	margin: 0 0 10px 0;
 	font-size: 1.1em;
-	color: #4caf50;
+	color: var(--p-color-1);
 	border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 	padding-bottom: 5px;
 }

@@ -73,7 +73,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 		<div id="nextTurnOverlay" class="overlay hidden">
 			<div class="overlay-content" style="max-width: 400px; text-align: center;">
 				<h2>Siguiente Turno</h2>
-				<h1 id="nextPlayerName" style="color: #4CAF50; margin: 20px 0;">Player Name</h1>
+				<h1 id="nextPlayerName" style="color: var(--p-color-1); margin: 20px 0;">Player Name</h1>
 			</div>
 		</div>
 

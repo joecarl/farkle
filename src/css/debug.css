@@ -1,32 +1,32 @@
 .rotation-test {
-  position: absolute;
-  top: 86px;
-  left: 20px;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 15px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  text-align: left;
-  min-width: 200px;
-  z-index: 50;
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
+	position: absolute;
+	top: 186px;
+	left: 20px;
+	background: rgba(0, 0, 0, 0.8);
+	padding: 15px;
+	border-radius: 10px;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	color: white;
+	text-align: left;
+	min-width: 200px;
+	z-index: 50;
+	opacity: 0.7;
+	transition: opacity 0.3s ease;
 }
 
 .rotation-test.hidden {
-  opacity: 0;
-  pointer-events: none;
+	opacity: 0;
+	pointer-events: none;
 }
 
 .rotation-test h4 {
-  margin-top: 0;
-  color: #4CAF50;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 5px;
+	margin-top: 0;
+	color: var(--p-color-1);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+	padding-bottom: 5px;
 }
 
 .rotation-test label {
-  display: block;
-  margin: 10px 0;
+	display: block;
+	margin: 10px 0;
 }

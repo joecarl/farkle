@@ -8,10 +8,12 @@
 	font-family: 'MedievalSharp', cursive;
 	font-weight: 400;
 	font-style: normal;
+	--p-color-1: rgba(218, 194, 102, 0.8);
 }
 
 * {
 	box-sizing: border-box;
+	-webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -24,7 +26,7 @@ body {
 
 h3 {
 	margin: 10px 0;
-	color: #4caf50;
+	color: var(--p-color-1);
 }
 
 .hidden {

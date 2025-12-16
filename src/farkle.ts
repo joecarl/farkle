@@ -790,7 +790,7 @@ export class FarkleGame {
 
 		const playersList = document.querySelector('#playersList')!;
 		playersList.innerHTML = gameState.players
-			.map((p, i) => `<li style="${i === activeIndex ? 'font-weight: bold; color: #4CAF50;' : ''}">${p.name}: ${p.score}</li>`)
+			.map((p, i) => `<li style="${i === activeIndex ? 'font-weight: bold; color: var(--p-color-1);' : ''}">${p.name}: ${p.score}</li>`)
 			.join('');
 
 		if (this.bankBtn) {
