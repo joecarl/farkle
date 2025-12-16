@@ -157,6 +157,10 @@
 	background-image: url('../assets/icons/scroll.png');
 }
 
+#musicBtn {
+	background-image: url('../assets/icons/harp.png');
+}
+
 #newGameBtn {
 	background-image: url('../assets/icons/beer.png');
 }

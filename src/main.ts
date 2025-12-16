@@ -1,5 +1,6 @@
 import './style.css';
 import { FarkleGame } from './farkle.ts';
+import { AudioManager } from './audio.ts';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 	<div id="pwaInstallOverlay" class="pwa-overlay hidden">
@@ -14,7 +15,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 		<div class="top-bar">
 			<div class="left-section">
 				<button id="infoBtn" class="icon-btn" type="button" title="Información"></button>
-				<button id="debugBtn" class="icon-btn" type="button" title="Herramientas de Debug"></button>
+				<button id="debugBtn" class="icon-btn hidden" type="button" title="Herramientas de Debug"></button>
+				<button id="musicBtn" class="icon-btn" type="button" title="Música"></button>
 				<div class="score-display">
 					<span id="topBarPlayerName">Player 1</span>: <span id="topBarTotalScore">0</span>
 					<span class="separator">|</span>
@@ -197,6 +199,18 @@ rotZSlider.addEventListener('input', (e) => {
 	const degrees = parseInt((e.target as HTMLInputElement).value);
 	rotZValue.textContent = degrees.toString();
 	game.setTestDiceRotation(parseInt(rotXSlider.value), parseInt(rotYSlider.value), degrees);
+});
+
+// Audio Logic
+const audioManager = new AudioManager();
+audioManager.init();
+
+const musicBtn = document.getElementById('musicBtn') as HTMLButtonElement;
+musicBtn.addEventListener('click', () => {
+	const isMuted = audioManager.toggleMute();
+	musicBtn.style.opacity = isMuted ? '0.5' : '1';
+	// Ensure it plays if it wasn't playing (first interaction)
+	audioManager.play();
 });
 
 // PWA Install Logic
