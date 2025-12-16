@@ -1,6 +1,8 @@
 import './style.css';
 import { FarkleGame } from './farkle.ts';
 import { AudioManager } from './audio.ts';
+import diceIcon from './assets/icons/dice.png';
+import endIcon from './assets/icons/end.png';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 	<div id="pwaInstallOverlay" class="pwa-overlay hidden">
@@ -50,12 +52,12 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 					</div>
 					<div class="instructions">
 						<h3>Cómo Jugar:</h3>
-						<p>1. <strong>Tirar:</strong> Pulsa 🎲 para lanzar los dados.</p>
+						<p>1. <strong>Tirar:</strong> Pulsa <img src="${diceIcon}" class="inline-icon" alt="dice"> para lanzar los dados.</p>
 						<p>2. <strong>Seleccionar:</strong> Arrastra los dados a la sección izquierda para hacer combinaciones y puntuar.</p>
 						<p>3. <strong>Decidir:</strong>
 							<ul style="list-style-type: disc; padding-left: 20px; margin: 5px 0;">
-								<li>Arriesgar: Tira los dados restantes (🎲) para sumar más puntos.</li>
-								<li>Plantarse: Pulsa 🛑 para guardar tus puntos y pasar el turno.</li>
+								<li>Arriesgar: Tira los dados restantes (<img src="${diceIcon}" class="inline-icon" alt="dice">) para sumar más puntos.</li>
+								<li>Plantarse: Pulsa <img src="${endIcon}" class="inline-icon" alt="stop"> para guardar tus puntos y pasar el turno.</li>
 							</ul>
 						</p>
 						<p>4. <strong>Farkle:</strong> Si en una tirada no obtienes puntos, ¡pierdes todo lo acumulado en el turno!</p>
