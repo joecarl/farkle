@@ -41,6 +41,9 @@ export class FarkleGame {
 	private cancelNewGameBtn!: HTMLButtonElement;
 	private newGamePlayersList!: HTMLUListElement;
 
+	private nextTurnOverlay!: HTMLDivElement;
+	private nextPlayerName!: HTMLHeadingElement;
+
 	private tempNewGamePlayers: string[] = [];
 
 	private readonly DIE_SIZE = 60;
@@ -54,6 +57,8 @@ export class FarkleGame {
 	private draggedDieIndex = -1;
 	private dragOffset = new THREE.Vector3();
 	private lastTime: number = 0;
+	private previousTurnScore: number = 0;
+	private isBanking: boolean = false;
 
 	constructor(canvas: HTMLCanvasElement) {
 		this.canvas = canvas;
@@ -111,6 +116,9 @@ export class FarkleGame {
 		this.cancelNewGameBtn = document.querySelector('#cancelNewGameBtn')!;
 		this.newGamePlayersList = document.querySelector('#newGamePlayersList')!;
 
+		this.nextTurnOverlay = document.querySelector('#nextTurnOverlay')!;
+		this.nextPlayerName = document.querySelector('#nextPlayerName')!;
+
 		this.rollBtn.addEventListener('click', () => this.rollDice());
 		this.bankBtn.addEventListener('click', () => this.bankPoints());
 		this.newGameBtn.addEventListener('click', () => this.showNewGameModal());
@@ -139,6 +147,10 @@ export class FarkleGame {
 
 	private hideNewGameModal() {
 		this.newGameModal.classList.add('hidden');
+	}
+
+	private hideNextTurnOverlay() {
+		this.nextTurnOverlay.classList.add('hidden');
 	}
 
 	private addPlayerToNewGame() {
@@ -224,7 +236,7 @@ export class FarkleGame {
 		this.animate();
 	}
 
-	private syncDiceState() {
+	private syncDiceState(updateScore: boolean = true) {
 		const logicalDice = this.logic.getDice();
 		this.dice.forEach((visualDie, i) => {
 			const logicalDie = logicalDice[i];
@@ -232,7 +244,9 @@ export class FarkleGame {
 			visualDie.selected = logicalDie.selected;
 			visualDie.locked = logicalDie.locked;
 		});
-		this.updateScoreDisplay();
+		if (updateScore) {
+			this.updateScoreDisplay();
+		}
 	}
 
 	private rollDice() {
@@ -247,8 +261,8 @@ export class FarkleGame {
 		this.rollBtn.disabled = true;
 		this.bankBtn.disabled = true;
 
-		// Sync state (locks might have changed)
-		this.syncDiceState();
+		// Sync state (locks might have changed), but don't update score yet (keep "at risk" score visible)
+		this.syncDiceState(false);
 
 		// Get dice that should be rolled
 		const diceToRoll = this.dice.filter((_, i) => rolledIndices.includes(i));
@@ -444,11 +458,7 @@ export class FarkleGame {
 		const gameState = this.logic.getGameState();
 
 		if (gameState.isFarkle) {
-			this.showFarkleMessage();
-			setTimeout(() => {
-				this.logic.bankPoints(); // Score 0, switch turn, reset dice
-				this.endTurn();
-			}, 2000);
+			this.handleFarkleSequence();
 		} else {
 			this.rollBtn.disabled = !gameState.canRoll;
 			this.updateScoreDisplay();
@@ -456,14 +466,57 @@ export class FarkleGame {
 		}
 	}
 
-	private showFarkleMessage() {
+	private async handleFarkleSequence() {
+		// 1. Wait 1 second after dice stop
+		await new Promise((resolve) => setTimeout(resolve, 1000));
+
+		// 2. Show Overlay
 		if (this.farkleOverlay) {
 			this.farkleOverlay.classList.remove('hidden');
-			setTimeout(() => {
-				this.farkleOverlay.classList.add('hidden');
-				this.draw();
-			}, 2000);
 		}
+
+		// 3. Wait 2 seconds (overlay duration)
+		await new Promise((resolve) => setTimeout(resolve, 2000));
+
+		// 4. Hide Overlay
+		if (this.farkleOverlay) {
+			this.farkleOverlay.classList.add('hidden');
+		}
+		this.draw();
+
+		// 5. Animate loss
+		await this.animateFarkleLoss();
+
+		// 6. Logic update
+		this.logic.bankPoints(); // Score 0, switch turn, reset dice
+		this.endTurn();
+	}
+
+	private animateFarkleLoss(): Promise<void> {
+		return new Promise((resolve) => {
+			const topBarTurnScore = document.querySelector('#topBarTurnScore');
+			if (!topBarTurnScore) {
+				resolve();
+				return;
+			}
+
+			// Add red color class
+			topBarTurnScore.classList.add('score-transfer-source');
+
+			let currentScore = parseInt(topBarTurnScore.textContent || '0');
+			const step = Math.max(10, Math.floor(currentScore / 20));
+
+			const interval = setInterval(() => {
+				currentScore -= step;
+				if (currentScore <= 0) {
+					currentScore = 0;
+					clearInterval(interval);
+					topBarTurnScore.classList.remove('score-transfer-source');
+					resolve();
+				}
+				topBarTurnScore.textContent = currentScore.toString();
+			}, 30);
+		});
 	}
 
 	private handleTouchStart(e: TouchEvent) {
@@ -497,7 +550,7 @@ export class FarkleGame {
 	}
 
 	private onInputStart(clientX: number, clientY: number) {
-		if (this.isRolling) return;
+		if (this.isRolling || this.isBanking) return;
 
 		const rect = this.canvas.getBoundingClientRect();
 		const x = clientX - rect.left;
@@ -616,15 +669,85 @@ export class FarkleGame {
 	}
 
 	private bankPoints() {
-		this.logic.bankPoints();
-		this.endTurn();
+		const gameState = this.logic.getGameState();
+		const startTurnScore = gameState.turnScore;
+		const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+		const startTotalScore = currentPlayer.score;
+
+		if (startTurnScore === 0) {
+			this.logic.bankPoints();
+			this.endTurn();
+			return;
+		}
+
+		this.isBanking = true;
+
+		// Disable buttons during animation
+		if (this.bankBtn) this.bankBtn.disabled = true;
+		if (this.rollBtn) this.rollBtn.disabled = true;
+
+		const topBarTurnScore = document.querySelector('#topBarTurnScore');
+		const topBarTotalScore = document.querySelector('#topBarTotalScore');
+
+		if (topBarTurnScore) topBarTurnScore.classList.add('score-transfer-source');
+		if (topBarTotalScore) topBarTotalScore.classList.add('score-transfer-target');
+
+		let currentTurnDisplay = startTurnScore;
+		let currentTotalDisplay = startTotalScore;
+
+		const step = Math.max(5, Math.floor(startTurnScore / 15)); // Adjust speed
+
+		const interval = setInterval(() => {
+			currentTurnDisplay -= step;
+			currentTotalDisplay += step;
+
+			if (currentTurnDisplay <= 0) {
+				currentTurnDisplay = 0;
+				currentTotalDisplay = startTotalScore + startTurnScore;
+				clearInterval(interval);
+
+				if (topBarTurnScore) topBarTurnScore.classList.remove('score-transfer-source');
+				if (topBarTotalScore) topBarTotalScore.classList.remove('score-transfer-target');
+
+				this.isBanking = false;
+				this.logic.bankPoints();
+				this.endTurn();
+				return;
+			}
+
+			if (topBarTurnScore) topBarTurnScore.textContent = currentTurnDisplay.toString();
+			if (topBarTotalScore) topBarTotalScore.textContent = currentTotalDisplay.toString();
+		}, 50);
 	}
 
 	private endTurn() {
-		this.syncDiceState();
-		this.collectDice();
-		this.updateScoreDisplay();
+		this.syncDiceState(false);
+
+		// Calculate previous player index (since logic has already switched)
+		const gameState = this.logic.getGameState();
+		const numPlayers = gameState.players.length;
+		const previousPlayerIndex = (gameState.currentPlayerIndex - 1 + numPlayers) % numPlayers;
+
+		this.updateScoreDisplay(previousPlayerIndex);
 		this.draw();
+
+		// Wait 1s then collect dice
+		setTimeout(() => {
+			this.collectDice();
+
+			// Wait another 1s then show overlay
+			setTimeout(() => {
+				const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+				this.nextPlayerName.textContent = currentPlayer.name;
+				this.nextTurnOverlay.classList.remove('hidden');
+
+				// Hide automatically after 2 seconds
+				setTimeout(() => {
+					this.hideNextTurnOverlay();
+					this.updateScoreDisplay(); // Update to new player
+				}, 2000);
+			}, 1000);
+		}, 1000);
 	}
 
 	private collectDice() {
@@ -642,9 +765,10 @@ export class FarkleGame {
 		});
 	}
 
-	private updateScoreDisplay() {
+	private updateScoreDisplay(playerIndex?: number) {
 		const gameState = this.logic.getGameState();
-		const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+		const activeIndex = playerIndex !== undefined ? playerIndex : gameState.currentPlayerIndex;
+		const currentPlayer = gameState.players[activeIndex];
 
 		// Update top bar display
 		const topBarPlayerName = document.querySelector('#topBarPlayerName');
@@ -654,11 +778,19 @@ export class FarkleGame {
 		if (topBarTotalScore) topBarTotalScore.textContent = currentPlayer.score.toString();
 
 		const topBarTurnScore = document.querySelector('#topBarTurnScore');
-		if (topBarTurnScore) topBarTurnScore.textContent = gameState.turnScore.toString();
+		if (topBarTurnScore) {
+			if (gameState.turnScore > this.previousTurnScore) {
+				topBarTurnScore.classList.remove('score-pop');
+				void (topBarTurnScore as HTMLElement).offsetWidth; // Trigger reflow
+				topBarTurnScore.classList.add('score-pop');
+			}
+			topBarTurnScore.textContent = gameState.turnScore.toString();
+		}
+		this.previousTurnScore = gameState.turnScore;
 
 		const playersList = document.querySelector('#playersList')!;
 		playersList.innerHTML = gameState.players
-			.map((p, i) => `<li style="${i === gameState.currentPlayerIndex ? 'font-weight: bold; color: #4CAF50;' : ''}">${p.name}: ${p.score}</li>`)
+			.map((p, i) => `<li style="${i === activeIndex ? 'font-weight: bold; color: #4CAF50;' : ''}">${p.name}: ${p.score}</li>`)
 			.join('');
 
 		if (this.bankBtn) {
