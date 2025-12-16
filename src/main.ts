@@ -1,6 +1,8 @@
 import './style.css';
 import { FarkleGame } from './farkle.ts';
 import { AudioManager } from './audio.ts';
+import { PWAManager } from './pwa.ts';
+import { DebugManager } from './debug.ts';
 import diceIcon from './assets/icons/dice.png';
 import endIcon from './assets/icons/end.png';
 
@@ -110,31 +112,6 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 				<ul id="playersList"></ul>
 			</div>
 
-			<div class="rotation-test hidden">
-				<h4>Prueba de Rotación (Dado 0):</h4>
-				<div>
-				<label>
-					Rotación X: 
-					<input type="range" id="rotXSlider" min="0" max="360" value="0" />
-					<span id="rotXValue">0</span>°
-				</label>
-				</div>
-				<div>
-				<label>
-					Rotación Y: 
-					<input type="range" id="rotYSlider" min="0" max="360" value="0" />
-					<span id="rotYValue">0</span>°
-				</label>
-				</div>
-				<div>
-				<label>
-					Rotación Z: 
-					<input type="range" id="rotZSlider" min="0" max="360" value="0" />
-					<span id="rotZValue">0</span>°
-				</label>
-				</div>
-			</div>
-
 			<div class="controls">
 				<button id="rollBtn" class="icon-btn" type="button" title="Tirar Dados"></button>
 				<button id="bankBtn" class="icon-btn" type="button" disabled title="Terminar turno"></button>
@@ -144,138 +121,49 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 	</div>
 `;
 
-const canvas = document.querySelector<HTMLCanvasElement>('#gameCanvas')!;
-const game = new FarkleGame(canvas);
-game.init();
-
-// Info Overlay Logic
-const infoBtn = document.querySelector<HTMLButtonElement>('#infoBtn')!;
-const closeInfoBtn = document.querySelector<HTMLButtonElement>('#closeInfoBtn')!;
-const infoOverlay = document.querySelector<HTMLDivElement>('#infoOverlay')!;
-
-function toggleOverlay(show: boolean) {
-	if (show) {
-		infoOverlay.classList.remove('hidden');
-	} else {
-		infoOverlay.classList.add('hidden');
-	}
-}
-
-infoBtn.addEventListener('click', () => toggleOverlay(true));
-closeInfoBtn.addEventListener('click', () => toggleOverlay(false));
-infoOverlay.addEventListener('click', (e) => {
-	if (e.target === infoOverlay) {
-		toggleOverlay(false);
-	}
-});
-
-// Debug Overlay Logic
-const debugBtn = document.querySelector<HTMLButtonElement>('#debugBtn')!;
-const rotationTest = document.querySelector<HTMLDivElement>('.rotation-test')!;
-
-debugBtn.addEventListener('click', () => {
-	rotationTest.classList.toggle('hidden');
-});
-
-// Setup rotation test sliders
-const rotXSlider = document.querySelector<HTMLInputElement>('#rotXSlider')!;
-const rotYSlider = document.querySelector<HTMLInputElement>('#rotYSlider')!;
-const rotZSlider = document.querySelector<HTMLInputElement>('#rotZSlider')!;
-const rotXValue = document.querySelector<HTMLSpanElement>('#rotXValue')!;
-const rotYValue = document.querySelector<HTMLSpanElement>('#rotYValue')!;
-const rotZValue = document.querySelector<HTMLSpanElement>('#rotZValue')!;
-
-rotXSlider.addEventListener('input', (e) => {
-	const degrees = parseInt((e.target as HTMLInputElement).value);
-	rotXValue.textContent = degrees.toString();
-	game.setTestDiceRotation(degrees, parseInt(rotYSlider.value), parseInt(rotZSlider.value));
-});
-
-rotYSlider.addEventListener('input', (e) => {
-	const degrees = parseInt((e.target as HTMLInputElement).value);
-	rotYValue.textContent = degrees.toString();
-	game.setTestDiceRotation(parseInt(rotXSlider.value), degrees, parseInt(rotZSlider.value));
-});
-
-rotZSlider.addEventListener('input', (e) => {
-	const degrees = parseInt((e.target as HTMLInputElement).value);
-	rotZValue.textContent = degrees.toString();
-	game.setTestDiceRotation(parseInt(rotXSlider.value), parseInt(rotYSlider.value), degrees);
-});
-
-// Audio Logic
-const audioManager = new AudioManager();
-audioManager.init();
-
-const musicBtn = document.getElementById('musicBtn') as HTMLButtonElement;
-musicBtn.addEventListener('click', () => {
-	const isMuted = audioManager.toggleMute();
-	musicBtn.style.opacity = isMuted ? '0.5' : '1';
-	// Ensure it plays if it wasn't playing (first interaction)
-	audioManager.play();
-});
-
 // PWA Install Logic
-let deferredPrompt: any;
-const installBtn = document.getElementById('installBtn') as HTMLButtonElement;
-const pwaOverlay = document.getElementById('pwaInstallOverlay') as HTMLDivElement;
-const iosInstructions = document.getElementById('iosInstructions') as HTMLParagraphElement;
+const pwaManager = new PWAManager();
+pwaManager.init();
 
-// Detect Mobile
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-// Detect iOS
-const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-// Check if running in standalone mode (already installed)
-const isInStandaloneMode =
-	window.matchMedia('(display-mode: standalone)').matches ||
-	window.matchMedia('(display-mode: fullscreen)').matches ||
-	window.matchMedia('(display-mode: minimal-ui)').matches ||
-	('standalone' in window.navigator && (window.navigator as any).standalone === true);
+if (!pwaManager.mustInstallApp()) {
+	const canvas = document.querySelector<HTMLCanvasElement>('#gameCanvas')!;
+	const game = new FarkleGame(canvas);
+	game.init();
 
-// If mobile and not standalone, show overlay
-if (isMobile && !isInStandaloneMode) {
-	pwaOverlay.classList.remove('hidden');
-	if (isIos) {
-		iosInstructions.classList.remove('hidden');
+	// Info Overlay Logic
+	const infoBtn = document.querySelector<HTMLButtonElement>('#infoBtn')!;
+	const closeInfoBtn = document.querySelector<HTMLButtonElement>('#closeInfoBtn')!;
+	const infoOverlay = document.querySelector<HTMLDivElement>('#infoOverlay')!;
+
+	function toggleOverlay(show: boolean) {
+		if (show) {
+			infoOverlay.classList.remove('hidden');
+		} else {
+			infoOverlay.classList.add('hidden');
+		}
 	}
+
+	infoBtn.addEventListener('click', () => toggleOverlay(true));
+	closeInfoBtn.addEventListener('click', () => toggleOverlay(false));
+	infoOverlay.addEventListener('click', (e) => {
+		if (e.target === infoOverlay) {
+			toggleOverlay(false);
+		}
+	});
+
+	// Debug Overlay Logic
+	const debugManager = new DebugManager(game);
+	debugManager.init();
+
+	// Audio Logic
+	const audioManager = new AudioManager();
+	audioManager.init();
+
+	const musicBtn = document.getElementById('musicBtn') as HTMLButtonElement;
+	musicBtn.addEventListener('click', () => {
+		const isMuted = audioManager.toggleMute();
+		musicBtn.style.opacity = isMuted ? '0.5' : '1';
+		// Ensure it plays if it wasn't playing (first interaction)
+		audioManager.play();
+	});
 }
-
-window.addEventListener('beforeinstallprompt', (e) => {
-	// Prevent the mini-infobar from appearing on mobile
-	e.preventDefault();
-	// Stash the event so it can be triggered later.
-	deferredPrompt = e;
-	// If we are on mobile, the overlay is already visible.
-});
-
-installBtn.addEventListener('click', async () => {
-	if (deferredPrompt) {
-		// Show the install prompt
-		deferredPrompt.prompt();
-		// Wait for the user to respond to the prompt
-		const { outcome } = await deferredPrompt.userChoice;
-		console.log(`User response to the install prompt: ${outcome}`);
-		// We've used the prompt, and can't use it again, throw it away
-		deferredPrompt = null;
-	} else if (isIos) {
-		// Instructions are already visible
-		alert('Sigue las instrucciones en pantalla: Pulsa Compartir y Añadir a inicio.');
-	} else {
-		// Fallback for other browsers
-		alert('Usa la opción "Añadir a pantalla de inicio" o "Instalar" del menú de tu navegador.');
-	}
-});
-
-window.addEventListener('appinstalled', () => {
-	// Do NOT hide the overlay in the browser.
-	// Instead, tell the user to open the app.
-	const pwaContent = pwaOverlay.querySelector('.pwa-content')!;
-	pwaContent.innerHTML = `
-		<h1>Instalando ...</h1>
-		<p>La aplicación se instalará en su dispositivo.</p>
-		<p>Por favor, ciérrala aquí y ábrela desde tu pantalla de inicio para jugar.</p>
-	`;
-	// Clear the deferredPrompt so it can be garbage collected
-	deferredPrompt = null;
-	console.log('PWA was installed');
-});
