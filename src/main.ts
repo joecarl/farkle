@@ -39,14 +39,14 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 						<ul>
 							<li>Un 1 = 100 puntos</li>
 							<li>Un 5 = 50 puntos</li>
-							<li>Tres 1s = 1,000 puntos</li>
+							<li>Tres 1s = 1000 puntos</li>
 							<li>Tres 2s = 200 puntos</li>
 							<li>Tres 3s = 300 puntos</li>
 							<li>Tres 4s = 400 puntos</li>
 							<li>Tres 5s = 500 puntos</li>
 							<li>Tres 6s = 600 puntos</li>
-							<li>Tres pares = 1,500 puntos</li>
-							<li>Escalera (1-6) = 1,500 puntos</li>
+							<li>Tres parejas = 1500 puntos</li>
+							<li>Escalera (1-6) = 1500 puntos</li>
 						</ul>
 						<p><em>* En combinaciones de 3 iguales, cada dado adicional idéntico duplica el valor puntuado.</em></p>
 					</div>
@@ -271,8 +271,8 @@ window.addEventListener('appinstalled', () => {
 	// Instead, tell the user to open the app.
 	const pwaContent = pwaOverlay.querySelector('.pwa-content')!;
 	pwaContent.innerHTML = `
-		<h1>¡Instalada!</h1>
-		<p>La aplicación se ha instalado correctamente.</p>
+		<h1>Instalando ...</h1>
+		<p>La aplicación se instalará en su dispositivo.</p>
 		<p>Por favor, ciérrala aquí y ábrela desde tu pantalla de inicio para jugar.</p>
 	`;
 	// Clear the deferredPrompt so it can be garbage collected
