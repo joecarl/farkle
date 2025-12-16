@@ -4,7 +4,7 @@ import { AudioManager } from './audio.ts';
 import { PWAManager } from './pwa.ts';
 import { DebugManager } from './debug.ts';
 import diceIcon from './assets/icons/dice.png';
-import endIcon from './assets/icons/end.png';
+import nextIcon from './assets/icons/next.png';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 	<div id="pwaInstallOverlay" class="pwa-overlay hidden">
@@ -59,7 +59,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 						<p>3. <strong>Decidir:</strong>
 							<ul style="list-style-type: disc; padding-left: 20px; margin: 5px 0;">
 								<li>Arriesgar: Tira los dados restantes (<img src="${diceIcon}" class="inline-icon" alt="dice">) para sumar más puntos.</li>
-								<li>Plantarse: Pulsa <img src="${endIcon}" class="inline-icon" alt="stop"> para guardar tus puntos y pasar el turno.</li>
+								<li>Plantarse: Pulsa <img src="${nextIcon}" class="inline-icon" alt="stop"> para guardar tus puntos y pasar el turno.</li>
 							</ul>
 						</p>
 						<p>4. <strong>Farkle:</strong> Si en una tirada no obtienes puntos, ¡pierdes todo lo acumulado en el turno!</p>
