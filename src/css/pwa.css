@@ -112,6 +112,6 @@
 /* Hide on landscape or non-mobile devices */
 @media screen and (orientation: landscape), screen and (hover: hover) {
 	.rotate-overlay {
-		/* display: none; */
+		display: none;
 	}
 }

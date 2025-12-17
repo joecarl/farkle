@@ -3,6 +3,7 @@ export class PWAManager {
 	private installBtn: HTMLButtonElement;
 	private pwaOverlay: HTMLDivElement;
 	private iosInstructions: HTMLParagraphElement;
+	private rotateOverlay: HTMLDivElement;
 
 	private isMobile: boolean = false;
 	private isInStandaloneMode: boolean = false;
@@ -12,6 +13,7 @@ export class PWAManager {
 		this.installBtn = document.getElementById('installBtn') as HTMLButtonElement;
 		this.pwaOverlay = document.getElementById('pwaInstallOverlay') as HTMLDivElement;
 		this.iosInstructions = document.getElementById('iosInstructions') as HTMLParagraphElement;
+		this.rotateOverlay = document.getElementById('rotateOverlay') as HTMLDivElement;
 	}
 
 	private injectOverlays() {
@@ -25,7 +27,7 @@ export class PWAManager {
 					<p id="iosInstructions" class="hidden small-text">Pulsa <span class="share-icon">⎋</span> y luego "Añadir a inicio"</p>
 				</div>
 			</div>
-			<div id="rotateOverlay" class="rotate-overlay">
+			<div id="rotateOverlay" class="rotate-overlay hidden">
 				<div class="rotate-content">
 					<div class="rotate-icon"></div>
 					<p>Por favor, gira tu dispositivo</p>
@@ -59,6 +61,11 @@ export class PWAManager {
 			if (isIos) {
 				this.iosInstructions.classList.remove('hidden');
 			}
+		} else {
+			// El overlay de rotación solo se muestra cuando la app ya está instalada
+			// ya que cuando no esta instalada, el overlay de instalación ya cubre toda la pantalla.
+			this.rotateOverlay.classList.remove('hidden');
+			// Quitar la clase hidden hace que se muestre solo si el dispositivo está en modo portrait (logica en CSS)
 		}
 	}
 
