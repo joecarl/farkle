@@ -27,7 +27,7 @@ export class PWAManager {
 			</div>
 			<div id="rotateOverlay" class="rotate-overlay">
 				<div class="rotate-content">
-					<div class="phone-icon">⟳</div>
+					<div class="rotate-icon"></div>
 					<p>Por favor, gira tu dispositivo</p>
 				</div>
 			</div>

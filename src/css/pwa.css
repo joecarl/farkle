@@ -57,7 +57,7 @@
 	height: 100vh;
 	background-color: #1a1a1a;
 	z-index: 10000;
-	display: none;
+	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
@@ -68,9 +68,21 @@
 	text-align: center;
 }
 
-.rotate-content .phone-icon {
+.rotate-content .rotate-icon {
 	font-size: 4rem;
 	margin-bottom: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.rotate-content .rotate-icon::before {
+	content: '';
+	display: block;
+	width: 2em;
+	height: 2em;
+	background-image: url(../assets/icons/rotate-right.svg);
+	background-size: contain;
 	animation: rotate-animation 2s infinite;
 }
 
@@ -97,9 +109,9 @@
 	}
 }
 
-/* Show only on portrait orientation on mobile devices */
-@media screen and (orientation: portrait) and (hover: none) and (pointer: coarse) {
+/* Hide on landscape or non-mobile devices */
+@media screen and (orientation: landscape), screen and (hover: hover) {
 	.rotate-overlay {
-		display: flex;
+		/* display: none; */
 	}
 }
