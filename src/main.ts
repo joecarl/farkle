@@ -130,6 +130,23 @@ if (!pwaManager.mustInstallApp()) {
 	const game = new FarkleGame(canvas);
 	game.init();
 
+	// Debug Overlay Logic
+	const debugManager = new DebugManager(game);
+	debugManager.init();
+
+	// Audio Logic
+	const audioManager = new AudioManager();
+	audioManager.init();
+	game.setAudioManager(audioManager);
+
+	const musicBtn = document.getElementById('musicBtn') as HTMLButtonElement;
+	musicBtn.addEventListener('click', () => {
+		const isMuted = audioManager.toggleMute();
+		musicBtn.style.opacity = isMuted ? '0.5' : '1';
+		// Ensure it plays if it wasn't playing (first interaction)
+		audioManager.play();
+	});
+
 	// Info Overlay Logic
 	const infoBtn = document.querySelector<HTMLButtonElement>('#infoBtn')!;
 	const closeInfoBtn = document.querySelector<HTMLButtonElement>('#closeInfoBtn')!;
@@ -149,21 +166,5 @@ if (!pwaManager.mustInstallApp()) {
 		if (e.target === infoOverlay) {
 			toggleOverlay(false);
 		}
-	});
-
-	// Debug Overlay Logic
-	const debugManager = new DebugManager(game);
-	debugManager.init();
-
-	// Audio Logic
-	const audioManager = new AudioManager();
-	audioManager.init();
-
-	const musicBtn = document.getElementById('musicBtn') as HTMLButtonElement;
-	musicBtn.addEventListener('click', () => {
-		const isMuted = audioManager.toggleMute();
-		musicBtn.style.opacity = isMuted ? '0.5' : '1';
-		// Ensure it plays if it wasn't playing (first interaction)
-		audioManager.play();
 	});
 }

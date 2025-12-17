@@ -1,6 +1,7 @@
 import { Dice3D } from './dice3D';
 import * as THREE from 'three';
 import { FarkleLogic } from './logic';
+import { AudioManager } from './audio';
 import type { DieState } from './types';
 import { interval, sleep } from './utils';
 
@@ -58,6 +59,7 @@ export class FarkleGame {
 	private canvas3D!: HTMLCanvasElement;
 	private dice3D!: Dice3D;
 	private logic: FarkleLogic;
+	private audioManager?: AudioManager;
 
 	private isDragging = false;
 	private draggedDieIndex = -1;
@@ -184,6 +186,10 @@ export class FarkleGame {
 		this.startGameBtn.disabled = this.tempNewGamePlayers.length < 2;
 	}
 
+	public setAudioManager(audioManager: AudioManager) {
+		this.audioManager = audioManager;
+	}
+
 	private startNewGame() {
 		if (this.tempNewGamePlayers.length >= 2) {
 			this.logic = new FarkleLogic(this.tempNewGamePlayers);
@@ -262,21 +268,48 @@ export class FarkleGame {
 		}
 	}
 
-	private rollDice() {
+	private async rollDice() {
 		if (this.isRolling) return;
+
+		this.isRolling = true;
 
 		// Logic handles the rules of what to roll
 		const rolledIndices = this.logic.rollDice();
 
-		if (rolledIndices.length === 0) return;
+		if (rolledIndices.length === 0) {
+			this.isRolling = false;
+			return;
+		}
 
-		this.isRolling = true;
+		// Animate collection of dice to be rolled
+		const diceToCollect = this.dice.filter((_, i) => rolledIndices.includes(i));
+		const collectionPoint = new THREE.Vector3(10, 0, 10);
+
+		diceToCollect.forEach((die) => {
+			die.collecting = true;
+			die.targetPosition = collectionPoint.clone();
+			die.targetPosition.x += Math.random() * 4;
+			die.targetPosition.z += Math.random() * 4;
+		});
+
+		await sleep(500);
+
+		if (diceToCollect.length > 1) {
+			// Play shake sound
+			this.audioManager?.playShake();
+			await sleep(900);
+		}
+		await sleep(200);
 
 		// Sync state (locks might have changed), but don't update score yet (keep "at risk" score visible)
 		this.syncDiceState(false);
 
 		// Get dice that should be rolled
 		const diceToRoll = this.dice.filter((_, i) => rolledIndices.includes(i));
+
+		// Play roll sound
+		await sleep(200);
+		this.audioManager?.playRoll(diceToRoll.length);
 
 		// Reposition rolling dice randomly
 		this.repositionDice(diceToRoll);
@@ -293,7 +326,7 @@ export class FarkleGame {
 			// But for animation we want to show random values until the end.
 
 			// Set start position (off-screen, bottom-right approx)
-			die.startPosition = new THREE.Vector3(10 + Math.random() * 4, 5 + Math.random() * 2, 10 + Math.random() * 4);
+			die.startPosition = new THREE.Vector3(10 + Math.random() * 4, 2 + Math.random() * 1.5, 10 + Math.random() * 4);
 			this.dice3D.setPosition(die.diceIndex, die.startPosition);
 
 			// Set target rotations based on target value
