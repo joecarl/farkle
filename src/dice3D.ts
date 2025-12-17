@@ -79,7 +79,7 @@ export class Dice3D {
 		texture.repeat.set(1, 1);
 		texture.colorSpace = THREE.SRGBColorSpace;
 
-		const size = 22.5;
+		const size = 27;
 		const geometry = new THREE.PlaneGeometry(size * 1.5, size * 1.0);
 		const material = new THREE.MeshStandardMaterial({
 			map: texture,
