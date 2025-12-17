@@ -8,23 +8,32 @@ export class PWAManager {
 	private isInStandaloneMode: boolean = false;
 
 	constructor() {
-		this.injectRotateOverlay();
+		this.injectOverlays();
 		this.installBtn = document.getElementById('installBtn') as HTMLButtonElement;
 		this.pwaOverlay = document.getElementById('pwaInstallOverlay') as HTMLDivElement;
 		this.iosInstructions = document.getElementById('iosInstructions') as HTMLParagraphElement;
 	}
 
-	private injectRotateOverlay() {
-		const rotateOverlay = document.createElement('div');
-		rotateOverlay.id = 'rotateOverlay';
-		rotateOverlay.className = 'rotate-overlay';
-		rotateOverlay.innerHTML = `
-			<div class="rotate-content">
-				<div class="phone-icon">⟳</div>
-				<p>Por favor, gira tu dispositivo</p>
+	private injectOverlays() {
+		const tpl = document.createElement('template');
+		tpl.innerHTML = `
+			<div id="pwaInstallOverlay" class="pwa-overlay hidden">
+				<div class="pwa-content">
+					<h1>Farkle</h1>
+					<p>Para jugar, instala la aplicación.</p>
+					<button id="installBtn" class="pwa-btn">Instalar App 📲</button>
+					<p id="iosInstructions" class="hidden small-text">Pulsa <span class="share-icon">⎋</span> y luego "Añadir a inicio"</p>
+				</div>
+			</div>
+			<div id="rotateOverlay" class="rotate-overlay">
+				<div class="rotate-content">
+					<div class="phone-icon">⟳</div>
+					<p>Por favor, gira tu dispositivo</p>
+				</div>
 			</div>
 		`;
-		document.body.appendChild(rotateOverlay);
+		const fragment = tpl.content.cloneNode(true);
+		document.body.appendChild(fragment);
 	}
 
 	public init() {

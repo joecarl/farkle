@@ -1,52 +1,7 @@
-.controls {
-	position: absolute;
-	bottom: 2vh;
-	right: 2vw;
-	display: flex;
-	gap: 2.5vw;
-	flex-wrap: wrap;
-	justify-content: flex-end;
-	pointer-events: none; /* Let clicks pass through container */
-	align-items: center;
-}
-
-.controls button {
+.game-controls button {
 	pointer-events: auto;
 	width: 6vw;
 	height: 6vw;
-}
-
-.btn-primary {
-	border-radius: 8px;
-	border: 2px solid transparent;
-	padding: 12px 24px;
-	font-size: 16px;
-	font-weight: 600;
-	font-family: inherit;
-	background: var(--p-color-1);
-	color: white;
-	cursor: pointer;
-	transition: all 0.3s ease;
-	box-shadow: 0 4px 12px rgba(27, 26, 22, 0.3);
-	text-transform: uppercase;
-	letter-spacing: 0.5px;
-}
-
-.btn-primary:hover:not(:disabled) {
-	transform: translateY(-2px);
-	box-shadow: 0 6px 16px rgba(15, 13, 11, 0.8);
-	background: var(--p-color-1);
-}
-
-.btn-primary:active:not(:disabled) {
-	transform: translateY(0);
-}
-
-.btn-primary:disabled {
-	background: #666;
-	cursor: not-allowed;
-	opacity: 0.5;
-	box-shadow: none;
 }
 
 .score-display {
@@ -74,20 +29,6 @@
 
 #topBarTurnScore {
 	min-width: 2em;
-}
-
-.players-overlay {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	background: rgba(0, 0, 0, 0.6);
-	padding: 15px;
-	border-radius: 0 10px 0 0;
-	color: white;
-	text-align: left;
-	min-width: 150px;
-	font-size: clamp(14px, 1.6vw, 24px);
-	pointer-events: none; /* Allow clicks to pass through to canvas */
 }
 
 .players-overlay h3 {

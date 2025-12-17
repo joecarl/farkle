@@ -63,9 +63,13 @@ export class FarkleGame {
 	private isBanking: boolean = false;
 	private actionsDisabled: boolean = false;
 
-	constructor(canvas: HTMLCanvasElement) {
-		this.canvas = canvas;
-		this.ctx = canvas.getContext('2d')!;
+	private readonly container: HTMLDivElement;
+
+	constructor(container: HTMLDivElement) {
+		this.container = container;
+		this.injectHtml();
+		this.canvas = this.container.querySelector('#gameCanvas')!;
+		this.ctx = this.canvas.getContext('2d')!;
 		this.logic = new FarkleLogic();
 	}
 
@@ -85,6 +89,56 @@ export class FarkleGame {
 		this.handleResize();
 
 		this.draw();
+	}
+
+	private injectHtml() {
+		this.container.innerHTML = `
+			<div class="game-container">
+
+				<div class="top-bar">
+					<button id="infoBtn" class="icon-btn" type="button" title="Información"></button>
+					<button id="debugBtn" class="icon-btn hidden" type="button" title="Herramientas de Debug"></button>
+					<button id="musicBtn" class="icon-btn" type="button" title="Música"></button>
+					<div class="score-display">
+						<span id="topBarPlayerName">Player 1</span>: <span id="topBarTotalScore">0</span>
+						<span class="separator">|</span>
+						Turno: <span id="topBarTurnScore">0</span>
+					</div>
+					
+					<div style="flex: 1 1 auto"></div>
+
+					<button id="easterEggBtn" class="icon-btn hidden" type="button"></button>
+					<button id="newGameBtn" class="icon-btn" type="button" title="Nuevo Juego"></button>
+				</div>		
+
+				<div id="farkleOverlay" class="overlay hidden">
+					<div class="farkle-message">
+						<h1>¡FARKLE!</h1>
+						<p>Perdiste los puntos del turno</p>
+					</div>
+				</div>
+
+				<div id="nextTurnOverlay" class="overlay hidden">
+					<div class="overlay-content" style="max-width: 400px; text-align: center;">
+						<h2>Siguiente Turno</h2>
+						<h1 id="nextPlayerName" style="color: var(--p-color-1); margin: 20px 0;">Player Name</h1>
+					</div>
+				</div>
+					
+				<canvas id="gameCanvas"></canvas>
+
+				<div class="players-overlay">
+					<h3>Jugadores</h3>
+					<ul id="playersList"></ul>
+				</div>
+
+				<div class="game-controls">
+					<button id="rollBtn" class="icon-btn" type="button" title="Tirar Dados"></button>
+					<button id="bankBtn" class="icon-btn" type="button" disabled title="Terminar turno"></button>
+				</div>
+					
+			</div>
+		`;
 	}
 
 	private handleResize() {
@@ -134,6 +188,13 @@ export class FarkleGame {
 
 	public setAudioManager(audioManager: AudioManager) {
 		this.audioManager = audioManager;
+		const musicBtn = document.getElementById('musicBtn') as HTMLButtonElement;
+		musicBtn.addEventListener('click', () => {
+			const isMuted = audioManager.toggleMute();
+			musicBtn.style.opacity = isMuted ? '0.5' : '1';
+			// Ensure it plays if it wasn't playing (first interaction)
+			audioManager.play();
+		});
 	}
 
 	private startNewGame(players: string[]) {

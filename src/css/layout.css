@@ -58,13 +58,28 @@
 	filter: grayscale(50%) drop-shadow(0 0 10px #00000072);
 }
 
-.left-section {
-	display: flex;
-	align-items: center;
-	gap: 15px;
+.players-overlay {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	background: rgba(0, 0, 0, 0.6);
+	padding: 15px;
+	border-radius: 0 10px 0 0;
+	color: white;
+	text-align: left;
+	min-width: 150px;
+	font-size: clamp(14px, 1.6vw, 24px);
+	pointer-events: none; /* Allow clicks to pass through to canvas */
 }
 
-.top-controls {
+.game-controls {
+	position: absolute;
+	bottom: 2vh;
+	right: 2vw;
 	display: flex;
-	gap: 20px;
+	gap: 2.5vw;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	pointer-events: none; /* Let clicks pass through container */
+	align-items: center;
 }
