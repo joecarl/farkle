@@ -6,13 +6,15 @@
 	"scripts": {
 		"dev": "vite --host 0.0.0.0",
 		"build": "tsc && vite build",
+		"test": "vitest",
 		"preview": "vite preview"
 	},
 	"devDependencies": {
 		"@types/three": "^0.181.0",
 		"typescript": "~5.9.3",
 		"vite": "^7.2.4",
-		"vite-plugin-pwa": "^1.2.0"
+		"vite-plugin-pwa": "^1.2.0",
+		"vitest": "^4.0.16"
 	},
 	"dependencies": {
 		"three": "^0.181.2"
