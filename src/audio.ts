@@ -1,3 +1,13 @@
+interface IAudioConfig {
+	tracks: string[];
+	easterEgg?: {
+		enabled: boolean;
+		tracks: string[];
+		chance: number;
+		image: string;
+	};
+}
+
 export class AudioManager {
 	private baseUrl = 'https://games.copinstar.com/hq';
 	private jsonUrl = this.baseUrl + '/farkle.json';
@@ -6,6 +16,9 @@ export class AudioManager {
 	private shakeSounds: HTMLAudioElement[] = [];
 	private rollSounds: HTMLAudioElement[] = [];
 	private _muted: boolean = false;
+	private easterEgg?: { imageUrl: string; tracks: string[] };
+	private playingEasterEgg: boolean = false;
+	private tracks: string[] = [];
 
 	constructor() {
 		this.audio = new Audio();
@@ -32,16 +45,32 @@ export class AudioManager {
 	}
 
 	async init() {
+		let config: IAudioConfig | null = null;
 		try {
 			const response = await fetch(this.jsonUrl);
-			const files = await response.json();
-			const tracks = files.tracks;
-			if (tracks && Array.isArray(tracks) && tracks.length > 0) {
-				const randomTrack = tracks[Math.floor(Math.random() * tracks.length)];
-				this.audio.src = this.baseUrl + '/' + randomTrack;
-			}
+			config = await response.json();
 		} catch (e) {
 			console.error('Failed to load music config', e);
+		}
+		if (!config) return;
+
+		const tracks = config.tracks ?? [];
+		const easterConfig = config.easterEgg;
+		const easterEnabled = easterConfig?.enabled ?? false;
+		const easterTracks = easterConfig?.tracks ?? [];
+		const easterChance = easterConfig?.chance ?? 0;
+		const easterImage = easterConfig?.image ?? '';
+
+		if (tracks.length > 0) {
+			this.tracks = tracks.map((t) => `${this.baseUrl}/${t}`);
+			const randomTrack = this.tracks[Math.floor(Math.random() * tracks.length)];
+			this.audio.src = randomTrack;
+		}
+
+		if (easterEnabled && easterTracks.length > 0 && Math.random() < easterChance) {
+			const parsedTracks = easterTracks.map((t) => `${this.baseUrl}/${t}`);
+			const imageUrl = easterImage ? `${this.baseUrl}/${easterImage}` : '';
+			this.easterEgg = { imageUrl, tracks: parsedTracks };
 		}
 
 		// Start music on first interaction with the page if not started
@@ -70,7 +99,28 @@ export class AudioManager {
 	toggleMute() {
 		this._muted = !this._muted;
 		this.audio.muted = this._muted;
+		this.shakeSounds.forEach((s) => (s.muted = this._muted));
+		this.rollSounds.forEach((s) => (s.muted = this._muted));
 		return this._muted;
+	}
+
+	getEasterEggMeta() {
+		return this.easterEgg ? { imageUrl: this.easterEgg.imageUrl } : null;
+	}
+
+	toggleEasterEggTrack() {
+		if (!this.easterEgg) return;
+		let tracks = [];
+		if (this.playingEasterEgg) {
+			tracks = this.tracks;
+		} else {
+			tracks = this.easterEgg.tracks;
+		}
+		this.playingEasterEgg = !this.playingEasterEgg;
+		const randomTrack = tracks[Math.floor(Math.random() * tracks.length)];
+		this.audio.src = randomTrack;
+		this.audio.currentTime = 0;
+		this.audio.play().catch((e) => console.log('Toggle easter egg failed', e));
 	}
 
 	playShake() {

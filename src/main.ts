@@ -28,6 +28,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 				</div>
 			</div>
 			<div class="top-controls">
+				<button id="easterEggBtn" class="icon-btn hidden" type="button"></button>
 				<button id="newGameBtn" class="icon-btn" type="button" title="Nuevo Juego"></button>
 			</div>
 		</div>
@@ -136,7 +137,17 @@ if (!pwaManager.mustInstallApp()) {
 
 	// Audio Logic
 	const audioManager = new AudioManager();
-	audioManager.init();
+	audioManager.init().then(() => {
+		const easterEggMeta = audioManager.getEasterEggMeta();
+		if (!easterEggMeta) return;
+		const easterBtn = document.getElementById('easterEggBtn')!;
+		easterBtn.classList.remove('hidden');
+		easterBtn.style.backgroundImage = `url(${easterEggMeta.imageUrl})`;
+		easterBtn.addEventListener('click', () => {
+			audioManager.toggleEasterEggTrack();
+			easterBtn.classList.toggle('easter-egg-festive');
+		});
+	});
 	game.setAudioManager(audioManager);
 
 	const musicBtn = document.getElementById('musicBtn') as HTMLButtonElement;

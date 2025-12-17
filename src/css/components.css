@@ -7,6 +7,7 @@
 	flex-wrap: wrap;
 	justify-content: flex-end;
 	pointer-events: none; /* Let clicks pass through container */
+	align-items: center;
 }
 
 .controls button {
@@ -169,6 +170,40 @@
 	background-image: url('../assets/icons/harp.png');
 }
 
+.easter-egg-festive {
+	animation: easterEggPulse 0.3s ease-in-out infinite, easterEggHueRotate 5s linear infinite;
+}
+
+@keyframes easterEggPulse {
+	0%,
+	100% {
+		transform: scale(1);
+		box-shadow: 0 0 10px rgba(218, 194, 102, 0.5);
+	}
+	50% {
+		transform: scale(1.3);
+		box-shadow: 0 0 25px rgba(218, 194, 102, 0.9);
+	}
+}
+
+@keyframes easterEggHueRotate {
+	0% {
+		filter: hue-rotate(0deg) brightness(1);
+	}
+	25% {
+		filter: hue-rotate(90deg) brightness(1.1);
+	}
+	50% {
+		filter: hue-rotate(180deg) brightness(1);
+	}
+	75% {
+		filter: hue-rotate(270deg) brightness(1.1);
+	}
+	100% {
+		filter: hue-rotate(360deg) brightness(1);
+	}
+}
+
 .inline-icon {
 	width: 1.5em;
 	height: 1.5em;
@@ -178,6 +213,8 @@
 }
 
 #rollBtn {
+	width: 8vw;
+	height: 8vw;
 	background-image: url('../assets/icons/dice.png');
 }
 
