@@ -1,9 +1,9 @@
 .controls {
 	position: absolute;
-	bottom: 20px;
-	right: 20px;
+	bottom: 2vh;
+	right: 2vw;
 	display: flex;
-	gap: 15px;
+	gap: 2.5vw;
 	flex-wrap: wrap;
 	justify-content: flex-end;
 	pointer-events: none; /* Let clicks pass through container */
@@ -138,7 +138,7 @@
 	transition: transform 0.2s ease;
 }
 
-.icon-btn:hover {
+.icon-btn:not(:disabled):hover {
 	transform: scale(1.1);
 	background-color: transparent !important;
 	box-shadow: none !important;

@@ -272,6 +272,7 @@ export class FarkleGame {
 		if (this.isRolling) return;
 
 		this.isRolling = true;
+		this.actionsDisabled = true;
 
 		// Logic handles the rules of what to roll
 		const rolledIndices = this.logic.rollDice();
@@ -318,12 +319,7 @@ export class FarkleGame {
 		diceToRoll.forEach((die) => {
 			die.rolling = true;
 			die.rollTime = 0;
-			// Target value is already set in logic, but we need to grab it
-			// Wait, logic.rollDice() set the values.
-			// We need to read them from logic.
-			die.targetValue = die.value; // Value was updated in syncDiceState?
-			// Yes, syncDiceState updated visualDie.value to the NEW value.
-			// But for animation we want to show random values until the end.
+			die.targetValue = die.value;
 
 			// Set start position (off-screen, bottom-right approx)
 			die.startPosition = new THREE.Vector3(10 + Math.random() * 4, 2 + Math.random() * 1.5, 10 + Math.random() * 4);
@@ -332,6 +328,7 @@ export class FarkleGame {
 			// Set target rotations based on target value
 			this.setDiceRotationForValue(die);
 		});
+		this.actionsDisabled = false;
 	}
 
 	private repositionDice(diceToRoll: VisualDie[]) {
