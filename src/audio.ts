@@ -1,6 +1,6 @@
 export class AudioManager {
-	private baseUrl = 'https://games.copinstar.com/hq/';
-	private jsonUrl = 'https://games.copinstar.com/hq/farkle.json';
+	private baseUrl = 'https://games.copinstar.com/hq';
+	private jsonUrl = this.baseUrl + '/farkle.json';
 	private audio: HTMLAudioElement;
 	private isPlaying: boolean = false;
 
@@ -14,9 +14,10 @@ export class AudioManager {
 		try {
 			const response = await fetch(this.jsonUrl);
 			const files = await response.json();
-			if (Array.isArray(files) && files.length > 0) {
-				const randomFile = files[Math.floor(Math.random() * files.length)];
-				this.audio.src = this.baseUrl + randomFile;
+			const tracks = files.tracks;
+			if (tracks && Array.isArray(tracks) && tracks.length > 0) {
+				const randomTrack = tracks[Math.floor(Math.random() * tracks.length)];
+				this.audio.src = this.baseUrl + '/' + randomTrack;
 			}
 		} catch (e) {
 			console.error('Failed to load music config', e);

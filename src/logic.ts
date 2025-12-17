@@ -8,11 +8,15 @@ export class FarkleLogic {
 	private isFarkleState: boolean = false;
 	private isStartOfTurn: boolean = true;
 
-	constructor() {
-		this.players = [
-			{ name: 'Player 1', score: 0 },
-			{ name: 'Player 2', score: 0 },
-		];
+	constructor(playerNames?: string[]) {
+		if (playerNames && playerNames.length >= 2) {
+			this.players = playerNames.map((name) => ({ name, score: 0 }));
+		} else {
+			this.players = [
+				{ name: 'Player 1', score: 0 },
+				{ name: 'Player 2', score: 0 },
+			];
+		}
 		this.dice = Array(6)
 			.fill(null)
 			.map(() => ({
@@ -207,18 +211,6 @@ export class FarkleLogic {
 			d.selected = false;
 			d.locked = false;
 		});
-	}
-
-	public resetGame(newPlayerNames?: string[]) {
-		if (newPlayerNames && newPlayerNames.length > 0) {
-			this.players = newPlayerNames.map((name) => ({ name, score: 0 }));
-		} else {
-			this.players.forEach((p) => (p.score = 0));
-		}
-		this.currentPlayerIndex = 0;
-		this.accumulatedTurnScore = 0;
-		this.isFarkleState = false;
-		this.resetDice();
 	}
 
 	public getTotalScore(): number {

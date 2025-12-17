@@ -45,6 +45,7 @@ export class FarkleGame {
 	private topBarPlayerName!: HTMLElement;
 	private topBarTurnScore!: HTMLElement;
 	private topBarTotalScore!: HTMLElement;
+	private playersList!: HTMLUListElement;
 
 	private nextTurnOverlay!: HTMLDivElement;
 	private nextPlayerName!: HTMLHeadingElement;
@@ -64,6 +65,7 @@ export class FarkleGame {
 	private lastTime: number = 0;
 	private previousTurnScore: number = 0;
 	private isBanking: boolean = false;
+	private actionsDisabled: boolean = false;
 
 	constructor(canvas: HTMLCanvasElement) {
 		this.canvas = canvas;
@@ -128,6 +130,8 @@ export class FarkleGame {
 		this.topBarTurnScore = document.querySelector('#topBarTurnScore')!;
 		this.topBarTotalScore = document.querySelector('#topBarTotalScore')!;
 
+		this.playersList = document.querySelector('#playersList')!;
+
 		this.rollBtn.addEventListener('click', () => this.rollDice());
 		this.bankBtn.addEventListener('click', () => this.bankPoints());
 		this.newGameBtn.addEventListener('click', () => this.showNewGameModal());
@@ -182,7 +186,7 @@ export class FarkleGame {
 
 	private startNewGame() {
 		if (this.tempNewGamePlayers.length >= 2) {
-			this.logic.resetGame(this.tempNewGamePlayers);
+			this.logic = new FarkleLogic(this.tempNewGamePlayers);
 			this.hideNewGameModal();
 			this.endTurn();
 		}
@@ -267,8 +271,6 @@ export class FarkleGame {
 		if (rolledIndices.length === 0) return;
 
 		this.isRolling = true;
-		this.rollBtn.disabled = true;
-		this.bankBtn.disabled = true;
 
 		// Sync state (locks might have changed), but don't update score yet (keep "at risk" score visible)
 		this.syncDiceState(false);
@@ -361,8 +363,10 @@ export class FarkleGame {
 		const lerpFactor = 1 - Math.pow(1 - 0.1, deltaTime * 60);
 		const dragLerpFactor = 1 - Math.pow(1 - 0.2, deltaTime * 60);
 		const collectLerpFactor = 1 - Math.pow(1 - 0.05, deltaTime * 60);
+		let anyAnimating = false;
 
 		this.dice.forEach((die) => {
+			let animatingDie = true;
 			// Rolling Animation
 			if (die.rolling) {
 				needsUpdate = true;
@@ -442,11 +446,25 @@ export class FarkleGame {
 				needsUpdate = true;
 				die.currentPosition.y += (0 - die.currentPosition.y) * dragLerpFactor;
 				this.dice3D.setPosition(die.diceIndex, die.currentPosition);
+			} else {
+				animatingDie = false;
+			}
+			if (animatingDie) {
+				anyAnimating = true;
 			}
 		});
 
 		if (needsUpdate || this.isDragging) {
 			this.draw();
+		}
+
+		if (anyAnimating) {
+			this.bankBtn.disabled = true;
+			this.rollBtn.disabled = true;
+		} else {
+			const gameState = this.logic.getGameState();
+			this.bankBtn.disabled = !gameState.canBank || this.actionsDisabled;
+			this.rollBtn.disabled = !gameState.canRoll || this.actionsDisabled;
 		}
 
 		requestAnimationFrame((t) => this.animate(t));
@@ -469,7 +487,6 @@ export class FarkleGame {
 		if (gameState.isFarkle) {
 			this.handleFarkleSequence();
 		} else {
-			this.rollBtn.disabled = !gameState.canRoll;
 			this.updateScoreDisplay();
 			this.draw();
 		}
@@ -683,8 +700,7 @@ export class FarkleGame {
 		this.isBanking = true;
 
 		// Disable buttons during animation
-		this.bankBtn.disabled = true;
-		this.rollBtn.disabled = true;
+		this.actionsDisabled = true;
 
 		this.topBarTurnScore.classList.add('score-transfer-source');
 		this.topBarTotalScore.classList.add('score-transfer-target');
@@ -714,7 +730,8 @@ export class FarkleGame {
 		this.logic.bankPoints();
 
 		await sleep(1000);
-		this.endTurn();
+		await this.endTurn();
+		this.actionsDisabled = false;
 	}
 
 	private async endTurn() {
@@ -775,16 +792,9 @@ export class FarkleGame {
 
 		this.previousTurnScore = gameState.turnScore;
 
-		const playersList = document.querySelector('#playersList')!;
-		playersList.innerHTML = gameState.players
+		this.playersList.innerHTML = gameState.players
 			.map((p, i) => `<li style="${i === activeIndex ? 'font-weight: bold; color: var(--p-color-1);' : ''}">${p.name}: ${p.score}</li>`)
 			.join('');
-
-		this.bankBtn.disabled = !gameState.canBank;
-
-		if (!this.isRolling) {
-			this.rollBtn.disabled = !gameState.canRoll;
-		}
 	}
 
 	private draw() {
