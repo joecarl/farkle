@@ -114,56 +114,6 @@
 	}
 }
 
-.pwa-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background: rgba(20, 20, 20, 0.98);
-	z-index: 9999;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex-direction: column;
-	color: white;
-}
-
-.pwa-content {
-	text-align: center;
-	padding: 20px;
-	max-width: 80%;
-}
-
-.pwa-btn {
-	font-size: 1.5rem;
-	padding: 15px 30px;
-	background: #4caf50;
-	color: white;
-	border: none;
-	border-radius: 8px;
-	cursor: pointer;
-	margin: 20px 0;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-
-.pwa-btn:active {
-	transform: scale(0.98);
-}
-
-.small-text {
-	font-size: 1rem;
-	opacity: 0.9;
-	margin-top: 10px;
-	line-height: 1.4;
-}
-
-.share-icon {
-	display: inline-block;
-	font-size: 1.2em;
-	vertical-align: middle;
-}
-
 .add-player-group {
 	display: flex;
 	margin-bottom: 20px;

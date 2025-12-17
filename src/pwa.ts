@@ -8,9 +8,23 @@ export class PWAManager {
 	private isInStandaloneMode: boolean = false;
 
 	constructor() {
+		this.injectRotateOverlay();
 		this.installBtn = document.getElementById('installBtn') as HTMLButtonElement;
 		this.pwaOverlay = document.getElementById('pwaInstallOverlay') as HTMLDivElement;
 		this.iosInstructions = document.getElementById('iosInstructions') as HTMLParagraphElement;
+	}
+
+	private injectRotateOverlay() {
+		const rotateOverlay = document.createElement('div');
+		rotateOverlay.id = 'rotateOverlay';
+		rotateOverlay.className = 'rotate-overlay';
+		rotateOverlay.innerHTML = `
+			<div class="rotate-content">
+				<div class="phone-icon">⟳</div>
+				<p>Por favor, gira tu dispositivo</p>
+			</div>
+		`;
+		document.body.appendChild(rotateOverlay);
 	}
 
 	public init() {
