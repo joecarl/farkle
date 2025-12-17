@@ -142,15 +142,37 @@ export class FarkleLogic {
 		const usedDice: number[] = [];
 		const descriptions: string[] = [];
 
+		// Check for two triplets
+		const triplets = counts.filter((c) => c >= 3).length;
+		if (triplets === 2 && values.length === 6) {
+			return { score: 2500, usedDice: [...values], description: 'Dos tríos' };
+		}
+
 		// Check for three pairs
 		const pairs = counts.filter((c) => c === 2).length;
 		if (pairs === 3 && values.length === 6) {
-			return { score: 1500, usedDice: [...values], description: 'Tres pares' };
+			return { score: 1500, usedDice: [...values], description: 'Tres parejas' };
 		}
 
 		// Check for straight (1-2-3-4-5-6)
 		if (values.length === 6 && counts.slice(1).every((c) => c === 1)) {
 			return { score: 1500, usedDice: [...values], description: 'Escalera' };
+		}
+
+		// Check for short straight (1-2-3-4-5 or 2-3-4-5-6)
+		const seq1 = [1, 2, 3, 4, 5];
+		if (seq1.every((num) => counts[num] >= 1)) {
+			score += 750;
+			usedDice.push(...seq1);
+			seq1.forEach((num) => counts[num]--);
+			descriptions.push('Escalera corta 1-5');
+		}
+		const seq2 = [2, 3, 4, 5, 6];
+		if (seq2.every((num) => counts[num] >= 1)) {
+			score += 750;
+			usedDice.push(...seq2);
+			seq2.forEach((num) => counts[num]--);
+			descriptions.push('Escalera corta 2-6');
 		}
 
 		// Check for three of a kind (or more)

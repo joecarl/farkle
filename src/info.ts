@@ -46,8 +46,10 @@ export class InfoManager {
 								<li>Tres 4s = 400 puntos</li>
 								<li>Tres 5s = 500 puntos</li>
 								<li>Tres 6s = 600 puntos</li>
+								<li>Escalera corta (1-5 o 2-6) = 750 puntos</li>
 								<li>Tres parejas = 1500 puntos</li>
 								<li>Escalera (1-6) = 1500 puntos</li>
+								<li>Dos tríos = 2500 puntos</li>
 							</ul>
 							<p><em>* En combinaciones de 3 iguales, cada dado adicional idéntico duplica el valor puntuado.</em></p>
 						</div>
