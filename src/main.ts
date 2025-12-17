@@ -84,26 +84,6 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 			</div>
 		</div>
 
-		<div id="newGameModal" class="overlay hidden">
-			<div class="overlay-content" style="max-width: 400px; text-align: center;">
-				<h3 id="newGameModalTitle">Configurar Jugadores</h3>
-				<div id="playersListContainer" style="margin-bottom: 20px; text-align: left; max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px;">
-					<ul id="newGamePlayersList" style="list-style: none; padding: 0; margin: 0;"></ul>
-				</div>
-				<div class="add-player-group">
-					<input type="text" id="newGamePlayerName" placeholder="Nombre del jugador">
-					<button id="addPlayerToGameBtn" type="button">+</button>
-				</div>
-				
-				<div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 0 -30px 20px -30px;"></div>
-
-				<div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-					<button id="startGameBtn" class="btn-primary" type="button" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);" disabled>Empezar Juego</button>
-					<button id="cancelNewGameBtn" class="btn-primary" type="button" style="background: #666;">Cancelar</button>
-				</div>
-			</div>
-		</div>
-
 		<div class="game-container">
 			
 			<canvas id="gameCanvas"></canvas>

@@ -2,6 +2,7 @@ import { Dice3D } from './dice3D';
 import * as THREE from 'three';
 import { FarkleLogic } from './logic';
 import { AudioManager } from './audio';
+import { NewGameMenu } from './newGameMenu';
 import type { DieState } from './types';
 import { interval, sleep } from './utils';
 
@@ -36,12 +37,7 @@ export class FarkleGame {
 	private newGameBtn!: HTMLButtonElement;
 	private farkleOverlay!: HTMLDivElement;
 
-	private newGameModal!: HTMLDivElement;
-	private newGamePlayerNameInput!: HTMLInputElement;
-	private addPlayerToGameBtn!: HTMLButtonElement;
-	private startGameBtn!: HTMLButtonElement;
-	private cancelNewGameBtn!: HTMLButtonElement;
-	private newGamePlayersList!: HTMLUListElement;
+	private newGameMenu!: NewGameMenu;
 
 	private topBarPlayerName!: HTMLElement;
 	private topBarTurnScore!: HTMLElement;
@@ -50,8 +46,6 @@ export class FarkleGame {
 
 	private nextTurnOverlay!: HTMLDivElement;
 	private nextPlayerName!: HTMLHeadingElement;
-
-	private tempNewGamePlayers: string[] = [];
 
 	private readonly DIE_SIZE = 60;
 	private readonly DIE_PADDING = 20;
@@ -118,12 +112,7 @@ export class FarkleGame {
 		this.newGameBtn = document.querySelector('#newGameBtn')!;
 		this.farkleOverlay = document.querySelector('#farkleOverlay')!;
 
-		this.newGameModal = document.querySelector('#newGameModal')!;
-		this.newGamePlayerNameInput = document.querySelector('#newGamePlayerName')!;
-		this.addPlayerToGameBtn = document.querySelector('#addPlayerToGameBtn')!;
-		this.startGameBtn = document.querySelector('#startGameBtn')!;
-		this.cancelNewGameBtn = document.querySelector('#cancelNewGameBtn')!;
-		this.newGamePlayersList = document.querySelector('#newGamePlayersList')!;
+		this.newGameMenu = new NewGameMenu((players) => this.startNewGame(players));
 
 		this.nextTurnOverlay = document.querySelector('#nextTurnOverlay')!;
 		this.nextPlayerName = document.querySelector('#nextPlayerName')!;
@@ -136,66 +125,20 @@ export class FarkleGame {
 
 		this.rollBtn.addEventListener('click', () => this.rollDice());
 		this.bankBtn.addEventListener('click', () => this.bankPoints());
-		this.newGameBtn.addEventListener('click', () => this.showNewGameModal());
-
-		this.addPlayerToGameBtn.addEventListener('click', () => this.addPlayerToNewGame());
-		this.startGameBtn.addEventListener('click', () => this.startNewGame());
-		this.cancelNewGameBtn.addEventListener('click', () => this.hideNewGameModal());
-
-		this.newGamePlayerNameInput.addEventListener('keydown', (e) => {
-			if (e.key === 'Enter') {
-				this.addPlayerToNewGame();
-			} else if (e.key === 'Escape') {
-				this.hideNewGameModal();
-			}
-		});
-	}
-
-	private showNewGameModal() {
-		this.tempNewGamePlayers = [];
-		this.updateNewGamePlayersList();
-		this.newGamePlayerNameInput.value = '';
-		this.newGameModal.classList.remove('hidden');
-		this.newGamePlayerNameInput.focus();
-		this.startGameBtn.disabled = true;
-	}
-
-	private hideNewGameModal() {
-		this.newGameModal.classList.add('hidden');
+		this.newGameBtn.addEventListener('click', () => this.newGameMenu.show());
 	}
 
 	private hideNextTurnOverlay() {
 		this.nextTurnOverlay.classList.add('hidden');
 	}
 
-	private addPlayerToNewGame() {
-		const name = this.newGamePlayerNameInput.value.trim();
-		if (name) {
-			this.tempNewGamePlayers.push(name);
-			this.newGamePlayerNameInput.value = '';
-			this.updateNewGamePlayersList();
-			this.newGamePlayerNameInput.focus();
-		}
-	}
-
-	private updateNewGamePlayersList() {
-		this.newGamePlayersList.innerHTML = this.tempNewGamePlayers
-			.map((name) => `<li style="padding: 5px; border-bottom: 1px solid rgba(255,255,255,0.1);">${name}</li>`)
-			.join('');
-
-		this.startGameBtn.disabled = this.tempNewGamePlayers.length < 2;
-	}
-
 	public setAudioManager(audioManager: AudioManager) {
 		this.audioManager = audioManager;
 	}
 
-	private startNewGame() {
-		if (this.tempNewGamePlayers.length >= 2) {
-			this.logic = new FarkleLogic(this.tempNewGamePlayers);
-			this.hideNewGameModal();
-			this.endTurn();
-		}
+	private startNewGame(players: string[]) {
+		this.logic = new FarkleLogic(players);
+		this.endTurn();
 	}
 
 	private initializeDice() {
