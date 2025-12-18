@@ -2,7 +2,7 @@ import { Dice3D } from './dice3D';
 import * as THREE from 'three';
 import { FarkleLogic } from './logic';
 import { AudioManager } from './audio';
-import { NewGameMenu } from './newGameMenu';
+import { NewGameMenu } from './new-game-menu';
 import type { DieState } from './types';
 import { interval, sleep } from './utils';
 
