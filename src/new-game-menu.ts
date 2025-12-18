@@ -1,10 +1,12 @@
+import type { Player } from './types';
+
 export class NewGameMenu {
 	private modal: HTMLDivElement;
-	private tempNewGamePlayers: string[] = [];
+	private tempNewGamePlayers: Player[] = [];
 	private suggestedNames: string[] = [];
-	private onStartGame: (players: string[]) => void;
+	private onStartGame: (players: Player[]) => void;
 
-	constructor(onStartGame: (players: string[]) => void) {
+	constructor(onStartGame: (players: Player[]) => void) {
 		this.onStartGame = onStartGame;
 		this.loadSuggestedNames();
 		this.modal = this.createModal();
@@ -118,6 +120,9 @@ export class NewGameMenu {
 							<input type="text" id="newGamePlayerName" placeholder="Nombre">
 							<button id="addPlayerToGameBtn" type="button"> <div class="inline-icon beer-icon-small"></div> Añadir</button>
 						</div>
+						<div class="add-bot-group">
+							<button id="addBotBtn" type="button" class="secondary-btn">Añadir Bot 🤖</button>
+						</div>
 						<div style="flex: 1 1 auto;"></div>
 						<div class="suggested-names-section">
 							<h4>Sugerencias</h4>
@@ -137,10 +142,12 @@ export class NewGameMenu {
 
 		const nameInput = container.querySelector('#newGamePlayerName') as HTMLInputElement;
 		const addBtn = container.querySelector('#addPlayerToGameBtn') as HTMLButtonElement;
+		const addBotBtn = container.querySelector('#addBotBtn') as HTMLButtonElement;
 		const startBtn = container.querySelector('#startGameBtn') as HTMLButtonElement;
 		const backBtn = container.querySelector('#backToMenuBtn') as HTMLButtonElement;
 
 		addBtn.addEventListener('click', () => this.addPlayer(nameInput));
+		addBotBtn.addEventListener('click', () => this.addBot());
 		nameInput.addEventListener('keydown', (e) => {
 			if (e.key === 'Enter') this.addPlayer(nameInput);
 		});
@@ -162,7 +169,8 @@ export class NewGameMenu {
 		if (!list) return;
 
 		list.innerHTML = '';
-		const availableSuggestions = this.suggestedNames.filter((name) => !this.tempNewGamePlayers.includes(name));
+		const playerNames = this.tempNewGamePlayers.map((p) => p.name);
+		const availableSuggestions = this.suggestedNames.filter((name) => !playerNames.includes(name));
 
 		if (availableSuggestions.length === 0) {
 			list.innerHTML = '<span class="no-suggestions">No hay sugerencias disponibles</span>';
@@ -210,17 +218,25 @@ export class NewGameMenu {
 		}
 	}
 
-	private addPlayerByName(name: string) {
-		if (!this.tempNewGamePlayers.includes(name)) {
-			this.tempNewGamePlayers.push(name);
-			this.saveSuggestedName(name);
+	private addBot() {
+		const botCount = this.tempNewGamePlayers.filter((p) => p.isBot).length;
+		const name = `Bot ${botCount + 1}`;
+		this.addPlayerByName(name, true);
+	}
+
+	private addPlayerByName(name: string, isBot: boolean = false) {
+		if (!this.tempNewGamePlayers.some((p) => p.name === name)) {
+			this.tempNewGamePlayers.push({ name, score: 0, isBot });
+			if (!isBot) {
+				this.saveSuggestedName(name);
+			}
 			this.updatePlayersList();
 			this.renderSuggestedNames();
 		}
 	}
 
 	private removePlayer(name: string) {
-		this.tempNewGamePlayers = this.tempNewGamePlayers.filter((p) => p !== name);
+		this.tempNewGamePlayers = this.tempNewGamePlayers.filter((p) => p.name !== name);
 		this.updatePlayersList();
 		this.renderSuggestedNames();
 	}
@@ -234,17 +250,17 @@ export class NewGameMenu {
 		} else {
 			const ul = document.createElement('ul');
 			ul.id = 'newGamePlayersList';
-			this.tempNewGamePlayers.forEach((name) => {
+			this.tempNewGamePlayers.forEach((player) => {
 				const li = document.createElement('li');
 
 				const nameSpan = document.createElement('span');
-				nameSpan.textContent = name;
+				nameSpan.textContent = player.name + (player.isBot ? ' 🤖' : '');
 
 				const deleteBtn = document.createElement('button');
 				deleteBtn.textContent = '×';
 				deleteBtn.className = 'delete-player-btn';
 				deleteBtn.title = 'Quitar jugador';
-				deleteBtn.addEventListener('click', () => this.removePlayer(name));
+				deleteBtn.addEventListener('click', () => this.removePlayer(player.name));
 
 				li.appendChild(nameSpan);
 				li.appendChild(deleteBtn);

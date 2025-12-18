@@ -13,6 +13,7 @@ export interface ScoringResult {
 export interface Player {
 	name: string;
 	score: number;
+	isBot?: boolean;
 }
 
 export interface GameState {

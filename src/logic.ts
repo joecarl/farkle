@@ -8,9 +8,9 @@ export class FarkleLogic {
 	private isFarkleState: boolean = false;
 	private isStartOfTurn: boolean = true;
 
-	constructor(playerNames?: string[]) {
-		if (playerNames && playerNames.length >= 2) {
-			this.players = playerNames.map((name) => ({ name, score: 0 }));
+	constructor(players?: Player[]) {
+		if (players && players.length >= 2) {
+			this.players = players.map((p) => ({ ...p, score: 0 }));
 		} else {
 			this.players = [
 				{ name: 'Player 1', score: 0 },

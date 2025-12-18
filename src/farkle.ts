@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { FarkleLogic } from './logic';
 import { AudioManager } from './audio';
 import { NewGameMenu } from './new-game-menu';
-import type { DieState } from './types';
+import type { DieState, Player } from './types';
 import { interval, sleep } from './utils';
 
 // Visual representation of a die, extending the logical state
@@ -197,7 +197,7 @@ export class FarkleGame {
 		});
 	}
 
-	private startNewGame(players: string[]) {
+	private startNewGame(players: Player[]) {
 		this.logic = new FarkleLogic(players);
 		this.endTurn();
 	}
@@ -523,6 +523,7 @@ export class FarkleGame {
 		} else {
 			this.updateScoreDisplay();
 			this.draw();
+			this.checkBotTurn();
 		}
 	}
 
@@ -791,6 +792,78 @@ export class FarkleGame {
 		await sleep(2000);
 		this.hideNextTurnOverlay();
 		this.updateScoreDisplay(); // Update to new player
+		this.checkBotTurn();
+	}
+
+	private async checkBotTurn() {
+		const gameState = this.logic.getGameState();
+		const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+
+		if (currentPlayer.isBot) {
+			this.actionsDisabled = true;
+			this.updateButtonsState();
+
+			await sleep(1000);
+
+			if (gameState.canRoll && gameState.turnScore === 0 && !gameState.isFarkle) {
+				this.rollDice();
+			} else if (!gameState.isFarkle) {
+				await this.botDecision();
+			}
+		}
+	}
+
+	private async botDecision() {
+		const dice = this.logic.getDice();
+		const unlockedDice = dice.map((d, i) => ({ ...d, index: i })).filter((d) => !d.locked && !d.selected);
+		const values = unlockedDice.map((d) => d.value);
+
+		// Use logic to find best scoring combination
+		const result = this.logic.calculateScore(values);
+
+		// Select dice
+		const usedValues = [...result.usedDice];
+
+		for (const val of usedValues) {
+			const dieToSelect = unlockedDice.find((d) => d.value === val && !this.logic.getDice()[d.index].selected);
+			if (dieToSelect) {
+				this.logic.toggleSelection(dieToSelect.index);
+
+				// Move visual die to selection zone
+				const visualDie = this.dice[dieToSelect.index];
+				visualDie.selected = true;
+
+				const targetPos = visualDie.currentPosition.clone();
+				// Truquito para evitar solapamientos: distribuir en X y Z según índice
+				const i = dieToSelect.index; // Seria mejor un contador separado para que quede mas natural
+				targetPos.x = i * 0.2 - 5.0 + Math.random() * 0.5;
+				targetPos.z = i * 1.5 - 3.5 + Math.random() * 0.5;
+
+				visualDie.targetPosition = targetPos;
+				visualDie.settling = true;
+
+				this.draw();
+				await sleep(500);
+			}
+		}
+
+		// Re-evaluate state
+		const gameState = this.logic.getGameState();
+
+		if (gameState.canRoll && gameState.dice.every((d) => d.locked || d.selected)) {
+			// Hot dice, must roll
+			this.rollDice();
+		} else if (gameState.turnScore >= 300) {
+			this.bankPoints();
+		} else {
+			this.rollDice();
+		}
+	}
+
+	private updateButtonsState() {
+		const gameState = this.logic.getGameState();
+		this.bankBtn.disabled = !gameState.canBank || this.actionsDisabled;
+		this.rollBtn.disabled = !gameState.canRoll || this.actionsDisabled;
 	}
 
 	private collectDice() {
