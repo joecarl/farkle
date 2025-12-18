@@ -8,7 +8,8 @@
 	font-family: 'MedievalSharp', cursive;
 	font-weight: 400;
 	font-style: normal;
-	--p-color-1: rgba(218, 194, 102, 0.8);
+	--p-color-1: rgb(215, 162, 55);
+	/*rgba(218, 194, 102, 0.8);*/
 }
 
 * {

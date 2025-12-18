@@ -61,13 +61,13 @@
 .local-game-setup {
 	display: flex;
 	flex-direction: column;
-	gap: 1.6cqw;
+	gap: 1.5cqw;
 	height: 100%;
 }
 
 .setup-columns {
 	display: flex;
-	gap: 20px;
+	gap: 3cqw;
 	text-align: left;
 	flex: 1 1 auto;
 }
@@ -77,10 +77,10 @@
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	gap: 2cqw;
+	gap: 1.5cqw;
 }
 .right-column {
-	padding: 2.5cqw 0;
+	padding: 2cqw 0;
 }
 
 /* Players List */
@@ -116,7 +116,7 @@
 	color: #ff6b6b;
 	font-size: 1.2em;
 	cursor: pointer;
-	padding: 0 5px;
+	padding: 0 0.5cqw;
 	line-height: 1;
 	opacity: 0.7;
 	transition: opacity 0.2s;
@@ -129,7 +129,7 @@
 .no-players-warning {
 	color: #ffaa00;
 	text-align: center;
-	padding: 20px;
+	padding: 4cqw;
 }
 
 /* Right Column Elements */
@@ -149,7 +149,7 @@
 
 .add-player-group input {
 	flex-grow: 1;
-	padding: 10px;
+	padding: 1.5cqw;
 	font-size: 2.2cqw;
 	color: black;
 	border: none;
@@ -162,13 +162,12 @@
 	display: flex;
 	gap: 0.4em;
 	border-radius: 0 5px 5px 0;
-	padding: 0 20px;
+	padding: 0 2cqw;
 	font-size: 2.2cqw;
 	line-height: 1;
 	margin: 0;
-	min-width: 50px;
 	border: none;
-	background-color: rgb(199, 146, 65);
+	background-color: var(--p-color-1);
 	font-family: inherit;
 	color: white;
 	align-items: center;
@@ -181,20 +180,22 @@
 	width: 100%;
 }
 .suggested-names-section h4 {
-	margin: 0 0 10px 0;
+	margin: 0 0 1cqw 0;
 	color: var(--p-color-1);
-	font-size: 1em;
+	font-size: 2.5cqw;
 }
 
 .suggested-list {
 	display: flex;
-	flex-wrap: wrap;
 	gap: 1.5cqw;
+	overflow-x: auto;
+	scrollbar-width: none;
+	max-width: 48cqw;
 }
 
 .suggested-name-tag {
 	background: rgba(255, 255, 255, 0.1);
-	padding: 5px 8px 5px 12px;
+	padding: 0.5cqw 1cqw 0.3cqw 1.5cqw;
 	border-radius: 15px;
 	font-size: 1.9cqw;
 	transition: background 0.2s;
@@ -218,14 +219,14 @@
 	color: #aaa;
 	font-weight: bold;
 	font-size: 1.1em;
-	padding: 0 2px;
+	padding: 0 0cqw;
 	line-height: 1;
 	border-radius: 50%;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 16px;
-	height: 16px;
+	width: 2cqw;
+	height: 2cqw;
 }
 
 .delete-suggestion-btn:hover {
@@ -261,7 +262,7 @@
 	background-color: var(--p-color-1);
 	color: white;
 	border: none;
-	padding: 10px 30px;
+	padding: 1.2cqw 4cqw;
 	border-radius: 5px;
 	font-size: 3cqw;
 	cursor: pointer;
@@ -277,19 +278,24 @@
 	background-color: rgba(255, 255, 255, 0.1);
 	color: white;
 	border: 1px solid rgba(255, 255, 255, 0.3);
-	padding: 8px 15px;
+	padding: 1cqw 2cqw;
 	border-radius: 5px;
-	font-size: 1rem;
+	font-size: 2.2cqw;
 	cursor: pointer;
 	font-family: inherit;
 	width: 100%;
-	margin-top: 5px;
+	margin-top: 1cqw;
 	transition: background 0.2s;
 }
 
 .secondary-btn:hover {
 	background-color: rgba(255, 255, 255, 0.2);
 }
+
+.action-buttons {
+	padding-top: 0.8cqw;
+}
+/* ----------------------------------------------------------------------- */
 
 /* Updated Menu Icons */
 .icon-wrapper {
@@ -383,8 +389,8 @@
 
 .room-icon .beer-mini-group {
 	position: absolute;
-	bottom: -5px;
-	right: -5px;
+	bottom: -0.6cqw;
+	right: -0cqw;
 	width: 10cqw;
 	height: 10cqw;
 }

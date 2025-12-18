@@ -75,7 +75,7 @@ export class NewGameMenu {
 						<div class="beer left"></div>
 						<div class="beer right"></div>
 					</div>
-					<span>Juego local</span>
+					<span>Partida local</span>
 				</button>
 				<button id="randomOnlineBtn" class="menu-btn">
 					<div class="icon-wrapper map-icon"></div>
@@ -116,14 +116,15 @@ export class NewGameMenu {
 					</div>
 					
 					<div class="right-column">
-						<div class="add-player-group">
-							<input type="text" id="newGamePlayerName" placeholder="Nombre">
-							<button id="addPlayerToGameBtn" type="button"> <div class="inline-icon beer-icon-small"></div> Añadir</button>
+						<div style="flex: 1 1 auto;">
+							<div class="add-player-group">
+								<input type="text" id="newGamePlayerName" placeholder="Nombre">
+								<button id="addPlayerToGameBtn" type="button"> <div class="inline-icon beer-icon-small"></div> Añadir</button>
+							</div>
+							<div class="add-bot-group">
+								<button id="addBotBtn" type="button" class="secondary-btn">🤖 Añadir Bot</button>
+							</div>
 						</div>
-						<div class="add-bot-group">
-							<button id="addBotBtn" type="button" class="secondary-btn">Añadir Bot 🤖</button>
-						</div>
-						<div style="flex: 1 1 auto;"></div>
 						<div class="suggested-names-section">
 							<h4>Sugerencias</h4>
 							<div id="suggestedNamesList" class="suggested-list"></div>
@@ -132,7 +133,7 @@ export class NewGameMenu {
 				</div>
 
 				<div class="action-buttons">
-					<button id="startGameBtn" class="primary-btn" disabled>Comenzar Juego</button>
+					<button id="startGameBtn" class="primary-btn" disabled>Comenzar partida</button>
 				</div>
 			</div>
 		`;
