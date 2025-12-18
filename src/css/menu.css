@@ -17,6 +17,7 @@
 #menuContent {
 	width: 780px;
 	max-width: 100%;
+	height: 100%;
 	container-type: inline-size;
 	padding: 3%;
 }
@@ -56,14 +57,41 @@
 	background: rgba(255, 255, 255, 0.2);
 }
 
-.players-list-container {
-	margin-bottom: 20px;
+/* Local Game Setup Layout */
+.local-game-setup {
+	display: flex;
+	flex-direction: column;
+	gap: 1.6cqw;
+	height: 100%;
+}
+
+.setup-columns {
+	display: flex;
+	gap: 20px;
 	text-align: left;
-	max-height: 150px;
+	flex: 1 1 auto;
+}
+
+.left-column,
+.right-column {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 2cqw;
+}
+.right-column {
+	padding: 2.5cqw 0;
+}
+
+/* Players List */
+.players-list-container {
+	flex-grow: 1;
+	font-size: 3cqw;
 	overflow-y: auto;
 	background: rgba(0, 0, 0, 0.3);
-	padding: 10px;
+	padding: 1cqw;
 	border-radius: 5px;
+	border: 1px solid rgba(23, 15, 2, 0.5);
 }
 
 .players-list-container ul {
@@ -73,26 +101,160 @@
 }
 
 .players-list-container li {
-	padding: 5px;
+	padding: 1cqw 2cqw;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	color: white;
+	font-size: 1.1em;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.delete-player-btn {
+	background: none;
+	border: none;
+	color: #ff6b6b;
+	font-size: 1.2em;
+	cursor: pointer;
+	padding: 0 5px;
+	line-height: 1;
+	opacity: 0.7;
+	transition: opacity 0.2s;
+}
+
+.delete-player-btn:hover {
+	opacity: 1;
+}
+
+.no-players-warning {
+	color: #ffaa00;
+	text-align: center;
+	padding: 20px;
+}
+
+/* Right Column Elements */
+.beer-icon-small {
+	width: 3cqw;
+	height: 3cqw;
+	background-image: url('../assets/icons/beer.png');
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+.add-player-group {
+	display: flex;
+	width: 100%;
+}
+
+.add-player-group input {
+	flex-grow: 1;
+	padding: 10px;
+	font-size: 2.2cqw;
+	color: black;
+	border: none;
+	border-radius: 5px 0 0 5px;
+	outline: none;
+	max-width: 70%;
+}
+
+.add-player-group button {
+	display: flex;
+	gap: 0.4em;
+	border-radius: 0 5px 5px 0;
+	padding: 0 20px;
+	font-size: 2.2cqw;
+	line-height: 1;
+	margin: 0;
+	min-width: 50px;
+	border: none;
+	background-color: rgb(199, 146, 65);
+	font-family: inherit;
+	color: white;
+	align-items: center;
+	cursor: pointer;
+	font-weight: bold;
+}
+
+/* Suggested Names */
+.suggested-names-section {
+	width: 100%;
+}
+.suggested-names-section h4 {
+	margin: 0 0 10px 0;
+	color: var(--p-color-1);
+	font-size: 1em;
+}
+
+.suggested-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.5cqw;
+}
+
+.suggested-name-tag {
+	background: rgba(255, 255, 255, 0.1);
+	padding: 5px 8px 5px 12px;
+	border-radius: 15px;
+	font-size: 1.9cqw;
+	transition: background 0.2s;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	display: flex;
+	align-items: center;
+	gap: 1cqw;
+}
+
+.suggested-name-tag:hover {
+	background: rgba(255, 255, 255, 0.2);
+	border-color: var(--p-color-1);
+}
+
+.suggested-name-tag .name-text {
+	cursor: pointer;
+}
+
+.delete-suggestion-btn {
+	cursor: pointer;
+	color: #aaa;
+	font-weight: bold;
+	font-size: 1.1em;
+	padding: 0 2px;
+	line-height: 1;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+}
+
+.delete-suggestion-btn:hover {
+	color: #ff6b6b;
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.no-suggestions {
+	color: #aaa;
+	font-size: 0.9em;
+	text-shadow: 0 0 5px black;
 }
 
 .back-btn {
 	background: none;
 	border: none;
-	color: #aaa;
 	cursor: pointer;
-	font-size: 1rem;
-	margin-bottom: 10px;
 	display: block;
+	background: url(../assets/icons/back.png) no-repeat center center;
+	width: 5cqw;
+	height: 5cqw;
+	background-size: contain;
+	position: absolute;
+	top: 10px;
+	left: 10px;
 }
 
 .back-btn:hover {
 	color: white;
-}
-
-.action-buttons {
-	margin-top: 20px;
 }
 
 .primary-btn {
@@ -101,8 +263,9 @@
 	border: none;
 	padding: 10px 30px;
 	border-radius: 5px;
-	font-size: 1.2rem;
+	font-size: 3cqw;
 	cursor: pointer;
+	font-family: inherit;
 }
 
 .primary-btn:disabled {
@@ -211,33 +374,4 @@
 .room-icon .beer-mini-group .beer {
 	width: 5.5cqw;
 	height: 7cqw;
-}
-
-.add-player-group {
-	display: flex;
-	margin-bottom: 20px;
-	width: 100%;
-	justify-content: center;
-}
-
-.add-player-group input {
-	flex-grow: 1;
-	padding: 10px;
-	font-size: 16px;
-	color: black;
-	border: none;
-	border-radius: 5px 0 0 5px;
-	outline: none;
-	max-width: 70%;
-}
-
-.add-player-group button {
-	border-radius: 0 5px 5px 0;
-	padding: 0 20px;
-	font-size: 28px;
-	line-height: 1;
-	margin: 0;
-	min-width: 50px;
-	border: none;
-	background-color: rgb(199, 146, 65);
 }
