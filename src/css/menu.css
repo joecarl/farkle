@@ -1,0 +1,228 @@
+/* New Game Menu Styles */
+.new-game-menu-content {
+	text-align: center;
+	background: url(../assets/table.png) center center repeat-x;
+	border: 5px solid #341e15;
+	box-shadow: 0 0 33px rgba(0, 0, 0, 0.3) !important;
+	background-size: auto 142%;
+	aspect-ratio: 10 / 4.8;
+	max-height: min(90vh, 400px);
+	max-width: min(90vw, 900px);
+	width: auto;
+	height: auto;
+	overflow: hidden;
+	padding: 0;
+}
+
+#menuContent {
+	width: 780px;
+	max-width: 100%;
+	container-type: inline-size;
+	padding: 3%;
+}
+
+.new-game-menu-content h2 {
+	margin: 0;
+	font-size: 4cqw;
+}
+
+.menu-buttons {
+	display: flex;
+	justify-content: space-evenly;
+	gap: 1.5cqw;
+	margin-top: 2cqw;
+}
+
+.menu-btn {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 2cqw;
+	padding: 1.5cqw 2cqw;
+	background: transparent;
+	border: none;
+	border-radius: 10px;
+	color: white;
+	font-family: inherit;
+	cursor: pointer;
+	transition: background 0.2s;
+	font-size: 4cqw;
+}
+
+.menu-btn:hover {
+	background: rgba(255, 255, 255, 0.2);
+}
+
+.players-list-container {
+	margin-bottom: 20px;
+	text-align: left;
+	max-height: 150px;
+	overflow-y: auto;
+	background: rgba(0, 0, 0, 0.3);
+	padding: 10px;
+	border-radius: 5px;
+}
+
+.players-list-container ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.players-list-container li {
+	padding: 5px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.back-btn {
+	background: none;
+	border: none;
+	color: #aaa;
+	cursor: pointer;
+	font-size: 1rem;
+	margin-bottom: 10px;
+	display: block;
+}
+
+.back-btn:hover {
+	color: white;
+}
+
+.action-buttons {
+	margin-top: 20px;
+}
+
+.primary-btn {
+	background-color: var(--p-color-1);
+	color: white;
+	border: none;
+	padding: 10px 30px;
+	border-radius: 5px;
+	font-size: 1.2rem;
+	cursor: pointer;
+}
+
+.primary-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* Updated Menu Icons */
+.icon-wrapper {
+	width: 24cqw;
+	height: 24cqw;
+	position: relative;
+	flex-shrink: 0;
+}
+
+.map-icon {
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-image: url('../assets/map.png');
+}
+
+/* Beer Toast Animation */
+.beer-toast {
+	position: relative;
+}
+
+.beer {
+	position: absolute;
+	width: 16cqw;
+	height: 16cqw;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	bottom: 1cqw;
+	transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.beer::before {
+	content: '';
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-image: url('../assets/icons/beer.png');
+	top: 0;
+	left: 0;
+}
+
+.beer.left {
+	left: 0;
+	transform-origin: bottom left;
+	transform: rotate(-15deg) translateY(-5%);
+}
+
+.beer.right {
+	right: 0;
+	transform-origin: bottom right;
+	transform: rotate(15deg) translateY(-15%);
+}
+.beer.right::before {
+	transform: scaleX(-1);
+}
+
+.menu-btn:hover .beer.left {
+	transform: rotate(10deg) translateX(-15%) translateY(-35%);
+}
+
+.menu-btn:hover .beer.right {
+	transform: rotate(-10deg) translateX(15%) translateY(-35%);
+}
+
+/* Room Icon (Map + Mini Beers) */
+.room-icon .map-bg {
+	width: 100%;
+	height: 100%;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	opacity: 0.8;
+	background-image: url('../assets/map.png');
+}
+
+.room-icon .beer-mini-group {
+	position: absolute;
+	bottom: -5px;
+	right: -5px;
+	width: 10cqw;
+	height: 10cqw;
+}
+
+.room-icon .beer-mini-group .beer {
+	width: 5cqw;
+	height: 7cqw;
+}
+
+.add-player-group {
+	display: flex;
+	margin-bottom: 20px;
+	width: 100%;
+	justify-content: center;
+}
+
+.add-player-group input {
+	flex-grow: 1;
+	padding: 10px;
+	font-size: 16px;
+	color: black;
+	border: none;
+	border-radius: 5px 0 0 5px;
+	outline: none;
+	max-width: 70%;
+}
+
+.add-player-group button {
+	border-radius: 0 5px 5px 0;
+	padding: 0 20px;
+	font-size: 28px;
+	line-height: 1;
+	margin: 0;
+	min-width: 50px;
+	border: none;
+	background-color: rgb(199, 146, 65);
+}
