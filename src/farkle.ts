@@ -827,7 +827,11 @@ export class FarkleGame {
 		this.previousTurnScore = gameState.turnScore;
 
 		this.playersList.innerHTML = gameState.players
-			.map((p, i) => `<li style="${i === activeIndex ? 'font-weight: bold; color: var(--p-color-1);' : ''}">${p.name}: ${p.score}</li>`)
+			.map(
+				(p, i) => `<li style="${i === activeIndex ? 'font-weight: bold; color: var(--p-color-1);' : ''}">
+				<span class="players-list-player-name">${p.name}</span> <span>${p.score} p</span>
+			</li>`
+			)
 			.join('');
 	}
 
