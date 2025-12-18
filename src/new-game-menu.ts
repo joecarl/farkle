@@ -43,7 +43,8 @@ export class NewGameMenu {
 			<h2>Nuevo Juego</h2>
 			<div class="menu-buttons">
 				<button id="localGameBtn" class="menu-btn">
-					<div class="icon-wrapper beer-toast">
+					<div class="icon-wrapper beer-toast">					
+						<div class="shield-bg"></div>
 						<div class="beer left"></div>
 						<div class="beer right"></div>
 					</div>
