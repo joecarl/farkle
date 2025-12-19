@@ -401,10 +401,10 @@
 	width: 10cqw;
 	height: 10cqw;
 	transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-	transform: rotate(1deg) translateY(-1cqw);
+	transform: rotate(10deg) translateY(-1cqw) translateX(-0.5cqw);
 }
 .online-random-icon:hover .compass-mini-group {
-	transform: rotate(20deg) translateY(-2cqw);
+	transform: rotate(25deg) translateY(-1.8cqw) translateX(0);
 }
 
 .online-random-icon .compass-mini-group .compass-base {
@@ -413,6 +413,7 @@
 	background: url('../assets/icons/compass-base.png') no-repeat center center;
 	background-size: contain;
 	position: absolute;
+	filter: drop-shadow(0 0 0.4cqw #00000037);
 }
 
 .online-random-icon .compass-mini-group .compass-arrow {
@@ -424,10 +425,11 @@
 	top: 38%;
 	left: 20%;
 	transition: all 0.3s ease;
+	filter: drop-shadow(0 0 0.4cqw #000c);
 }
 
 .online-random-icon:hover .compass-mini-group .compass-arrow {
-	transform: rotate(180deg);
+	transform: rotate(120deg);
 }
 
 /* Online Setup */
