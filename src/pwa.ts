@@ -1,3 +1,5 @@
+import { isMobile } from './utils';
+
 export class PWAManager {
 	private deferredPrompt: any;
 	private installBtn: HTMLButtonElement;
@@ -45,7 +47,7 @@ export class PWAManager {
 
 	private checkInstallationStatus() {
 		// Detect Mobile
-		this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+		this.isMobile = isMobile();
 		// Detect iOS
 		const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
 		// Check if running in standalone mode (already installed)

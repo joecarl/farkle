@@ -1,4 +1,8 @@
 import type { Player } from './types';
+import { mobileDelayedClick } from './utils';
+
+const FARKLE_SUGGESTED_NAMES = 'farkle.suggestedNames';
+const FARKLE_USERNAME = 'farkle.username';
 
 export class NewGameMenu {
 	private modal: HTMLDivElement;
@@ -16,7 +20,7 @@ export class NewGameMenu {
 
 	private loadSuggestedNames() {
 		try {
-			const stored = localStorage.getItem('farkle_suggested_names');
+			const stored = localStorage.getItem(FARKLE_SUGGESTED_NAMES);
 			if (stored) {
 				this.suggestedNames = JSON.parse(stored);
 			}
@@ -32,7 +36,7 @@ export class NewGameMenu {
 	private saveSuggestedName(name: string) {
 		if (!this.suggestedNames.includes(name)) {
 			this.suggestedNames.push(name);
-			localStorage.setItem('farkle_suggested_names', JSON.stringify(this.suggestedNames));
+			localStorage.setItem(FARKLE_SUGGESTED_NAMES, JSON.stringify(this.suggestedNames));
 			this.renderSuggestedNames();
 		}
 	}
@@ -94,9 +98,169 @@ export class NewGameMenu {
 			</div>
 		`;
 
-		container.querySelector('#localGameBtn')!.addEventListener('click', () => this.renderLocalGameSetup());
-		container.querySelector('#randomOnlineBtn')!.addEventListener('click', () => console.log('Random Online clicked'));
-		container.querySelector('#roomOnlineBtn')!.addEventListener('click', () => console.log('Room Online clicked'));
+		mobileDelayedClick(container.querySelector('#localGameBtn')!, () => {
+			this.renderLocalGameSetup();
+		});
+		mobileDelayedClick(container.querySelector('#randomOnlineBtn')!, () => {
+			this.renderRandomOnlineSetup();
+		});
+		mobileDelayedClick(container.querySelector('#roomOnlineBtn')!, () => {
+			this.renderRoomOnlineSetup();
+		});
+	}
+
+	private getStoredUsername(): string {
+		return localStorage.getItem(FARKLE_USERNAME) || '';
+	}
+
+	private setStoredUsername(name: string) {
+		localStorage.setItem(FARKLE_USERNAME, name);
+	}
+
+	private renderRandomOnlineSetup() {
+		const container = this.modal.querySelector('#menuContent')!;
+		const storedName = this.getStoredUsername();
+
+		container.innerHTML = `
+			<div class="online-setup">
+				<button id="backToMenuBtn" class="back-btn"></button>
+				<h2>Aleatorio Online</h2>
+				<div class="input-group">
+					<label for="onlineUsername">Nombre de usuario</label>
+					<input type="text" id="onlineUsername" value="${storedName}" placeholder="Tu nombre">
+				</div>
+				<div class="action-buttons">
+					<button id="searchMatchBtn" class="primary-btn">Buscar partida</button>
+				</div>
+			</div>
+		`;
+
+		const backBtn = container.querySelector('#backToMenuBtn') as HTMLButtonElement;
+		const searchBtn = container.querySelector('#searchMatchBtn') as HTMLButtonElement;
+		const nameInput = container.querySelector('#onlineUsername') as HTMLInputElement;
+
+		backBtn.addEventListener('click', () => this.renderMainMenu());
+
+		searchBtn.addEventListener('click', () => {
+			const name = nameInput.value.trim();
+			if (name) {
+				this.setStoredUsername(name);
+				console.log('Searching match for:', name);
+				// TODO: Implement search match logic
+			} else {
+				nameInput.focus();
+			}
+		});
+	}
+
+	private renderRoomOnlineSetup() {
+		const container = this.modal.querySelector('#menuContent')!;
+
+		container.innerHTML = `
+			<div class="online-setup">
+				<button id="backToMenuBtn" class="back-btn"></button>
+				<h2>Sala Online</h2>
+				<div class="menu-buttons">
+					<button id="createRoomBtn" class="menu-btn">
+						<span>Crear sala</span>
+					</button>
+					<button id="joinRoomBtn" class="menu-btn">
+						<span>Unirse a sala</span>
+					</button>
+				</div>
+			</div>
+		`;
+
+		const backBtn = container.querySelector('#backToMenuBtn') as HTMLButtonElement;
+		backBtn.addEventListener('click', () => this.renderMainMenu());
+
+		container.querySelector('#createRoomBtn')!.addEventListener('click', () => this.renderCreateRoomSetup());
+		container.querySelector('#joinRoomBtn')!.addEventListener('click', () => this.renderJoinRoomSetup());
+	}
+
+	private renderCreateRoomSetup() {
+		const container = this.modal.querySelector('#menuContent')!;
+		const storedName = this.getStoredUsername();
+
+		container.innerHTML = `
+			<div class="online-setup">
+				<button id="backToRoomMenuBtn" class="back-btn"></button>
+				<h2>Crear Sala</h2>
+				<div class="input-group">
+					<label for="onlineUsername">Nombre de usuario</label>
+					<input type="text" id="onlineUsername" value="${storedName}" placeholder="Tu nombre">
+				</div>
+				<div class="action-buttons">
+					<button id="doCreateRoomBtn" class="primary-btn">Crear sala</button>
+				</div>
+			</div>
+		`;
+
+		const backBtn = container.querySelector('#backToRoomMenuBtn') as HTMLButtonElement;
+		const createBtn = container.querySelector('#doCreateRoomBtn') as HTMLButtonElement;
+		const nameInput = container.querySelector('#onlineUsername') as HTMLInputElement;
+
+		backBtn.addEventListener('click', () => this.renderRoomOnlineSetup());
+
+		createBtn.addEventListener('click', () => {
+			const name = nameInput.value.trim();
+			if (name) {
+				this.setStoredUsername(name);
+				console.log('Creating room for:', name);
+				// TODO: Implement create room logic
+			} else {
+				nameInput.focus();
+			}
+		});
+	}
+
+	private renderJoinRoomSetup() {
+		const container = this.modal.querySelector('#menuContent')!;
+		const storedName = this.getStoredUsername();
+
+		container.innerHTML = `
+			<div class="online-setup">
+				<button id="backToRoomMenuBtn" class="back-btn"></button>
+				<h2>Unirse a Sala</h2>
+				<div class="input-group">
+					<label for="onlineUsername">Nombre de usuario</label>
+					<input type="text" id="onlineUsername" value="${storedName}" placeholder="Tu nombre">
+				</div>
+				<div class="input-group">
+					<label for="roomCode">Código de sala</label>
+					<input type="text" id="roomCode" placeholder="Código">
+				</div>
+				<div class="action-buttons">
+					<button id="doJoinRoomBtn" class="primary-btn">Entrar en la sala</button>
+				</div>
+			</div>
+		`;
+
+		const backBtn = container.querySelector('#backToRoomMenuBtn') as HTMLButtonElement;
+		const joinBtn = container.querySelector('#doJoinRoomBtn') as HTMLButtonElement;
+		const nameInput = container.querySelector('#onlineUsername') as HTMLInputElement;
+		const codeInput = container.querySelector('#roomCode') as HTMLInputElement;
+
+		backBtn.addEventListener('click', () => this.renderRoomOnlineSetup());
+
+		joinBtn.addEventListener('click', () => {
+			const name = nameInput.value.trim();
+			const code = codeInput.value.trim();
+
+			if (!name) {
+				nameInput.focus();
+				return;
+			}
+
+			if (!code) {
+				codeInput.focus();
+				return;
+			}
+
+			this.setStoredUsername(name);
+			console.log('Joining room:', code, 'as', name);
+			// TODO: Implement join room logic
+		});
 	}
 
 	private renderLocalGameSetup() {
@@ -206,7 +370,7 @@ export class NewGameMenu {
 
 	private removeSuggestedName(name: string) {
 		this.suggestedNames = this.suggestedNames.filter((n) => n !== name);
-		localStorage.setItem('farkle_suggested_names', JSON.stringify(this.suggestedNames));
+		localStorage.setItem(FARKLE_SUGGESTED_NAMES, JSON.stringify(this.suggestedNames));
 		this.renderSuggestedNames();
 	}
 

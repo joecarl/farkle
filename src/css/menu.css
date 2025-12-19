@@ -202,7 +202,7 @@
 	border: 1px solid rgba(255, 255, 255, 0.2);
 	display: flex;
 	align-items: center;
-	gap: 1cqw;
+	gap: 2.5cqw;
 }
 
 .suggested-name-tag:hover {
@@ -218,8 +218,8 @@
 	cursor: pointer;
 	color: #aaa;
 	font-weight: bold;
-	font-size: 1.1em;
-	padding: 0 0cqw;
+	font-size: 1.4em;
+	padding: 0;
 	line-height: 1;
 	border-radius: 50%;
 	display: inline-flex;
@@ -398,4 +398,41 @@
 .room-icon .beer-mini-group .beer {
 	width: 5.5cqw;
 	height: 7cqw;
+}
+
+/* Online Setup */
+.online-setup {
+	display: flex;
+	flex-direction: column;
+	gap: 2cqw;
+	height: 100%;
+	align-items: center;
+	justify-content: center;
+}
+
+.input-group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5cqw;
+	width: 100%;
+	max-width: 400px;
+	text-align: left;
+}
+
+.input-group label {
+	color: var(--p-color-1);
+	font-size: 3cqw;
+	text-shadow: 0 0 5px black;
+}
+
+.input-group input {
+	padding: 1cqw;
+	font-size: 3cqw;
+	border-radius: 5px;
+	border: 1px solid #ccc;
+	background: rgba(255, 255, 255, 0.9);
+}
+
+.online-setup .action-buttons {
+	margin-top: 2cqw;
 }
