@@ -137,6 +137,13 @@ export class FarkleGame {
 					<button id="bankBtn" class="icon-btn" type="button" disabled title="Terminar turno"></button>
 				</div>
 					
+			</div>			
+
+			<div class="disco-lights hidden">
+				<div class="haz rojo"></div>
+				<div class="haz azul"></div>
+				<div class="haz verde"></div>
+				<div class="haz morado"></div>
 			</div>
 		`;
 	}

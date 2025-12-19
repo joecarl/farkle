@@ -1,0 +1,62 @@
+.disco-lights {
+	position: fixed;
+	width: 100vw;
+	height: 100vh;
+	top: 0;
+	transform-origin: top center;
+	opacity: 0.5;
+	background-color: rgba(255, 0, 0, 0.4);
+	animation: easterEggPulse 0.3s ease-in-out infinite, easterEggHueRotate 5s linear infinite;
+	pointer-events: none;
+}
+
+/* HAZ BASE */
+.haz {
+	position: absolute;
+	top: -20%;
+	left: 50%;
+	width: 60vmin;
+	height: 140vmin;
+	transform-origin: top center;
+	clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+	filter: blur(6px);
+	opacity: 0.4;
+	animation: mover 6s linear infinite;
+}
+
+/* COLORES */
+.rojo {
+	background: linear-gradient(to bottom, rgba(255, 60, 60, 0.9), rgba(255, 60, 60, 0));
+	animation-delay: 0s;
+}
+
+.azul {
+	background: linear-gradient(to bottom, rgba(80, 80, 255, 0.9), rgba(80, 80, 255, 0));
+	animation-delay: -2s;
+}
+
+.verde {
+	background: linear-gradient(to bottom, rgba(80, 255, 120, 0.9), rgba(80, 255, 120, 0));
+	animation-delay: -4s;
+}
+
+.morado {
+	background: linear-gradient(to bottom, rgba(180, 80, 255, 0.9), rgba(180, 80, 255, 0));
+	animation-delay: -6s;
+}
+
+/* MOVIMIENTO */
+@keyframes mover {
+	0% {
+		transform: translateX(-50%) rotate(-30deg);
+		opacity: 0.2;
+	}
+	50% {
+		transform: translateX(-50%) rotate(30deg);
+		opacity: 0.6;
+	}
+	100% {
+		transform: translateX(-50%) rotate(-30deg);
+		opacity: 0.2;
+	}
+}

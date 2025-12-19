@@ -109,6 +109,7 @@ export class AudioManager {
 	}
 
 	toggleEasterEggTrack() {
+		document.querySelector('.disco-lights')!.classList.toggle('hidden');
 		if (!this.easterEgg) return;
 		let tracks = [];
 		if (this.playingEasterEgg) {
