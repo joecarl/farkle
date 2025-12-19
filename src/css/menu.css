@@ -305,13 +305,6 @@
 	flex-shrink: 0;
 }
 
-.map-icon {
-	background-size: contain;
-	background-repeat: no-repeat;
-	background-position: center;
-	background-image: url('../assets/map.png');
-}
-
 /* Beer Toast Animation */
 .beer-toast {
 	position: relative;
@@ -376,8 +369,9 @@
 	box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
 }
 
-/* Room Icon (Map + Mini Beers) */
-.room-icon .map-bg {
+/* Room Icon (Map + Mini Beers) + Online Random Icon (Map + Compass) */
+.room-icon .map-bg,
+.online-random-icon .map-bg {
 	width: 100%;
 	height: 100%;
 	background-size: contain;
@@ -398,6 +392,42 @@
 .room-icon .beer-mini-group .beer {
 	width: 5.5cqw;
 	height: 7cqw;
+}
+
+.online-random-icon .compass-mini-group {
+	position: absolute;
+	bottom: -0.6cqw;
+	right: -0cqw;
+	width: 10cqw;
+	height: 10cqw;
+	transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	transform: rotate(1deg) translateY(-1cqw);
+}
+.online-random-icon:hover .compass-mini-group {
+	transform: rotate(20deg) translateY(-2cqw);
+}
+
+.online-random-icon .compass-mini-group .compass-base {
+	width: 8cqw;
+	height: 10cqw;
+	background: url('../assets/icons/compass-base.png') no-repeat center center;
+	background-size: contain;
+	position: absolute;
+}
+
+.online-random-icon .compass-mini-group .compass-arrow {
+	width: 4cqw;
+	height: 4cqw;
+	background: url('../assets/icons/compass-arrow.png') no-repeat center center;
+	background-size: contain;
+	position: absolute;
+	top: 38%;
+	left: 20%;
+	transition: all 0.3s ease;
+}
+
+.online-random-icon:hover .compass-mini-group .compass-arrow {
+	transform: rotate(180deg);
 }
 
 /* Online Setup */

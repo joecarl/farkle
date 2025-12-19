@@ -82,7 +82,13 @@ export class NewGameMenu {
 					<span>Partida local</span>
 				</button>
 				<button id="randomOnlineBtn" class="menu-btn">
-					<div class="icon-wrapper map-icon"></div>
+					<div class="icon-wrapper online-random-icon">
+						<div class="map-bg"></div>
+						<div class="compass-mini-group">
+							<div class="compass-base"></div>
+							<div class="compass-arrow"></div>
+						</div>
+					</div>
 					<span>Aleatorio online</span>
 				</button>
 				<button id="roomOnlineBtn" class="menu-btn">
