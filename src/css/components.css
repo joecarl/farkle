@@ -1,20 +1,40 @@
 .score-display {
-	font-size: clamp(14px, 2vw, 30px);
+	font-size: clamp(18px, 2.5vmin, 50px);
 	font-weight: bold;
 	color: rgb(252, 240, 218);
 	display: flex;
 	align-items: center;
-	gap: 15px;
-	text-shadow: 0px 0 10px rgba(0, 0, 0, 1);
+	gap: 1vmin;
+	text-shadow: 0px 0 1vmin rgb(0, 0, 0);
 	background-color: rgba(65, 50, 18, 0.556);
-	padding: 0.8vw 1.6vw;
-	border: 2px solid var(--p-color-1);
-	border-radius: 0.8em;
+	padding: 0.6vw 1.6vw 0.5vw 1.6vw;
+	border: 0.2vw solid var(--p-color-1);
+	border-radius: 1.5vmin;
 }
 
 .score-display .separator {
 	color: rgba(255, 255, 255, 0.5);
 	font-weight: normal;
+}
+
+.score-display .score-label {
+	padding: 0 0.6em;
+	border-radius: 1vmin;
+}
+
+.score-display .score-label::after {
+	content: ' :';
+	opacity: 0.8;
+}
+
+.score-display .player-name {
+	color: var(--p-color-1);
+}
+
+.score-display .score-value::after {
+	content: ' p';
+	opacity: 0.8;
+	font-size: 0.8em;
 }
 
 #topBarTotalScore {
@@ -156,7 +176,7 @@
 
 /* Easter Egg */
 .easter-egg-festive {
-	animation: easterEggPulse 0.3s ease-in-out infinite, easterEggHueRotate 5s linear infinite;
+	animation: easterEggPulse var(--track-pulse) ease-in-out infinite, easterEggHueRotate 5s linear infinite;
 }
 
 @keyframes easterEggPulse {

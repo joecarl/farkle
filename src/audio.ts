@@ -1,8 +1,10 @@
+type Track = string | { src: string; title?: string; artist?: string; pulse?: number };
+
 interface IAudioConfig {
-	tracks: string[];
+	tracks: Track[];
 	easterEgg?: {
 		enabled: boolean;
-		tracks: string[];
+		tracks: Track[];
 		chance: number;
 		image: string;
 	};
@@ -16,9 +18,9 @@ export class AudioManager {
 	private shakeSounds: HTMLAudioElement[] = [];
 	private rollSounds: HTMLAudioElement[] = [];
 	private _muted: boolean = false;
-	private easterEgg?: { imageUrl: string; tracks: string[] };
+	private easterEgg?: { imageUrl: string; tracks: Track[] };
 	private playingEasterEgg: boolean = false;
-	private tracks: string[] = [];
+	private tracks: Track[] = [];
 
 	constructor() {
 		this.audio = new Audio();
@@ -62,15 +64,14 @@ export class AudioManager {
 		const easterImage = easterConfig?.image ?? '';
 
 		if (tracks.length > 0) {
-			this.tracks = tracks.map((t) => `${this.baseUrl}/${t}`);
+			this.tracks = tracks;
 			const randomTrack = this.tracks[Math.floor(Math.random() * tracks.length)];
-			this.audio.src = randomTrack;
+			this.setCurrentTrack(randomTrack);
 		}
 
 		if (easterEnabled && easterTracks.length > 0 && Math.random() < easterChance) {
-			const parsedTracks = easterTracks.map((t) => `${this.baseUrl}/${t}`);
 			const imageUrl = easterImage ? `${this.baseUrl}/${easterImage}` : '';
-			this.easterEgg = { imageUrl, tracks: parsedTracks };
+			this.easterEgg = { imageUrl, tracks: easterTracks };
 		}
 
 		// Start music on first interaction with the page if not started
@@ -108,6 +109,16 @@ export class AudioManager {
 		return this.easterEgg ? { imageUrl: this.easterEgg.imageUrl } : null;
 	}
 
+	private setCurrentTrack(track: Track) {
+		if (typeof track === 'string') {
+			this.audio.src = this.baseUrl + '/' + track;
+		} else {
+			this.audio.src = this.baseUrl + '/' + track.src;
+			document.documentElement.style.setProperty('--track-pulse', String(track.pulse ?? 0));
+		}
+		this.audio.currentTime = 0;
+	}
+
 	toggleEasterEggTrack() {
 		document.querySelector('.disco-lights')!.classList.toggle('hidden');
 		if (!this.easterEgg) return;
@@ -119,8 +130,7 @@ export class AudioManager {
 		}
 		this.playingEasterEgg = !this.playingEasterEgg;
 		const randomTrack = tracks[Math.floor(Math.random() * tracks.length)];
-		this.audio.src = randomTrack;
-		this.audio.currentTime = 0;
+		this.setCurrentTrack(randomTrack);
 		this.audio.play().catch((e) => console.log('Toggle easter egg failed', e));
 	}
 

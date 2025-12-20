@@ -100,9 +100,11 @@ export class FarkleGame {
 					<button id="debugBtn" class="icon-btn hidden" type="button" title="Herramientas de Debug"></button>
 					<button id="musicBtn" class="icon-btn" type="button" title="Música"></button>
 					<div class="score-display">
-						<span id="topBarPlayerName">Player 1</span>: <span id="topBarTotalScore">0</span>
+						<span id="topBarPlayerName" class="score-label player-name">Player 1</span>
+						<span id="topBarTotalScore" class="score-value">0</span>
 						<span class="separator">|</span>
-						Turno: <span id="topBarTurnScore">0</span>
+						<span class="score-label">Turno</span>
+						<span id="topBarTurnScore" class="score-value">0</span>
 					</div>
 					
 					<div style="flex: 1 1 auto"></div>
@@ -143,7 +145,6 @@ export class FarkleGame {
 				<div class="haz rojo"></div>
 				<div class="haz azul"></div>
 				<div class="haz verde"></div>
-				<div class="haz morado"></div>
 			</div>
 		`;
 	}

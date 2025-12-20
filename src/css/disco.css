@@ -1,12 +1,12 @@
 .disco-lights {
+	--transparency: 0.25;
 	position: fixed;
 	width: 100vw;
 	height: 100vh;
 	top: 0;
 	transform-origin: top center;
-	opacity: 0.5;
-	background-color: rgba(255, 0, 0, 0.4);
-	animation: easterEggPulse 0.3s ease-in-out infinite, easterEggHueRotate 5s linear infinite;
+	background-color: rgba(255, 0, 0, var(--transparency));
+	animation: easterEggHueRotate 5s linear infinite;
 	pointer-events: none;
 }
 
@@ -14,49 +14,47 @@
 .haz {
 	position: absolute;
 	top: -20%;
-	left: 50%;
-	width: 60vmin;
+	width: 100vmin;
 	height: 140vmin;
 	transform-origin: top center;
 	clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-	filter: blur(6px);
-	opacity: 0.4;
-	animation: mover 6s linear infinite;
+	--flash-pulse: calc(var(--track-pulse) / 2);
+
+	animation: flash var(--flash-pulse) linear infinite;
 }
 
 /* COLORES */
 .rojo {
-	background: linear-gradient(to bottom, rgba(255, 60, 60, 0.9), rgba(255, 60, 60, 0));
+	background: linear-gradient(to bottom, rgba(255, 210, 210, var(--transparency)), rgba(255, 60, 60, 0));
 	animation-delay: 0s;
+	left: 0%;
+	transform: translateX(-50%) rotate(-26deg);
 }
 
 .azul {
-	background: linear-gradient(to bottom, rgba(80, 80, 255, 0.9), rgba(80, 80, 255, 0));
-	animation-delay: -2s;
+	background: linear-gradient(to bottom, rgba(210, 210, 255, var(--transparency)), rgba(80, 80, 255, 0));
+	animation-delay: calc(var(--flash-pulse) / 1.5);
+	display: none;
+	left: 110%;
+	top: 15%;
+	transform: translateX(-50%) rotate(50deg);
 }
 
 .verde {
-	background: linear-gradient(to bottom, rgba(80, 255, 120, 0.9), rgba(80, 255, 120, 0));
-	animation-delay: -4s;
-}
-
-.morado {
-	background: linear-gradient(to bottom, rgba(180, 80, 255, 0.9), rgba(180, 80, 255, 0));
-	animation-delay: -6s;
+	background: linear-gradient(to bottom, rgba(210, 255, 210, var(--transparency)), rgba(80, 255, 120, 0));
+	animation-delay: calc(var(--flash-pulse) * 2 / 1.5);
+	left: 100%;
+	transform: translateX(-50%) rotate(26deg);
 }
 
 /* MOVIMIENTO */
-@keyframes mover {
-	0% {
-		transform: translateX(-50%) rotate(-30deg);
-		opacity: 0.2;
+@keyframes flash {
+	0%,
+	20% {
+		visibility: visible;
 	}
-	50% {
-		transform: translateX(-50%) rotate(30deg);
-		opacity: 0.6;
-	}
+	21%,
 	100% {
-		transform: translateX(-50%) rotate(-30deg);
-		opacity: 0.2;
+		visibility: hidden;
 	}
 }
