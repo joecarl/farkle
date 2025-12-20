@@ -214,6 +214,7 @@
 	align-items: center;
 	gap: 1em;
 	cursor: pointer;
+	white-space: nowrap;
 }
 
 .suggested-name-tag:hover {
