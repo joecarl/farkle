@@ -14,6 +14,7 @@ export interface Player {
 	name: string;
 	score: number;
 	isBot?: boolean;
+	id?: string;
 }
 
 export interface GameState {
