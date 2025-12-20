@@ -1,7 +1,8 @@
 import { io, Socket } from 'socket.io-client';
 import { DEFAULT_SCORE_GOAL } from './logic';
+import { getPathname } from './utils';
 
-const SERVER_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : `http://${window.location.hostname}:3000`;
+const SERVER_URL = import.meta.env.DEV ? 'http://localhost:3000' : location.origin;
 
 export class OnlineManager {
 	private socket: Socket;
@@ -19,7 +20,8 @@ export class OnlineManager {
 	public onError?: (data: { message: string }) => void;
 
 	private constructor() {
-		this.socket = io(SERVER_URL);
+		const socketPath = getPathname() + '/socket.io';
+		this.socket = io(SERVER_URL, { path: socketPath });
 		this.setupListeners();
 	}
 

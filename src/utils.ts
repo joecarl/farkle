@@ -35,3 +35,10 @@ export function mobileDelayedClick(btn: HTMLElement, handler: () => void, delay:
 		}
 	});
 }
+
+export function getPathname(): string {
+	let pn = location.pathname;
+	const lastPos = pn.length - 1;
+	if (pn[lastPos] === '/') pn = pn.substring(0, lastPos);
+	return pn;
+}
