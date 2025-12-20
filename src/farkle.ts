@@ -212,6 +212,7 @@ export class FarkleGame {
 
 			switch (data.action) {
 				case 'roll':
+					console.log('Received remote roll action', data.payload);
 					this.rollDice(true, data.payload.values, data.payload.positions);
 					break;
 				case 'bank':
@@ -368,11 +369,31 @@ export class FarkleGame {
 			return;
 		}
 
+		// Get dice that should be rolled
+		const diceToRoll = this.dice.filter((_, i) => rolledIndices.includes(i));
+
+		// Pre-calculate positions for online sync
+		this.repositionDice(diceToRoll, forcedPositions);
+		const calculatedPositions = new Map<number, THREE.Vector3>();
+		diceToRoll.forEach((d) => {
+			if (d.targetPosition) {
+				calculatedPositions.set(d.diceIndex, d.targetPosition.clone());
+			}
+		});
+
+		if (this.isOnline && !isRemote && this.roomId) {
+			const values = rolledIndices.map((i) => this.logic.getDice()[i].value);
+			const positions: DicePositions = {};
+			calculatedPositions.forEach((pos, index) => {
+				positions[index] = pos;
+			});
+			this.onlineManager.sendGameAction(this.roomId, 'roll', { values, positions });
+		}
+
 		// Animate collection of dice to be rolled
-		const diceToCollect = this.dice.filter((_, i) => rolledIndices.includes(i));
 		const collectionPoint = new THREE.Vector3(10, 0, 10);
 
-		diceToCollect.forEach((die) => {
+		diceToRoll.forEach((die) => {
 			die.collecting = true;
 			die.targetPosition = collectionPoint.clone();
 			die.targetPosition.x += Math.random() * 4;
@@ -381,7 +402,7 @@ export class FarkleGame {
 
 		await sleep(500);
 
-		if (diceToCollect.length > 1) {
+		if (diceToRoll.length > 1) {
 			// Play shake sound
 			this.audioManager?.playShake();
 			await sleep(900);
@@ -391,26 +412,15 @@ export class FarkleGame {
 		// Sync state (locks might have changed), but don't update score yet (keep "at risk" score visible)
 		this.syncDiceState(false);
 
-		// Get dice that should be rolled
-		const diceToRoll = this.dice.filter((_, i) => rolledIndices.includes(i));
-
 		// Play roll sound
 		await sleep(200);
 		this.audioManager?.playRoll(diceToRoll.length);
 
-		// Reposition rolling dice randomly
-		this.repositionDice(diceToRoll, forcedPositions);
-
-		if (this.isOnline && !isRemote && this.roomId) {
-			const values = rolledIndices.map((i) => this.logic.getDice()[i].value);
-			const positions: DicePositions = {};
-			diceToRoll.forEach((d) => {
-				if (d.targetPosition) {
-					positions[d.diceIndex] = d.targetPosition;
-				}
-			});
-			this.onlineManager.sendGameAction(this.roomId, 'roll', { values, positions });
-		}
+		// Restore calculated positions
+		diceToRoll.forEach((d) => {
+			const pos = calculatedPositions.get(d.diceIndex);
+			if (pos) d.targetPosition = pos;
+		});
 
 		// Start rolling animation with 3D effect
 		diceToRoll.forEach((die) => {
@@ -429,7 +439,7 @@ export class FarkleGame {
 	}
 
 	private repositionDice(diceToRoll: VisualDie[], forcedPositions?: DicePositions) {
-		const lockedDice = this.dice.filter((d) => d.selected || d.locked);
+		const lockedDice = this.dice.filter((d) => !diceToRoll.includes(d));
 		const occupiedPositions: THREE.Vector3[] = [];
 
 		// Get positions of locked dice
@@ -604,9 +614,7 @@ export class FarkleGame {
 			this.bankBtn.disabled = true;
 			this.rollBtn.disabled = true;
 		} else {
-			const gameState = this.logic.getGameState();
-			this.bankBtn.disabled = !gameState.canBank || this.actionsDisabled;
-			this.rollBtn.disabled = !gameState.canRoll || this.actionsDisabled;
+			this.updateButtonsState();
 		}
 
 		requestAnimationFrame((t) => this.animate(t));
@@ -1015,10 +1023,17 @@ export class FarkleGame {
 		}
 	}
 
+	private isControlableTurn(): boolean {
+		if (!this.isOnline) return true;
+		const gameState = this.logic.getGameState();
+		return gameState.players[gameState.currentPlayerIndex].id === this.onlineManager.getSocketId();
+	}
+
 	private updateButtonsState() {
 		const gameState = this.logic.getGameState();
-		this.bankBtn.disabled = !gameState.canBank || this.actionsDisabled;
-		this.rollBtn.disabled = !gameState.canRoll || this.actionsDisabled;
+		const isTurn = this.isControlableTurn();
+		this.bankBtn.disabled = !gameState.canBank || this.actionsDisabled || !isTurn;
+		this.rollBtn.disabled = !gameState.canRoll || this.actionsDisabled || !isTurn;
 	}
 
 	private collectDice() {
