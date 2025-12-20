@@ -1,5 +1,7 @@
-import type { Player } from './types';
+import type { GameConfig, Player } from './types';
 import { mobileDelayedClick } from './utils';
+import { OnlineManager } from './online-manager';
+import { DEFAULT_SCORE_GOAL } from './logic';
 
 const FARKLE_SUGGESTED_NAMES = 'farkle.suggestedNames';
 const FARKLE_USERNAME = 'farkle.username';
@@ -8,14 +10,129 @@ export class NewGameMenu {
 	private modal: HTMLDivElement;
 	private tempNewGamePlayers: Player[] = [];
 	private suggestedNames: string[] = [];
-	private onStartGame: (players: Player[]) => void;
+	private onStartGame: (config: GameConfig) => void;
+	private onlineManager: OnlineManager;
+	private scoreGoalSetup: number = DEFAULT_SCORE_GOAL;
 
-	constructor(onStartGame: (players: Player[]) => void) {
+	constructor(onStartGame: (config: GameConfig) => void) {
 		this.onStartGame = onStartGame;
+		this.onlineManager = OnlineManager.getInstance();
+		this.setupOnlineListeners();
 		this.loadSuggestedNames();
 		this.modal = this.createModal();
 		document.body.appendChild(this.modal);
 		this.setupEventListeners();
+	}
+
+	private setupOnlineListeners() {
+		this.onlineManager.onRoomCreated = (data) => {
+			this.renderLobby(data.players);
+		};
+
+		this.onlineManager.onPlayerJoined = (data) => {
+			// Since currentRoomId is set optimistically on join, or confirmed on create,
+			// we can simply check if we have a room ID to render the lobby.
+			if (this.onlineManager.currentRoomId) {
+				this.renderLobby(data.players);
+			}
+		};
+
+		this.onlineManager.onPlayerUpdate = (data) => {
+			if (this.onlineManager.currentRoomId) {
+				this.renderLobby(data.players);
+			}
+		};
+
+		this.onlineManager.onGameStarted = (data) => {
+			this.hide();
+			// Start the game with online players
+			const players: Player[] = data.players.map((p: any) => ({
+				name: p.name,
+				score: 0,
+				isBot: false,
+				id: p.id, // Add ID to Player type if needed, or just map by name/index
+			}));
+			this.onStartGame({ players, roomId: this.onlineManager.currentRoomId!, scoreGoal: data.scoreGoal });
+		};
+
+		this.onlineManager.onError = (data) => {
+			alert(data.message);
+		};
+	}
+
+	private renderLobby(players: any[]) {
+		const container = this.modal.querySelector('#menuContent')!;
+		const myId = this.onlineManager.getSocketId();
+		const me = players.find((p: any) => p.id === myId);
+		const isReady = me?.ready || false;
+
+		container.innerHTML = `
+			<div class="online-setup lobby-layout">
+				<div class="lobby-header">
+					<h2>Sala: ${this.onlineManager.currentRoomId}</h2>
+				</div>
+				
+				<div class="lobby-columns">
+					<div class="lobby-left">
+						<h3>Jugadores</h3>
+						<div class="players-list-container">
+							<ul id="lobbyPlayersList">
+								${players
+									.map(
+										(p) => `
+									<li>
+										<span>${p.name} ${p.id === myId ? '(Tú)' : ''}</span>
+										<span class="status ${p.ready ? 'ready' : 'not-ready'}">
+											${p.ready ? 'Listo' : 'Esperando'}
+										</span>
+									</li>
+								`
+									)
+									.join('')}
+							</ul>
+						</div>
+					</div>
+					
+					<div class="lobby-right">
+						<div class="room-info">
+							<span class="label">Meta:</span>
+							<span class="value">${this.onlineManager.scoreGoal.toLocaleString()} pts</span>
+						</div>
+						
+						<div class="lobby-actions">
+							<button id="toggleReadyBtn" class="secondary-btn ${isReady ? 'ready-active' : ''}">
+								${isReady ? 'Listo ✓' : 'Marcar como Listo'}
+							</button>
+							${
+								this.onlineManager.isHost
+									? `<button id="hostStartGameBtn" class="primary-btn" ${
+											players.length >= 2 && players.every((p) => p.ready) ? '' : 'disabled'
+									  }>Comenzar partida</button>`
+									: ''
+							}
+						</div>
+					</div>
+				</div>
+			</div>
+		`;
+
+		const readyBtn = container.querySelector('#toggleReadyBtn') as HTMLButtonElement;
+		readyBtn.addEventListener('click', () => {
+			if (this.onlineManager.currentRoomId) {
+				this.onlineManager.setReady(this.onlineManager.currentRoomId, !isReady);
+			}
+		});
+
+		if (this.onlineManager.isHost) {
+			const startBtn = container.querySelector('#hostStartGameBtn') as HTMLButtonElement;
+			if (startBtn) {
+				startBtn.addEventListener('click', () => {
+					if (this.onlineManager.currentRoomId) {
+						this.onlineManager.startGame(this.onlineManager.currentRoomId);
+					}
+				});
+			}
+		}
 	}
 
 	private loadSuggestedNames() {
@@ -184,6 +301,39 @@ export class NewGameMenu {
 		container.querySelector('#joinRoomBtn')!.addEventListener('click', () => this.renderJoinRoomSetup());
 	}
 
+	private getScoreControlHTML(initialValue: number = DEFAULT_SCORE_GOAL): string {
+		this.scoreGoalSetup = initialValue;
+		return `
+			<div class="score-control">
+				<div class="score-buttons left">
+					<button type="button" class="score-btn" data-delta="-1000">-1000</button>
+					<button type="button" class="score-btn" data-delta="-500">-500</button>
+				</div>
+				<div id="scoreGoalDisplay" class="score-display">${initialValue}</div>
+				<div class="score-buttons right">
+					<button type="button" class="score-btn" data-delta="500">+500</button>
+					<button type="button" class="score-btn" data-delta="1000">+1000</button>
+				</div>
+			</div>
+		`;
+	}
+
+	private setupScoreControlListeners(container: Element) {
+		const scoreGoalDisplay = container.querySelector('#scoreGoalDisplay') as HTMLDivElement;
+		const scoreBtns = container.querySelectorAll('.score-btn');
+
+		if (!scoreGoalDisplay) return;
+
+		scoreBtns.forEach((btn) => {
+			btn.addEventListener('click', (e) => {
+				const delta = parseInt((e.target as HTMLButtonElement).dataset.delta || '0');
+				this.scoreGoalSetup += delta;
+				if (this.scoreGoalSetup < 1000) this.scoreGoalSetup = 1000;
+				scoreGoalDisplay.textContent = this.scoreGoalSetup.toString();
+			});
+		});
+	}
+
 	private renderCreateRoomSetup() {
 		const container = this.modal.querySelector('#menuContent')!;
 		const storedName = this.getStoredUsername();
@@ -196,6 +346,10 @@ export class NewGameMenu {
 					<label for="onlineUsername">Nombre de usuario</label>
 					<input type="text" id="onlineUsername" value="${storedName}" placeholder="Tu nombre">
 				</div>
+				<div class="input-group" style="font-size: 2.2cqw;">
+					<label>Puntuación Objetivo</label>
+					${this.getScoreControlHTML()}
+				</div>
 				<div class="action-buttons">
 					<button id="doCreateRoomBtn" class="primary-btn">Crear sala</button>
 				</div>
@@ -206,14 +360,16 @@ export class NewGameMenu {
 		const createBtn = container.querySelector('#doCreateRoomBtn') as HTMLButtonElement;
 		const nameInput = container.querySelector('#onlineUsername') as HTMLInputElement;
 
+		this.setupScoreControlListeners(container);
+
 		backBtn.addEventListener('click', () => this.renderRoomOnlineSetup());
 
 		createBtn.addEventListener('click', () => {
 			const name = nameInput.value.trim();
 			if (name) {
 				this.setStoredUsername(name);
-				console.log('Creating room for:', name);
-				// TODO: Implement create room logic
+				console.log('Creating room for:', name, 'scoreGoal:', this.scoreGoalSetup);
+				this.onlineManager.createRoom(name, this.scoreGoalSetup);
 			} else {
 				nameInput.focus();
 			}
@@ -265,7 +421,7 @@ export class NewGameMenu {
 
 			this.setStoredUsername(name);
 			console.log('Joining room:', code, 'as', name);
-			// TODO: Implement join room logic
+			this.onlineManager.joinRoom(code, name);
 		});
 	}
 
@@ -302,7 +458,13 @@ export class NewGameMenu {
 					</div>
 				</div>
 
-				<div class="action-buttons">
+				<div class="setup-footer">
+				
+						<div class="game-settings-section" style="font-size: 2cqw;">
+							<label style="display: block; margin-bottom: 0.5cqw; font-size: 1.1em;">Puntuación Objetivo</label>
+							${this.getScoreControlHTML()}
+						</div>
+						<div style="flex: 1 1 auto;"></div>
 					<button id="startGameBtn" class="primary-btn" disabled>Comenzar partida</button>
 				</div>
 			</div>
@@ -310,6 +472,7 @@ export class NewGameMenu {
 
 		this.updatePlayersList();
 		this.renderSuggestedNames();
+		this.setupScoreControlListeners(container);
 
 		const nameInput = container.querySelector('#newGamePlayerName') as HTMLInputElement;
 		const addBtn = container.querySelector('#addPlayerToGameBtn') as HTMLButtonElement;
@@ -325,7 +488,7 @@ export class NewGameMenu {
 
 		startBtn.addEventListener('click', () => {
 			if (this.tempNewGamePlayers.length >= 2) {
-				this.onStartGame(this.tempNewGamePlayers);
+				this.onStartGame({ players: this.tempNewGamePlayers, scoreGoal: this.scoreGoalSetup });
 				this.hide();
 			}
 		});

@@ -1,5 +1,7 @@
 import type { ScoringResult, DieState, GameState, Player } from './types';
 
+export const DEFAULT_SCORE_GOAL = 10000;
+
 export class FarkleLogic {
 	private players: Player[] = [];
 	private currentPlayerIndex: number = 0;
@@ -7,8 +9,10 @@ export class FarkleLogic {
 	private dice: DieState[];
 	private isFarkleState: boolean = false;
 	private isStartOfTurn: boolean = true;
+	public scoreGoal: number;
 
-	constructor(players?: Player[]) {
+	constructor(players?: Player[], scoreGoal: number = DEFAULT_SCORE_GOAL) {
+		this.scoreGoal = scoreGoal;
 		if (players && players.length >= 2) {
 			this.players = players.map((p) => ({ ...p, score: 0 }));
 		} else {

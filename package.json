@@ -5,6 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite --host 0.0.0.0",
+		"server": "cd server && npm run dev",
 		"build": "tsc && vite build",
 		"test": "vitest",
 		"preview": "vite preview"
@@ -17,6 +18,7 @@
 		"vitest": "^4.0.16"
 	},
 	"dependencies": {
+		"socket.io-client": "^4.8.1",
 		"three": "^0.181.2"
 	}
 }

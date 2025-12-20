@@ -1,9 +1,11 @@
-import { Dice3D } from './dice3D';
+import type { DicePositions, DieState, GameConfig } from './types';
 import * as THREE from 'three';
+import { Dice3D } from './dice3D';
 import { FarkleLogic } from './logic';
 import { AudioManager } from './audio';
 import { NewGameMenu } from './new-game-menu';
-import type { DieState, Player } from './types';
+import { OverlayManager } from './overlay-manager';
+import { OnlineManager } from './online-manager';
 import { interval, sleep } from './utils';
 
 // Visual representation of a die, extending the logical state
@@ -25,6 +27,7 @@ interface VisualDie extends DieState {
 	currentPosition: THREE.Vector3;
 	settling: boolean;
 	collecting: boolean;
+	remoteDragging?: boolean;
 }
 
 export class FarkleGame {
@@ -35,7 +38,8 @@ export class FarkleGame {
 	private rollBtn!: HTMLButtonElement;
 	private bankBtn!: HTMLButtonElement;
 	private newGameBtn!: HTMLButtonElement;
-	private farkleOverlay!: HTMLDivElement;
+
+	private overlayManager!: OverlayManager;
 
 	private newGameMenu!: NewGameMenu;
 
@@ -43,9 +47,6 @@ export class FarkleGame {
 	private topBarTurnScore!: HTMLElement;
 	private topBarTotalScore!: HTMLElement;
 	private playersList!: HTMLUListElement;
-
-	private nextTurnOverlay!: HTMLDivElement;
-	private nextPlayerName!: HTMLHeadingElement;
 
 	private readonly DIE_SIZE = 60;
 	private readonly DIE_PADDING = 20;
@@ -63,6 +64,12 @@ export class FarkleGame {
 	private isBanking: boolean = false;
 	private actionsDisabled: boolean = false;
 
+	private onlineManager: OnlineManager;
+	private roomId: string | null = null;
+	private isOnline: boolean = false;
+	private lastMoveSendTime: number = 0;
+	private remoteUpdatePending: boolean = false;
+
 	private readonly container: HTMLDivElement;
 
 	constructor(container: HTMLDivElement) {
@@ -71,6 +78,7 @@ export class FarkleGame {
 		this.canvas = this.container.querySelector('#gameCanvas')!;
 		this.ctx = this.canvas.getContext('2d')!;
 		this.logic = new FarkleLogic();
+		this.onlineManager = OnlineManager.getInstance();
 	}
 
 	init() {
@@ -112,20 +120,6 @@ export class FarkleGame {
 					<button id="easterEggBtn" class="icon-btn hidden" type="button"></button>
 					<button id="newGameBtn" class="icon-btn" type="button" title="Nuevo Juego"></button>
 				</div>		
-
-				<div id="farkleOverlay" class="overlay hidden">
-					<div class="farkle-message">
-						<h1>¡FARKLE!</h1>
-						<p>Perdiste los puntos del turno</p>
-					</div>
-				</div>
-
-				<div id="nextTurnOverlay" class="overlay hidden">
-					<div class="overlay-content" style="max-width: 400px; text-align: center;">
-						<h2>Siguiente Turno</h2>
-						<h1 id="nextPlayerName" style="color: var(--p-color-1); margin: 20px 0;">Player Name</h1>
-					</div>
-				</div>
 					
 				<canvas id="gameCanvas"></canvas>
 
@@ -172,12 +166,11 @@ export class FarkleGame {
 		this.rollBtn = document.querySelector('#rollBtn')!;
 		this.bankBtn = document.querySelector('#bankBtn')!;
 		this.newGameBtn = document.querySelector('#newGameBtn')!;
-		this.farkleOverlay = document.querySelector('#farkleOverlay')!;
 
-		this.newGameMenu = new NewGameMenu((players) => this.startNewGame(players));
+		this.newGameMenu = new NewGameMenu((cfg) => this.startNewGame(cfg));
 
-		this.nextTurnOverlay = document.querySelector('#nextTurnOverlay')!;
-		this.nextPlayerName = document.querySelector('#nextPlayerName')!;
+		const gameContainer = this.container.querySelector('.game-container') as HTMLElement;
+		this.overlayManager = new OverlayManager(gameContainer, () => this.newGameMenu.show());
 
 		this.topBarPlayerName = document.querySelector('#topBarPlayerName')!;
 		this.topBarTurnScore = document.querySelector('#topBarTurnScore')!;
@@ -188,10 +181,6 @@ export class FarkleGame {
 		this.rollBtn.addEventListener('click', () => this.rollDice());
 		this.bankBtn.addEventListener('click', () => this.bankPoints());
 		this.newGameBtn.addEventListener('click', () => this.newGameMenu.show());
-	}
-
-	private hideNextTurnOverlay() {
-		this.nextTurnOverlay.classList.add('hidden');
 	}
 
 	public setAudioManager(audioManager: AudioManager) {
@@ -205,9 +194,66 @@ export class FarkleGame {
 		});
 	}
 
-	private startNewGame(players: Player[]) {
-		this.logic = new FarkleLogic(players);
+	private startNewGame(config: GameConfig = {}) {
+		this.logic = new FarkleLogic(config.players, config.scoreGoal);
+		this.roomId = config.roomId || null;
+		this.isOnline = !!config.roomId;
+
+		if (this.isOnline) {
+			this.setupOnlineListeners();
+		}
+
 		this.endTurn();
+	}
+
+	private setupOnlineListeners() {
+		this.onlineManager.onGameAction = (data) => {
+			if (data.senderId === this.onlineManager.getSocketId()) return;
+
+			switch (data.action) {
+				case 'roll':
+					this.rollDice(true, data.payload.values, data.payload.positions);
+					break;
+				case 'bank':
+					this.bankPoints(true);
+					break;
+				case 'select_die':
+					this.toggleDieSelection(data.payload.index, true);
+					break;
+				case 'die_move':
+					this.handleRemoteDieMove(data.payload.index, data.payload.position);
+					break;
+				case 'die_settle':
+					this.handleRemoteDieSettle(data.payload.index, data.payload.targetPosition);
+					break;
+			}
+		};
+	}
+
+	private handleRemoteDieMove(index: number, position: { x: number; y: number; z: number }) {
+		const die = this.dice.find((d) => d.diceIndex === index);
+		if (die) {
+			if (!die.remoteDragging || !die.targetPosition) {
+				die.targetPosition = new THREE.Vector3(position.x, position.y, position.z);
+				die.remoteDragging = true;
+				// If distance is huge, snap immediately
+				if (die.currentPosition.distanceTo(die.targetPosition) > 5) {
+					die.currentPosition.copy(die.targetPosition);
+				}
+			} else {
+				die.targetPosition.set(position.x, position.y, position.z);
+			}
+			this.remoteUpdatePending = true;
+		}
+	}
+
+	private handleRemoteDieSettle(index: number, targetPosition: { x: number; y: number; z: number }) {
+		const die = this.dice.find((d) => d.diceIndex === index);
+		if (die) {
+			die.remoteDragging = false; // Stop remote dragging
+			die.targetPosition = new THREE.Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
+			die.settling = true;
+		}
 	}
 
 	private initializeDice() {
@@ -280,14 +326,42 @@ export class FarkleGame {
 		}
 	}
 
-	private async rollDice() {
+	private toggleDieSelection(index: number, isRemote: boolean = false) {
+		if (isRemote) {
+			this.logic.toggleSelection(index);
+			this.syncDiceState();
+
+			const die = this.dice[index];
+			// Clear remote drag target to avoid conflict
+			die.remoteDragging = false;
+
+			if (die.selected) {
+				// Move to selection area (left side)
+				die.targetPosition = new THREE.Vector3(-3 + Math.random(), 0, Math.random() * 4 - 2);
+			} else {
+				// Move to play area (right side)
+				die.targetPosition = new THREE.Vector3(2.5 + Math.random(), 0, Math.random() * 4 - 2);
+			}
+			die.collecting = true;
+		}
+	}
+
+	private async rollDice(isRemote: boolean = false, forcedValues?: number[], forcedPositions?: DicePositions) {
 		if (this.isRolling) return;
+
+		if (this.isOnline && !isRemote) {
+			const state = this.logic.getGameState();
+			const currentPlayer = state.players[state.currentPlayerIndex];
+			if (currentPlayer.id !== this.onlineManager.getSocketId()) {
+				return;
+			}
+		}
 
 		this.isRolling = true;
 		this.actionsDisabled = true;
 
 		// Logic handles the rules of what to roll
-		const rolledIndices = this.logic.rollDice();
+		const rolledIndices = this.logic.rollDice(forcedValues);
 
 		if (rolledIndices.length === 0) {
 			this.isRolling = false;
@@ -325,7 +399,18 @@ export class FarkleGame {
 		this.audioManager?.playRoll(diceToRoll.length);
 
 		// Reposition rolling dice randomly
-		this.repositionDice(diceToRoll);
+		this.repositionDice(diceToRoll, forcedPositions);
+
+		if (this.isOnline && !isRemote && this.roomId) {
+			const values = rolledIndices.map((i) => this.logic.getDice()[i].value);
+			const positions: DicePositions = {};
+			diceToRoll.forEach((d) => {
+				if (d.targetPosition) {
+					positions[d.diceIndex] = d.targetPosition;
+				}
+			});
+			this.onlineManager.sendGameAction(this.roomId, 'roll', { values, positions });
+		}
 
 		// Start rolling animation with 3D effect
 		diceToRoll.forEach((die) => {
@@ -343,7 +428,7 @@ export class FarkleGame {
 		this.actionsDisabled = false;
 	}
 
-	private repositionDice(diceToRoll: VisualDie[]) {
+	private repositionDice(diceToRoll: VisualDie[], forcedPositions?: DicePositions) {
 		const lockedDice = this.dice.filter((d) => d.selected || d.locked);
 		const occupiedPositions: THREE.Vector3[] = [];
 
@@ -357,6 +442,12 @@ export class FarkleGame {
 		const minDistance = 2.0; // Distancia mínima (doble del grosor 1.0)
 
 		diceToRoll.forEach((die) => {
+			if (forcedPositions && forcedPositions[die.diceIndex]) {
+				const pos = forcedPositions[die.diceIndex];
+				die.targetPosition = new THREE.Vector3(pos.x, pos.y, pos.z);
+				return;
+			}
+
 			let validPosition = false;
 			let newPos = new THREE.Vector3();
 			let attempts = 0;
@@ -457,6 +548,14 @@ export class FarkleGame {
 				this.dice3D.setPosition(die.diceIndex, die.currentPosition);
 				this.updateDieScreenPosition(die);
 			}
+			// Remote Dragging Animation
+			else if (die.remoteDragging && die.targetPosition) {
+				needsUpdate = true;
+				// Interpolate towards remote target
+				die.currentPosition.lerp(die.targetPosition, 0.3);
+				this.dice3D.setPosition(die.diceIndex, die.currentPosition);
+				this.updateDieScreenPosition(die);
+			}
 			// Settling Animation (Drop & Collision Avoidance)
 			else if (die.settling && die.targetPosition) {
 				needsUpdate = true;
@@ -496,8 +595,9 @@ export class FarkleGame {
 			}
 		});
 
-		if (needsUpdate || this.isDragging) {
+		if (needsUpdate || this.isDragging || this.remoteUpdatePending) {
 			this.draw();
+			this.remoteUpdatePending = false;
 		}
 
 		if (anyAnimating) {
@@ -540,17 +640,13 @@ export class FarkleGame {
 		await sleep(1000);
 
 		// 2. Show Overlay
-		if (this.farkleOverlay) {
-			this.farkleOverlay.classList.remove('hidden');
-		}
+		this.overlayManager.showFarkle();
 
 		// 3. Wait 2 seconds (overlay duration)
 		await sleep(2000);
 
 		// 4. Hide Overlay
-		if (this.farkleOverlay) {
-			this.farkleOverlay.classList.add('hidden');
-		}
+		this.overlayManager.hideFarkle();
 		this.draw();
 
 		// 5. Animate loss
@@ -612,6 +708,14 @@ export class FarkleGame {
 	private onInputStart(clientX: number, clientY: number) {
 		if (this.isRolling || this.isBanking) return;
 
+		if (this.isOnline) {
+			const state = this.logic.getGameState();
+			const currentPlayer = state.players[state.currentPlayerIndex];
+			if (currentPlayer.id !== this.onlineManager.getSocketId()) {
+				return;
+			}
+		}
+
 		const rect = this.canvas.getBoundingClientRect();
 		const x = clientX - rect.left;
 		const y = clientY - rect.top;
@@ -651,6 +755,17 @@ export class FarkleGame {
 				die.currentPosition.x = newPos.x;
 				die.currentPosition.z = newPos.z;
 				// Y is handled in animate() for smoothness
+
+				if (this.isOnline && this.roomId) {
+					const now = Date.now();
+					if (now - this.lastMoveSendTime > 30) {
+						this.onlineManager.sendGameAction(this.roomId, 'die_move', {
+							index: die.diceIndex,
+							position: die.currentPosition,
+						});
+						this.lastMoveSendTime = now;
+					}
+				}
 			}
 		}
 	}
@@ -718,7 +833,17 @@ export class FarkleGame {
 					if (index !== -1) {
 						this.logic.toggleSelection(index);
 						this.syncDiceState();
+						if (this.isOnline && this.roomId) {
+							this.onlineManager.sendGameAction(this.roomId, 'select_die', { index });
+						}
 					}
+				}
+
+				if (this.isOnline && this.roomId) {
+					this.onlineManager.sendGameAction(this.roomId, 'die_settle', {
+						index: die.diceIndex,
+						targetPosition: die.targetPosition,
+					});
 				}
 			}
 		}
@@ -728,7 +853,18 @@ export class FarkleGame {
 		// draw() is called by animate loop
 	}
 
-	private async bankPoints() {
+	private async bankPoints(isRemote: boolean = false) {
+		if (this.isOnline && !isRemote) {
+			const state = this.logic.getGameState();
+			const currentPlayer = state.players[state.currentPlayerIndex];
+			if (currentPlayer.id !== this.onlineManager.getSocketId()) {
+				return;
+			}
+			if (this.roomId) {
+				this.onlineManager.sendGameAction(this.roomId, 'bank', {});
+			}
+		}
+
 		const gameState = this.logic.getGameState();
 		const startTurnScore = gameState.turnScore;
 		const currentPlayer = gameState.players[gameState.currentPlayerIndex];
@@ -784,6 +920,18 @@ export class FarkleGame {
 		const gameState = this.logic.getGameState();
 		const numPlayers = gameState.players.length;
 		const previousPlayerIndex = (gameState.currentPlayerIndex - 1 + numPlayers) % numPlayers;
+		const previousPlayer = gameState.players[previousPlayerIndex];
+
+		if (previousPlayer.score >= this.logic.scoreGoal) {
+			this.startNewGame(); // Reset for next game
+			this.overlayManager.showWinner(previousPlayer.name, gameState.players);
+
+			if (this.isOnline && this.roomId) {
+				this.onlineManager.sendGameAction(this.roomId, 'game_over', { winnerName: previousPlayer.name });
+				this.onlineManager.leaveRoom(); // Clean up local state
+			}
+			return;
+		}
 
 		this.updateScoreDisplay(previousPlayerIndex);
 		this.draw();
@@ -791,14 +939,13 @@ export class FarkleGame {
 		this.collectDice();
 
 		const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-		this.nextPlayerName.textContent = currentPlayer.name;
 
 		await sleep(500);
-		this.nextTurnOverlay.classList.remove('hidden');
+		this.overlayManager.showNextTurn(currentPlayer.name);
 
 		// Hide automatically after 2 seconds
 		await sleep(2000);
-		this.hideNextTurnOverlay();
+		this.overlayManager.hideNextTurn();
 		this.updateScoreDisplay(); // Update to new player
 		this.checkBotTurn();
 	}

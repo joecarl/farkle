@@ -26,3 +26,11 @@ export interface GameState {
 	canRoll: boolean;
 	dice: DieState[];
 }
+
+export interface GameConfig {
+	players?: Player[];
+	scoreGoal?: number;
+	roomId?: string;
+}
+
+export type DicePositions = { [index: number]: { x: number; y: number; z: number } };
