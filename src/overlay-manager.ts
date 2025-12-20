@@ -37,9 +37,9 @@ export class OverlayManager {
 
 			<div id="winnerOverlay" class="overlay hidden">
 				<div class="overlay-content" style="max-width: 400px; text-align: center;">
-					<h2>¡Ganador!</h2>
-					<h1 id="winnerName" style="color: var(--p-color-1); margin: 20px 0;">Player Name</h1>
-					<ul id="winnerRanking" class="winner-ranking" style="list-style: none; padding: 0; margin: 20px 0; text-align: left;"></ul>
+					<h2 style="margin: 0;">¡Ganador!</h2>
+					<h1 id="winnerName" style="color: var(--p-color-1); margin: 1vh 0;">Player Name</h1>
+					<ul id="winnerRanking" class="winner-ranking" style="list-style: none; padding: 0; text-align: left;"></ul>
 					<button id="winnerNewGameBtn" class="primary-btn" style="margin-top: 20px;">Nuevo Juego</button>
 				</div>
 			</div>

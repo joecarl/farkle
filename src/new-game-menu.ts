@@ -494,8 +494,6 @@ export class NewGameMenu {
 		});
 
 		backBtn.addEventListener('click', () => this.renderMainMenu());
-
-		setTimeout(() => nameInput.focus(), 100);
 	}
 
 	private renderSuggestedNames() {
@@ -514,13 +512,13 @@ export class NewGameMenu {
 		availableSuggestions.forEach((name) => {
 			const tag = document.createElement('div');
 			tag.className = 'suggested-name-tag';
+			tag.addEventListener('click', () => {
+				this.addPlayerByName(name);
+			});
 
 			const nameSpan = document.createElement('span');
 			nameSpan.textContent = name;
 			nameSpan.className = 'name-text';
-			nameSpan.addEventListener('click', () => {
-				this.addPlayerByName(name);
-			});
 
 			const deleteBtn = document.createElement('span');
 			deleteBtn.textContent = '×';

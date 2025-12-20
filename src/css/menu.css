@@ -28,7 +28,7 @@
 
 .new-game-menu-content h2 {
 	margin: 0;
-	font-size: 4cqw;
+	font-size: 2em !important;
 	color: var(--p-color-1);
 	text-shadow: 0 0 10px black;
 }
@@ -204,14 +204,16 @@
 
 .suggested-name-tag {
 	background: rgba(255, 255, 255, 0.1);
-	padding: 0.5cqw 1cqw 0.3cqw 1.5cqw;
+	padding: 0cqw 0 0 1.5cqw;
+	height: 2.1em;
 	border-radius: 15px;
-	font-size: 1.9cqw;
+	font-size: 1em;
 	transition: background 0.2s;
 	border: 1px solid rgba(255, 255, 255, 0.2);
 	display: flex;
 	align-items: center;
-	gap: 2.5cqw;
+	gap: 1em;
+	cursor: pointer;
 }
 
 .suggested-name-tag:hover {
@@ -219,23 +221,19 @@
 	border-color: var(--p-color-1);
 }
 
-.suggested-name-tag .name-text {
-	cursor: pointer;
-}
-
 .delete-suggestion-btn {
 	cursor: pointer;
 	color: #aaa;
 	font-weight: bold;
-	font-size: 1.4em;
-	padding: 0;
+	font-size: 1.5em;
+	height: 100%;
+	aspect-ratio: 1 / 1;
+	display: inline-flex;
 	line-height: 1;
 	border-radius: 50%;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 2cqw;
-	height: 2cqw;
 }
 
 .delete-suggestion-btn:hover {
