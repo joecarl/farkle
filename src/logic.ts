@@ -68,7 +68,7 @@ export class FarkleLogic {
 		return this.dice;
 	}
 
-	public rollDice(): number[] {
+	public rollDice(forcedValues?: number[]): number[] {
 		this.isStartOfTurn = false;
 		// Commit score from selection if any
 		const selectionScore = this.calculateScore(this.getSelectedDiceValues()).score;
@@ -90,9 +90,14 @@ export class FarkleLogic {
 
 		// Roll available dice
 		const rolledIndices: number[] = [];
+		let forcedIndex = 0;
 		this.dice.forEach((d, i) => {
 			if (!d.locked) {
-				d.value = Math.floor(Math.random() * 6) + 1;
+				if (forcedValues && forcedIndex < forcedValues.length) {
+					d.value = forcedValues[forcedIndex++];
+				} else {
+					d.value = Math.floor(Math.random() * 6) + 1;
+				}
 				rolledIndices.push(i);
 			}
 		});
