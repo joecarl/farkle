@@ -714,6 +714,7 @@ export class FarkleGame {
 	}
 
 	private onInputStart(clientX: number, clientY: number) {
+		if (this.currentPlayerIsBot()) return;
 		if (this.isRolling || this.isBanking) return;
 
 		if (this.isOnline) {
@@ -959,23 +960,28 @@ export class FarkleGame {
 		this.overlayManager.hideNextTurn();
 		this.updateScoreDisplay(); // Update to new player
 		this.checkBotTurn();
+		this.updateButtonsState();
+	}
+
+	private currentPlayerIsBot(): boolean {
+		const gameState = this.logic.getGameState();
+		const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+		return !!currentPlayer.isBot;
 	}
 
 	private async checkBotTurn() {
 		const gameState = this.logic.getGameState();
-		const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+		if (!this.currentPlayerIsBot()) return;
 
-		if (currentPlayer.isBot) {
-			this.actionsDisabled = true;
-			this.updateButtonsState();
+		this.actionsDisabled = true;
+		this.updateButtonsState();
 
-			await sleep(1000);
+		await sleep(1000);
 
-			if (gameState.canRoll && gameState.turnScore === 0 && !gameState.isFarkle) {
-				this.rollDice();
-			} else if (!gameState.isFarkle) {
-				await this.botDecision();
-			}
+		if (gameState.canRoll && gameState.turnScore === 0 && !gameState.isFarkle) {
+			this.rollDice();
+		} else if (!gameState.isFarkle) {
+			await this.botDecision();
 		}
 	}
 
@@ -1031,6 +1037,7 @@ export class FarkleGame {
 	}
 
 	private isControlableTurn(): boolean {
+		if (this.currentPlayerIsBot()) return false;
 		if (!this.isOnline) return true;
 		const gameState = this.logic.getGameState();
 		return gameState.players[gameState.currentPlayerIndex].id === this.onlineManager.getSocketId();
@@ -1038,9 +1045,10 @@ export class FarkleGame {
 
 	private updateButtonsState() {
 		const gameState = this.logic.getGameState();
-		const isTurn = this.isControlableTurn();
-		this.bankBtn.disabled = !gameState.canBank || this.actionsDisabled || !isTurn;
-		this.rollBtn.disabled = !gameState.canRoll || this.actionsDisabled || !isTurn;
+		const forceDisabled = this.actionsDisabled || !this.isControlableTurn();
+
+		this.bankBtn.disabled = !gameState.canBank || forceDisabled;
+		this.rollBtn.disabled = !gameState.canRoll || forceDisabled;
 	}
 
 	private collectDice() {
