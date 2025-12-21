@@ -42,3 +42,49 @@ export function getPathname(): string {
 	if (pn[lastPos] === '/') pn = pn.substring(0, lastPos);
 	return pn;
 }
+
+const SAFE_SYLLABLES = [
+	'ka',
+	'ra',
+	'lo',
+	'mi',
+	'na',
+	'to',
+	'zu',
+	'pi',
+	'xe',
+	'no',
+	'ru',
+	'sa',
+	'be',
+	'ti',
+	'vo',
+	'qu',
+	'si',
+	'la',
+	'do',
+	'fa',
+	'ge',
+	'hi',
+	'jo',
+	'ku',
+	'ma',
+	'nu',
+	'pa',
+	'ro',
+	'su',
+	'ki',
+	'zi',
+	'la',
+];
+
+export function generateNameFromSyllables(minSyllables = 2, maxSyllables = 3): string {
+	const count = Math.floor(Math.random() * (maxSyllables - minSyllables + 1)) + minSyllables;
+	let name = '';
+	for (let i = 0; i < count; i++) {
+		const idx = Math.floor(Math.random() * SAFE_SYLLABLES.length);
+		name += SAFE_SYLLABLES[idx];
+	}
+	// Capitalize first letter
+	return name.charAt(0).toUpperCase() + name.slice(1);
+}

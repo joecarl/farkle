@@ -74,6 +74,7 @@
 	gap: 3cqw;
 	text-align: left;
 	flex: 1 1 auto;
+	overflow: hidden;
 }
 
 .left-column,
@@ -96,6 +97,8 @@
 	padding: 1cqw;
 	border-radius: 5px;
 	border: 1px solid rgba(23, 15, 2, 0.5);
+	overflow-y: auto;
+	scrollbar-width: thin;
 }
 
 .players-list-container ul {

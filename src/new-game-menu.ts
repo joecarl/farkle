@@ -1,5 +1,5 @@
 import type { GameConfig, Player } from './types';
-import { mobileDelayedClick } from './utils';
+import { generateNameFromSyllables, mobileDelayedClick } from './utils';
 import { OnlineManager } from './online-manager';
 import { DEFAULT_SCORE_GOAL } from './logic';
 
@@ -551,9 +551,21 @@ export class NewGameMenu {
 	}
 
 	private addBot() {
-		const botCount = this.tempNewGamePlayers.filter((p) => p.isBot).length;
-		const name = `Bot ${botCount + 1}`;
+		const name = this.getRandomBotName() + ' 🤖';
 		this.addPlayerByName(name, true);
+	}
+
+	private getRandomBotName(): string {
+		const usedNames = this.tempNewGamePlayers.map((p) => p.name);
+		// Try generating a name from safe syllables first (up to a few attempts)
+		for (let attempt = 0; attempt < 6; attempt++) {
+			const gen = generateNameFromSyllables(2, 3);
+			if (!usedNames.includes(gen)) return gen;
+		}
+
+		// If generation attempts failed, return a numbered bot as last resort
+		const botCount = this.tempNewGamePlayers.filter((p) => p.isBot).length;
+		return `Bot ${botCount + 1}`;
 	}
 
 	private addPlayerByName(name: string, isBot: boolean = false) {
@@ -586,7 +598,7 @@ export class NewGameMenu {
 				const li = document.createElement('li');
 
 				const nameSpan = document.createElement('span');
-				nameSpan.textContent = player.name + (player.isBot ? ' 🤖' : '');
+				nameSpan.textContent = player.name; // + (player.isBot ? ' 🤖' : '');
 
 				const deleteBtn = document.createElement('button');
 				deleteBtn.textContent = '×';
