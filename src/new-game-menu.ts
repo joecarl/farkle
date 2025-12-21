@@ -269,7 +269,7 @@ export class NewGameMenu {
 			if (name) {
 				this.setStoredUsername(name);
 				console.log('Searching match for:', name);
-				// TODO: Implement search match logic
+				this.onlineManager.findMatch(name, this.scoreGoalSetup);
 			} else {
 				nameInput.focus();
 			}

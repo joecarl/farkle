@@ -50,6 +50,30 @@ io.on('connection', (socket: Socket) => {
 		console.log(`Room created: ${roomId} by ${data.playerName} with score goal ${rooms[roomId].scoreGoal}`);
 	});
 
+	// Simple matchmaking: find an open room or create one
+	// TODO: no mezclar con rooms privadas
+	socket.on('find_match', (data: { playerName: string; scoreGoal?: number }) => {
+		// Try to find a room that's not started and not full
+		const candidate = Object.values(rooms).find((r) => !r.gameStarted && r.players.length < 6);
+		if (candidate) {
+			candidate.players.push({ id: socket.id, name: data.playerName, ready: false });
+			socket.join(candidate.id);
+			io.to(candidate.id).emit('player_joined', { players: candidate.players, scoreGoal: candidate.scoreGoal, roomId: candidate.id });
+			console.log(`${data.playerName} matched into room ${candidate.id}`);
+		} else {
+			const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+			rooms[roomId] = {
+				id: roomId,
+				players: [{ id: socket.id, name: data.playerName, ready: false }],
+				gameStarted: false,
+				scoreGoal: data.scoreGoal || 10000,
+			};
+			socket.join(roomId);
+			socket.emit('room_created', { roomId, players: rooms[roomId].players, scoreGoal: rooms[roomId].scoreGoal });
+			console.log(`Matchmaking created room: ${roomId} for ${data.playerName}`);
+		}
+	});
+
 	socket.on('join_room', (data: { roomId: string; playerName: string }) => {
 		const room = rooms[data.roomId];
 		if (room) {

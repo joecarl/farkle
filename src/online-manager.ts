@@ -45,6 +45,7 @@ export class OnlineManager {
 		});
 
 		this.socket.on('player_joined', (data) => {
+			if (data.roomId) this.currentRoomId = data.roomId;
 			if (data.scoreGoal) this.scoreGoal = data.scoreGoal;
 			if (this.onPlayerJoined) this.onPlayerJoined(data);
 		});
@@ -96,6 +97,10 @@ export class OnlineManager {
 
 	public sendGameAction(roomId: string, action: string, payload: any) {
 		this.socket.emit('game_action', { roomId, action, payload });
+	}
+
+	public findMatch(playerName: string, scoreGoal?: number) {
+		this.socket.emit('find_match', { playerName, scoreGoal });
 	}
 
 	public leaveRoom() {
