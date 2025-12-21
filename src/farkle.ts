@@ -135,7 +135,7 @@ export class FarkleGame {
 					
 			</div>			
 
-			<div class="disco-lights hidden">
+			<div class="disco-lights hidden" style="z-index: 1000;">
 				<div class="haz rojo"></div>
 				<div class="haz azul"></div>
 				<div class="haz verde"></div>
@@ -381,7 +381,7 @@ export class FarkleGame {
 			}
 		});
 
-		if (this.isOnline && !isRemote && this.roomId) {
+		if (this.roomId && !isRemote) {
 			const values = rolledIndices.map((i) => this.logic.getDice()[i].value);
 			const positions: DicePositions = {};
 			calculatedPositions.forEach((pos, index) => {
@@ -764,7 +764,7 @@ export class FarkleGame {
 				die.currentPosition.z = newPos.z;
 				// Y is handled in animate() for smoothness
 
-				if (this.isOnline && this.roomId) {
+				if (this.roomId) {
 					const now = Date.now();
 					if (now - this.lastMoveSendTime > 30) {
 						this.onlineManager.sendGameAction(this.roomId, 'die_move', {
@@ -841,13 +841,13 @@ export class FarkleGame {
 					if (index !== -1) {
 						this.logic.toggleSelection(index);
 						this.syncDiceState();
-						if (this.isOnline && this.roomId) {
+						if (this.roomId) {
 							this.onlineManager.sendGameAction(this.roomId, 'select_die', { index });
 						}
 					}
 				}
 
-				if (this.isOnline && this.roomId) {
+				if (this.roomId) {
 					this.onlineManager.sendGameAction(this.roomId, 'die_settle', {
 						index: die.diceIndex,
 						targetPosition: die.targetPosition,
@@ -931,13 +931,16 @@ export class FarkleGame {
 		const previousPlayer = gameState.players[previousPlayerIndex];
 
 		if (previousPlayer.score >= this.logic.scoreGoal) {
-			this.startNewGame(); // Reset for next game
 			this.overlayManager.showWinner(previousPlayer.name, gameState.players);
 
-			if (this.isOnline && this.roomId) {
-				this.onlineManager.sendGameAction(this.roomId, 'game_over', { winnerName: previousPlayer.name });
+			if (this.roomId) {
+				const payload = { winnerName: previousPlayer.name, players: gameState.players };
+				console.log('Sending game over action', payload);
+				this.onlineManager.sendGameAction(this.roomId, 'game_over', payload);
 				this.onlineManager.leaveRoom(); // Clean up local state
 			}
+
+			this.startNewGame(); // Reset for next game
 			return;
 		}
 

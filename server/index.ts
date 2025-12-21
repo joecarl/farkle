@@ -116,8 +116,11 @@ io.on('connection', (socket: Socket) => {
 
 			// If game over
 			if (data.action === 'game_over') {
+				console.log(`Game over in room ${data.roomId}`);
 				if (room.gameId) {
-					endGameRecord(room.gameId, data.payload.winnerName);
+					const finalPlayers = data.payload?.players ?? room.players;
+					const winnerName = data.payload?.winnerName ?? null;
+					endGameRecord(room.gameId, winnerName, finalPlayers);
 				}
 				delete rooms[data.roomId]; // Cleanup
 			}
