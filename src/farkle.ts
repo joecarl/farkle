@@ -989,7 +989,9 @@ export class FarkleGame {
 
 		// Select dice
 		const usedValues = [...result.usedDice];
+		const lockedDiceCount = dice.filter((d) => d.locked).length;
 
+		let d = 0;
 		for (const val of usedValues) {
 			const dieToSelect = unlockedDice.find((d) => d.value === val && !this.logic.getDice()[d.index].selected);
 			if (dieToSelect) {
@@ -1001,7 +1003,7 @@ export class FarkleGame {
 
 				const targetPos = visualDie.currentPosition.clone();
 				// Truquito para evitar solapamientos: distribuir en X y Z según índice
-				const i = dieToSelect.index; // Seria mejor un contador separado para que quede mas natural
+				const i = lockedDiceCount + d++;
 				targetPos.x = i * 0.2 - 5.0 + Math.random() * 0.5;
 				targetPos.z = i * 1.5 - 3.5 + Math.random() * 0.5;
 
@@ -1009,10 +1011,12 @@ export class FarkleGame {
 				visualDie.settling = true;
 
 				this.draw();
-				await sleep(500);
+				this.updateScoreDisplay(); // Update to new player
+				await sleep(800);
 			}
 		}
 
+		await sleep(800);
 		// Re-evaluate state
 		const gameState = this.logic.getGameState();
 
