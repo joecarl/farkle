@@ -5,7 +5,10 @@ describe('FarkleLogic', () => {
 	let game: FarkleLogic;
 
 	beforeEach(() => {
-		game = new FarkleLogic(['Alice', 'Bob']);
+		game = new FarkleLogic([
+			{ name: 'Alice', score: 0 },
+			{ name: 'Bob', score: 0 },
+		]);
 	});
 
 	describe('Initialization', () => {
@@ -212,8 +215,15 @@ describe('FarkleLogic', () => {
 			const newDice = game.getDice();
 			// All should be unlocked now
 			expect(newDice.every((d) => !d.locked)).toBe(true);
-			// And we should have accumulated the score
-			expect(game.getTurnScore()).toBeGreaterThanOrEqual(2500);
+			// And we should have accumulated the score — but if the re-roll was a Farkle,
+			// turn score will be 0. Accept either outcome.
+			const turnScore = game.getTurnScore();
+			const state = game.getGameState();
+			if (state.isFarkle) {
+				expect(turnScore).toBe(0);
+			} else {
+				expect(turnScore).toBeGreaterThanOrEqual(2500);
+			}
 		});
 	});
 });
