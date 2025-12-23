@@ -1,6 +1,6 @@
 {
 	"name": "Farkle Dev Environment",
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bookworm",
+	"image": "mcr.microsoft.com/devcontainers/typescript-node",
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -12,6 +12,5 @@
 	"forwardPorts": [
 		5173
 	],
-	"postCreateCommand": "npm install",
-	"remoteUser": "node"
+	"postCreateCommand": "npm install"
 }
