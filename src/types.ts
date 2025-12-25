@@ -25,6 +25,8 @@ export interface GameState {
 	canBank: boolean;
 	canRoll: boolean;
 	dice: DieState[];
+	isStartOfTurn?: boolean;
+	accumulatedTurnScore?: number;
 }
 
 export interface GameConfig {

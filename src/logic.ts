@@ -65,7 +65,20 @@ export class FarkleLogic {
 			canBank,
 			canRoll,
 			dice: this.dice.map((d) => ({ ...d })), // Copy
+			isStartOfTurn: this.isStartOfTurn,
+			accumulatedTurnScore: this.accumulatedTurnScore,
 		};
+	}
+
+	public restoreState(state: GameState) {
+		this.players = state.players;
+		this.currentPlayerIndex = state.currentPlayerIndex;
+		this.dice = state.dice;
+		this.isFarkleState = state.isFarkle;
+		if (state.isStartOfTurn !== undefined) this.isStartOfTurn = state.isStartOfTurn;
+		if (state.accumulatedTurnScore !== undefined) this.accumulatedTurnScore = state.accumulatedTurnScore;
+		// If accumulatedTurnScore is missing (legacy), try to infer or default to 0
+		else this.accumulatedTurnScore = 0;
 	}
 
 	public getDice(): DieState[] {
