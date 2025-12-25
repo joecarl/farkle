@@ -83,6 +83,7 @@ export class FarkleGame {
 
 	init() {
 		this.setupButtons();
+		this.setupOnlineListeners();
 		this.initializeDice();
 		this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
 		this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
@@ -199,16 +200,52 @@ export class FarkleGame {
 		this.roomId = config.roomId || null;
 		this.isOnline = !!config.roomId;
 
-		if (this.isOnline) {
-			this.setupOnlineListeners();
-		}
-
 		this.endTurn();
 	}
 
 	private setupOnlineListeners() {
+		this.onlineManager.onRejoinPrompt = (data) => {
+			// Simple confirm for now. In a real app, use a nice modal.
+			if (confirm(`Tienes una partida en curso en la sala ${data.roomId}. ¿Quieres volver a unirte?`)) {
+				this.roomId = data.roomId;
+				this.isOnline = true;
+				this.onlineManager.rejoinGame(data.roomId);
+				// Hide new game menu if open
+				this.newGameMenu.hide();
+			}
+		};
+
+		this.onlineManager.onStateSyncRequest = (data) => {
+			// Only send if we are in the same room (checked by server, but good to be safe)
+			// and if we have valid state.
+			if (this.isOnline && this.roomId) {
+				const state = this.logic.getGameState();
+				this.onlineManager.sendStateSync(data.requesterId, state);
+			}
+		};
+
+		this.onlineManager.onStateSync = (data) => {
+			if (this.isOnline) {
+				console.log('Restoring game state...');
+				this.logic.restoreState(data.gameState);
+
+				// Update visual dice from logical dice
+				const logicalDice = this.logic.getDice();
+				this.dice.forEach((d, i) => {
+					d.value = logicalDice[i].value;
+					d.selected = logicalDice[i].selected;
+					d.locked = logicalDice[i].locked;
+					// Reset positions/rotations if needed, or animate them
+					// For now, just snap them to a valid state or let draw handle it
+				});
+
+				this.updateUI();
+				this.draw();
+			}
+		};
+
 		this.onlineManager.onGameAction = (data) => {
-			if (data.senderId === this.onlineManager.getSocketId()) return;
+			if (data.senderId === this.onlineManager.getUserId()) return;
 
 			switch (data.action) {
 				case 'roll':
@@ -353,7 +390,7 @@ export class FarkleGame {
 		if (this.isOnline && !isRemote) {
 			const state = this.logic.getGameState();
 			const currentPlayer = state.players[state.currentPlayerIndex];
-			if (currentPlayer.id !== this.onlineManager.getSocketId()) {
+			if (currentPlayer.id !== this.onlineManager.getUserId()) {
 				return;
 			}
 		}
@@ -720,7 +757,7 @@ export class FarkleGame {
 		if (this.isOnline) {
 			const state = this.logic.getGameState();
 			const currentPlayer = state.players[state.currentPlayerIndex];
-			if (currentPlayer.id !== this.onlineManager.getSocketId()) {
+			if (currentPlayer.id !== this.onlineManager.getUserId()) {
 				return;
 			}
 		}
@@ -866,7 +903,7 @@ export class FarkleGame {
 		if (this.isOnline && !isRemote) {
 			const state = this.logic.getGameState();
 			const currentPlayer = state.players[state.currentPlayerIndex];
-			if (currentPlayer.id !== this.onlineManager.getSocketId()) {
+			if (currentPlayer.id !== this.onlineManager.getUserId()) {
 				return;
 			}
 			if (this.roomId) {
@@ -1040,7 +1077,7 @@ export class FarkleGame {
 		if (this.currentPlayerIsBot()) return false;
 		if (!this.isOnline) return true;
 		const gameState = this.logic.getGameState();
-		return gameState.players[gameState.currentPlayerIndex].id === this.onlineManager.getSocketId();
+		return gameState.players[gameState.currentPlayerIndex].id === this.onlineManager.getUserId();
 	}
 
 	private updateButtonsState() {
@@ -1064,6 +1101,10 @@ export class FarkleGame {
 			die.targetPosition.x += (Math.random() - 0.5) * 1;
 			die.targetPosition.z += (Math.random() - 0.5) * 1;
 		});
+	}
+
+	public updateUI() {
+		this.updateScoreDisplay();
 	}
 
 	private updateScoreDisplay(playerIndex?: number) {
