@@ -4,20 +4,26 @@ import { getPathname } from './utils';
 
 const SERVER_URL = import.meta.env.DEV ? 'http://localhost:3000' : location.origin;
 
+const FARKLE_USER_ID = 'farkle.userId';
+
 export class OnlineManager {
 	private socket: Socket;
 	private static instance: OnlineManager;
 
 	public currentRoomId: string | null = null;
 	public isHost: boolean = false;
+	public isRandom: boolean = false;
 	public scoreGoal: number = DEFAULT_SCORE_GOAL;
 
-	public onRoomCreated?: (data: { roomId: string; players: any[]; scoreGoal: number }) => void;
-	public onPlayerJoined?: (data: { players: any[]; scoreGoal?: number }) => void;
+	public onRoomCreated?: (data: { roomId: string; players: any[]; scoreGoal: number; isRandom?: boolean }) => void;
+	public onPlayerJoined?: (data: { players: any[]; scoreGoal?: number; isRandom?: boolean }) => void;
 	public onPlayerUpdate?: (data: { players: any[] }) => void;
 	public onGameStarted?: (data: { players: any[]; currentPlayerIndex: number; scoreGoal: number }) => void;
 	public onGameAction?: (data: { action: string; payload: any; senderId: string }) => void;
 	public onError?: (data: { message: string }) => void;
+	public onRejoinPrompt?: (data: { roomId: string; players: any[]; scoreGoal: number; gameStarted: boolean; gameId: any }) => void;
+	public onStateSyncRequest?: (data: { requesterId: string }) => void;
+	public onStateSync?: (data: { gameState: any; targetId: string }) => void;
 
 	private constructor() {
 		const socketPath = getPathname() + '/socket.io';
@@ -35,23 +41,64 @@ export class OnlineManager {
 	private setupListeners() {
 		this.socket.on('connect', () => {
 			console.log('Connected to server', this.socket.id);
+
+			// Send stored userId (if any) to server to identify
+			try {
+				const saved = localStorage.getItem(FARKLE_USER_ID);
+				this.socket.emit('identify', { userId: saved });
+			} catch (err) {
+				console.warn('Could not access localStorage for userId', err);
+			}
+		});
+
+		// Server will reply with assigned/confirmed userId
+		this.socket.on('identified', (data: { userId: string }) => {
+			try {
+				localStorage.setItem(FARKLE_USER_ID, data.userId);
+				console.log('Stored User ID in localStorage', data.userId);
+			} catch (err) {
+				console.warn('Could not store User ID in localStorage', err);
+			}
+		});
+
+		this.socket.on('rejoin_prompt', (data) => {
+			if (this.onRejoinPrompt) this.onRejoinPrompt(data);
+		});
+
+		this.socket.on('request_state_sync', (data) => {
+			if (this.onStateSyncRequest) this.onStateSyncRequest(data);
+		});
+
+		this.socket.on('state_sync', (data) => {
+			if (this.onStateSync) this.onStateSync(data);
 		});
 
 		this.socket.on('room_created', (data) => {
 			this.currentRoomId = data.roomId;
 			this.isHost = true;
 			this.scoreGoal = data.scoreGoal;
+			this.isRandom = !!data.isRandom;
 			if (this.onRoomCreated) this.onRoomCreated(data);
 		});
 
 		this.socket.on('player_joined', (data) => {
 			if (data.roomId) this.currentRoomId = data.roomId;
 			if (data.scoreGoal) this.scoreGoal = data.scoreGoal;
+			if (data.isRandom !== undefined) this.isRandom = data.isRandom;
 			if (this.onPlayerJoined) this.onPlayerJoined(data);
 		});
 
 		this.socket.on('player_left', (data) => {
 			if (this.onPlayerJoined) this.onPlayerJoined(data); // Reuse same callback for list update
+		});
+
+		this.socket.on('player_disconnected', (data) => {
+			// Treat as player update or specific UI
+			console.log('Player disconnected:', data.playerId);
+		});
+
+		this.socket.on('player_rejoined', (data) => {
+			console.log('Player rejoined:', data.playerId);
 		});
 
 		this.socket.on('player_update', (data) => {
@@ -87,6 +134,15 @@ export class OnlineManager {
 		this.socket.emit('join_room', { roomId, playerName });
 	}
 
+	public rejoinGame(roomId: string) {
+		this.currentRoomId = roomId;
+		this.socket.emit('rejoin_game', { roomId });
+	}
+
+	public sendStateSync(targetId: string, gameState: any) {
+		this.socket.emit('state_sync', { targetId, gameState });
+	}
+
 	public setReady(roomId: string, isReady: boolean) {
 		this.socket.emit('player_ready', { roomId, isReady });
 	}
@@ -104,10 +160,20 @@ export class OnlineManager {
 	}
 
 	public leaveRoom() {
+		this.socket.emit('leave_room');
 		this.currentRoomId = null;
 		this.isHost = false;
-		// Optional: emit 'leave_room' if server supports it,
-		// currently server handles disconnect or game_over
+		this.isRandom = false;
+	}
+
+	public getUserId(): string | null {
+		try {
+			const saved = localStorage.getItem(FARKLE_USER_ID);
+			return saved;
+		} catch (err) {
+			console.warn('Could not access localStorage for userId', err);
+			return null;
+		}
 	}
 
 	public getSocketId() {

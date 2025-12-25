@@ -62,14 +62,15 @@ export class NewGameMenu {
 
 	private renderLobby(players: any[]) {
 		const container = this.modal.querySelector('#menuContent')!;
-		const myId = this.onlineManager.getSocketId();
+		const myId = this.onlineManager.getUserId();
 		const me = players.find((p: any) => p.id === myId);
 		const isReady = me?.ready || false;
+		const isRandom = this.onlineManager.isRandom;
 
 		container.innerHTML = `
 			<div class="online-setup lobby-layout">
 				<div class="lobby-header">
-					<h2>Sala: ${this.onlineManager.currentRoomId}</h2>
+					<h2>${isRandom ? 'Buscando oponente...' : `Sala: ${this.onlineManager.currentRoomId}`}</h2>
 				</div>
 				
 				<div class="lobby-columns">
@@ -99,6 +100,9 @@ export class NewGameMenu {
 							<span class="value">${this.onlineManager.scoreGoal.toLocaleString()} pts</span>
 						</div>
 						
+						${
+							!isRandom
+								? `
 						<div class="lobby-actions">
 							<button id="toggleReadyBtn" class="secondary-btn ${isReady ? 'ready-active' : ''}">
 								${isReady ? 'Listo ✓' : 'Marcar como Listo'}
@@ -111,26 +115,37 @@ export class NewGameMenu {
 									: ''
 							}
 						</div>
+						`
+								: `
+						<div class="lobby-actions">
+							<p>Esperando a otro jugador...</p>
+						</div>
+						`
+						}
 					</div>
 				</div>
 			</div>
 		`;
 
-		const readyBtn = container.querySelector('#toggleReadyBtn') as HTMLButtonElement;
-		readyBtn.addEventListener('click', () => {
-			if (this.onlineManager.currentRoomId) {
-				this.onlineManager.setReady(this.onlineManager.currentRoomId, !isReady);
-			}
-		});
-
-		if (this.onlineManager.isHost) {
-			const startBtn = container.querySelector('#hostStartGameBtn') as HTMLButtonElement;
-			if (startBtn) {
-				startBtn.addEventListener('click', () => {
+		if (!isRandom) {
+			const readyBtn = container.querySelector('#toggleReadyBtn') as HTMLButtonElement;
+			if (readyBtn) {
+				readyBtn.addEventListener('click', () => {
 					if (this.onlineManager.currentRoomId) {
-						this.onlineManager.startGame(this.onlineManager.currentRoomId);
+						this.onlineManager.setReady(this.onlineManager.currentRoomId, !isReady);
 					}
 				});
+			}
+
+			if (this.onlineManager.isHost) {
+				const startBtn = container.querySelector('#hostStartGameBtn') as HTMLButtonElement;
+				if (startBtn) {
+					startBtn.addEventListener('click', () => {
+						if (this.onlineManager.currentRoomId) {
+							this.onlineManager.startGame(this.onlineManager.currentRoomId);
+						}
+					});
+				}
 			}
 		}
 	}
@@ -269,7 +284,7 @@ export class NewGameMenu {
 			if (name) {
 				this.setStoredUsername(name);
 				console.log('Searching match for:', name);
-				this.onlineManager.findMatch(name, this.scoreGoalSetup);
+				this.onlineManager.findMatch(name);
 			} else {
 				nameInput.focus();
 			}
