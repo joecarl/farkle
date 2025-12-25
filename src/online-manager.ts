@@ -23,7 +23,7 @@ export class OnlineManager {
 	public onError?: (data: { message: string }) => void;
 	public onRejoinPrompt?: (data: { roomId: string; players: any[]; scoreGoal: number; gameStarted: boolean; gameId: any }) => void;
 	public onStateSyncRequest?: (data: { requesterId: string }) => void;
-	public onStateSync?: (data: { gameState: any; targetId: string }) => void;
+	public onStateSync?: (data: { state: any; targetId: string }) => void;
 
 	private constructor() {
 		const socketPath = getPathname() + '/socket.io';
@@ -139,8 +139,8 @@ export class OnlineManager {
 		this.socket.emit('rejoin_game', { roomId });
 	}
 
-	public sendStateSync(targetId: string, gameState: any) {
-		this.socket.emit('state_sync', { targetId, gameState });
+	public sendStateSync(targetId: string, state: any) {
+		this.socket.emit('state_sync', { targetId, state });
 	}
 
 	public setReady(roomId: string, isReady: boolean) {

@@ -219,15 +219,21 @@ export class FarkleGame {
 			// Only send if we are in the same room (checked by server, but good to be safe)
 			// and if we have valid state.
 			if (this.isOnline && this.roomId) {
-				const state = this.logic.getGameState();
-				this.onlineManager.sendStateSync(data.requesterId, state);
+				const logicState = this.logic.getGameState();
+				// Include visual positions so the requester can restore 3D placement
+				const visualState: any = { dice: {} };
+				this.dice.forEach((d) => {
+					visualState.dice[d.diceIndex] = { ...d };
+				});
+				const payload = { logicState, visualState } as any;
+				this.onlineManager.sendStateSync(data.requesterId, payload);
 			}
 		};
 
 		this.onlineManager.onStateSync = (data) => {
 			if (this.isOnline) {
 				console.log('Restoring game state...');
-				this.logic.restoreState(data.gameState);
+				this.logic.restoreState(data.state.logicState);
 
 				// Update visual dice from logical dice
 				const logicalDice = this.logic.getDice();
@@ -235,9 +241,29 @@ export class FarkleGame {
 					d.value = logicalDice[i].value;
 					d.selected = logicalDice[i].selected;
 					d.locked = logicalDice[i].locked;
-					// Reset positions/rotations if needed, or animate them
-					// For now, just snap them to a valid state or let draw handle it
 				});
+
+				// If the sender included visual positions, restore them to the 3D scene
+				const visualState = data.state.visualState ?? null;
+				if (visualState) {
+					this.dice.forEach((d) => {
+						const vd = visualState.dice[d.diceIndex] as VisualDie;
+						if (vd) {
+							if (vd.targetPosition) {
+								d.currentPosition.set(vd.targetPosition.x, vd.targetPosition.y, vd.targetPosition.z);
+							} else {
+								d.currentPosition.set(vd.currentPosition.x, vd.currentPosition.y, vd.currentPosition.z);
+							}
+							d.rotationX = vd.rotationX;
+							d.rotationY = vd.rotationY;
+							d.rotationZ = vd.rotationZ;
+							d.targetRotationX = vd.targetRotationX;
+							d.targetRotationY = vd.targetRotationY;
+							d.targetRotationZ = vd.targetRotationZ;
+							this.updateDieScreenPosition(d);
+						}
+					});
+				}
 
 				this.updateUI();
 				this.draw();
@@ -563,11 +589,11 @@ export class FarkleGame {
 					this.dice3D.setPosition(die.diceIndex, die.currentPosition);
 				}
 
-				if (progress < 0.85) {
-					die.value = Math.floor(Math.random() * 6) + 1;
-				} else {
-					die.value = die.targetValue;
-				}
+				// if (progress < 0.85) {
+				// 	die.value = Math.floor(Math.random() * 6) + 1;
+				// } else {
+				// 	die.value = die.targetValue;
+				// }
 
 				if (progress >= 1) {
 					die.rolling = false;

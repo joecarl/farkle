@@ -71,7 +71,8 @@ io.on('connection', (socket: Socket) => {
 			console.log(`Socket ${socket.id} identified as existing user ${userId}`);
 
 			// Check if this user is part of any ongoing game (so they can be prompted to rejoin)
-			ongoingRoom = Object.values(rooms).find((r) => r.players.some((p) => p.id === userId) && r.gameStarted) ?? null;
+			ongoingRoom =
+				Object.values(rooms).find((r) => r.players.some((p) => p.id === userId) && r.players.some((p) => !p.disconnected) && r.gameStarted) ?? null;
 		} else {
 			// Generate a new random id and persist
 			userId = crypto.randomBytes(12).toString('hex');
@@ -230,7 +231,7 @@ io.on('connection', (socket: Socket) => {
 		}
 	});
 
-	socket.on('state_sync', (data: { targetId: string; gameState: any }) => {
+	socket.on('state_sync', (data: { targetId: string; state: any }) => {
 		// Relay state to the target user
 		// We need to find the socket for targetId.
 		// Since we don't have a map of userId -> socket, we can broadcast to room with "for: targetId"
@@ -243,7 +244,7 @@ io.on('connection', (socket: Socket) => {
 		// Find room
 		const room = Object.values(rooms).find((r) => r.players.some((p) => p.id === userId));
 		if (room) {
-			io.to(room.id).emit('state_sync', { gameState: data.gameState, targetId: data.targetId });
+			io.to(room.id).emit('state_sync', { state: data.state, targetId: data.targetId });
 		}
 	});
 
