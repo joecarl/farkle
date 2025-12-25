@@ -13,14 +13,62 @@ const db = new Database(dbPath);
 
 // Initialize tables
 db.exec(`
-  CREATE TABLE IF NOT EXISTS games (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    end_time DATETIME,
-    winner_name TEXT,
-    players_json TEXT
-  );
+	CREATE TABLE IF NOT EXISTS games (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+		end_time DATETIME,
+		winner_name TEXT,
+		players_json TEXT
+	);
+	CREATE TABLE IF NOT EXISTS users (
+		id TEXT PRIMARY KEY,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		last_seen DATETIME,
+		display_name TEXT,
+		email TEXT,
+		avatar_url TEXT,
+		role TEXT DEFAULT 'player',
+		preferences_json TEXT,
+		wins INTEGER DEFAULT 0,
+		losses INTEGER DEFAULT 0,
+		locale TEXT,
+		last_ip TEXT,
+		is_banned INTEGER DEFAULT 0
+	);
 `);
+
+// Ensure columns exist for older DBs: add missing columns safely
+const columnInfo = (table: string) => db.prepare(`PRAGMA table_info(${table})`).all();
+const hasColumn = (table: string, column: string) => columnInfo(table).some((c: any) => c.name === column);
+const addColumnIfMissing = (table: string, columnName: string, columnCfg: string) => {
+	try {
+		if (!hasColumn(table, columnName)) {
+			db.exec(`ALTER TABLE ${table} ADD COLUMN ${columnName} ${columnCfg}`);
+		}
+	} catch (err) {
+		console.error(`Failed to add column ${columnName} to ${table}:`, err);
+	}
+};
+
+// Run migration additions (no-op if columns already present)
+addColumnIfMissing('users', 'display_name', 'TEXT');
+
+// User helpers
+export const getUser = (id: string) => {
+	const stmt = db.prepare('SELECT * FROM users WHERE id = ?');
+	return stmt.get(id);
+};
+
+export const createUser = (id: string) => {
+	const stmt = db.prepare('INSERT OR IGNORE INTO users (id, last_seen) VALUES (?, CURRENT_TIMESTAMP)');
+	const info = stmt.run(id);
+	return info.changes > 0;
+};
+
+export const touchUser = (id: string) => {
+	const stmt = db.prepare('UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = ?');
+	stmt.run(id);
+};
 
 export const logConnection = (ip: string, socketId: string, event: 'connect' | 'disconnect') => {
 	const timestamp = new Date().toISOString();
