@@ -15,12 +15,8 @@ interface VisualDie extends DieState {
 	rolling: boolean;
 	targetValue: number;
 	rollTime: number;
-	rotationX: number;
-	rotationY: number;
-	rotationZ: number;
-	targetRotationX: number;
-	targetRotationY: number;
-	targetRotationZ: number;
+	rotation: THREE.Euler;
+	targetRotation: THREE.Euler;
 	diceIndex: number;
 	startPosition?: THREE.Vector3;
 	targetPosition?: THREE.Vector3;
@@ -254,12 +250,9 @@ export class FarkleGame {
 							} else {
 								d.currentPosition.set(vd.currentPosition.x, vd.currentPosition.y, vd.currentPosition.z);
 							}
-							d.rotationX = vd.rotationX;
-							d.rotationY = vd.rotationY;
-							d.rotationZ = vd.rotationZ;
-							d.targetRotationX = vd.targetRotationX;
-							d.targetRotationY = vd.targetRotationY;
-							d.targetRotationZ = vd.targetRotationZ;
+							// Support both legacy numeric fields and serialized Euler-like objects
+							d.rotation.set(vd.rotation.x, vd.rotation.y, vd.rotation.z);
+							d.targetRotation.set(vd.targetRotation.x, vd.targetRotation.y, vd.targetRotation.z);
 							this.updateDieScreenPosition(d);
 						}
 					});
@@ -355,12 +348,8 @@ export class FarkleGame {
 				rolling: false,
 				targetValue: 1,
 				rollTime: 0,
-				rotationX: 0,
-				rotationY: 0,
-				rotationZ: 0,
-				targetRotationX: 0,
-				targetRotationY: 0,
-				targetRotationZ: 0,
+				rotation: new THREE.Euler(0, 0, 0),
+				targetRotation: new THREE.Euler(0, 0, 0),
 				diceIndex,
 				currentPosition: position3D.clone(),
 				settling: false,
@@ -580,9 +569,9 @@ export class FarkleGame {
 				const progress = Math.min(die.rollTime / ROLL_DURATION, 1);
 				const easeProgress = 1 - Math.pow(1 - progress, 3);
 
-				die.rotationX = die.targetRotationX * easeProgress;
-				die.rotationY = die.targetRotationY * easeProgress;
-				die.rotationZ = die.targetRotationZ * easeProgress;
+				die.rotation.x = die.targetRotation.x * easeProgress;
+				die.rotation.y = die.targetRotation.y * easeProgress;
+				die.rotation.z = die.targetRotation.z * easeProgress;
 
 				if (die.startPosition && die.targetPosition) {
 					die.currentPosition.lerpVectors(die.startPosition, die.targetPosition, easeProgress);
@@ -604,6 +593,8 @@ export class FarkleGame {
 						this.updateDieScreenPosition(die);
 					}
 
+					// Ensure final rotation matches target
+					die.rotation.copy(die.targetRotation);
 					// Check if all dice finished rolling
 					if (!this.dice.some((d) => d.rolling)) {
 						this.isRolling = false;
@@ -1199,34 +1190,46 @@ export class FarkleGame {
 		// Set target rotation to show the correct face
 		switch (die.targetValue) {
 			case 1:
-				die.targetRotationX = -Math.PI / 2 + extraRotationsX;
-				die.targetRotationY = 0 + extraRotationsY;
-				die.targetRotationZ = randomVerticalRotation + extraRotationsZ;
+				die.targetRotation.set(
+					-Math.PI / 2 + extraRotationsX, // X
+					0 + extraRotationsY, // Y
+					randomVerticalRotation + extraRotationsZ // Z
+				);
 				break;
 			case 2:
-				die.targetRotationX = Math.PI + extraRotationsX;
-				die.targetRotationY = randomVerticalRotation + extraRotationsY;
-				die.targetRotationZ = 0 + extraRotationsZ;
+				die.targetRotation.set(
+					Math.PI + extraRotationsX, // X
+					randomVerticalRotation + extraRotationsY, // Y
+					0 + extraRotationsZ // Z
+				);
 				break;
 			case 3:
-				die.targetRotationX = 0 + extraRotationsX;
-				die.targetRotationY = randomVerticalRotation + extraRotationsY;
-				die.targetRotationZ = Math.PI / 2 + extraRotationsZ;
+				die.targetRotation.set(
+					0 + extraRotationsX, // X
+					randomVerticalRotation + extraRotationsY, // Y
+					Math.PI / 2 + extraRotationsZ // Z
+				);
 				break;
 			case 4:
-				die.targetRotationX = 0 + extraRotationsX;
-				die.targetRotationY = randomVerticalRotation + extraRotationsY;
-				die.targetRotationZ = -Math.PI / 2 + extraRotationsZ;
+				die.targetRotation.set(
+					0 + extraRotationsX, // X
+					randomVerticalRotation + extraRotationsY, // Y
+					-Math.PI / 2 + extraRotationsZ // Z
+				);
 				break;
 			case 5:
-				die.targetRotationX = 0 + extraRotationsX;
-				die.targetRotationY = randomVerticalRotation + extraRotationsY;
-				die.targetRotationZ = 0 + extraRotationsZ;
+				die.targetRotation.set(
+					0 + extraRotationsX, // X
+					randomVerticalRotation + extraRotationsY, // Y
+					0 + extraRotationsZ // Z
+				);
 				break;
 			case 6:
-				die.targetRotationX = Math.PI / 2 + extraRotationsX;
-				die.targetRotationY = 0 + extraRotationsY;
-				die.targetRotationZ = randomVerticalRotation + extraRotationsZ;
+				die.targetRotation.set(
+					Math.PI / 2 + extraRotationsX, // X
+					0 + extraRotationsY, // Y
+					randomVerticalRotation + extraRotationsZ // Z
+				);
 				break;
 		}
 	}
@@ -1235,7 +1238,7 @@ export class FarkleGame {
 		const { selected, locked } = die;
 
 		// Update 3D dice rotation
-		this.dice3D.setRotation(die.diceIndex, die.rotationX, die.rotationY, die.rotationZ);
+		this.dice3D.setRotation(die.diceIndex, die.rotation.x, die.rotation.y, die.rotation.z);
 
 		// Update 3D visual state
 		this.dice3D.setDiceState(die.diceIndex, selected, locked);
@@ -1244,9 +1247,7 @@ export class FarkleGame {
 	public setTestDiceRotation(xDegrees: number, yDegrees: number, zDegrees: number): void {
 		if (this.dice.length > 0) {
 			const testDie = this.dice[0];
-			testDie.rotationX = (xDegrees * Math.PI) / 180;
-			testDie.rotationY = (yDegrees * Math.PI) / 180;
-			testDie.rotationZ = (zDegrees * Math.PI) / 180;
+			testDie.rotation.set((xDegrees * Math.PI) / 180, (yDegrees * Math.PI) / 180, (zDegrees * Math.PI) / 180);
 			this.draw();
 		}
 	}
