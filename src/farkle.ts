@@ -1,6 +1,5 @@
 import type { DicePositions, DieState, GameConfig } from './types';
-import * as THREE from 'three';
-import { Dice3D } from './dice3D';
+import { addVectors, Dice3D, distance, subVectors, type Vector3D } from './dice3D';
 import { FarkleLogic } from './logic';
 import { AudioManager } from './audio';
 import { NewGameMenu } from './new-game-menu';
@@ -10,20 +9,9 @@ import { interval, sleep } from './utils';
 
 // Visual representation of a die, extending the logical state
 interface VisualDie extends DieState {
+	diceIndex: number;
 	x: number;
 	y: number;
-	rolling: boolean;
-	targetValue: number;
-	rollTime: number;
-	rotation: THREE.Euler;
-	targetRotation: THREE.Euler;
-	diceIndex: number;
-	startPosition?: THREE.Vector3;
-	targetPosition?: THREE.Vector3;
-	currentPosition: THREE.Vector3;
-	settling: boolean;
-	collecting: boolean;
-	remoteDragging?: boolean;
 }
 
 export class FarkleGame {
@@ -52,9 +40,8 @@ export class FarkleGame {
 	private logic: FarkleLogic;
 	private audioManager?: AudioManager;
 
-	private isDragging = false;
 	private draggedDieIndex = -1;
-	private dragOffset = new THREE.Vector3();
+	private dragOffset: Vector3D = { x: 0, y: 0, z: 0 };
 	private lastTime: number = 0;
 	private previousTurnScore: number = 0;
 	private isBanking: boolean = false;
@@ -219,10 +206,11 @@ export class FarkleGame {
 				// Include visual positions so the requester can restore 3D placement
 				const visualState: any = { dice: {} };
 				this.dice.forEach((d) => {
-					visualState.dice[d.diceIndex] = { ...d };
+					const state = this.dice3D.getDieState(d.diceIndex);
+					visualState.dice[d.diceIndex] = { ...d, ...state };
 				});
 				const payload = { logicState, visualState } as any;
-				this.onlineManager.sendStateSync(data.requesterId, payload);
+				this.onlineManager.sendStateSync(data.requesterId, this.roomId, payload);
 			}
 		};
 
@@ -243,17 +231,17 @@ export class FarkleGame {
 				const visualState = data.state.visualState ?? null;
 				if (visualState) {
 					this.dice.forEach((d) => {
-						const vd = visualState.dice[d.diceIndex] as VisualDie;
+						const vd = visualState.dice[d.diceIndex];
 						if (vd) {
-							if (vd.targetPosition) {
-								d.currentPosition.set(vd.targetPosition.x, vd.targetPosition.y, vd.targetPosition.z);
-							} else {
-								d.currentPosition.set(vd.currentPosition.x, vd.currentPosition.y, vd.currentPosition.z);
-							}
-							// Support both legacy numeric fields and serialized Euler-like objects
-							d.rotation.set(vd.rotation.x, vd.rotation.y, vd.rotation.z);
-							d.targetRotation.set(vd.targetRotation.x, vd.targetRotation.y, vd.targetRotation.z);
+							console.log('Restoring visual die', d.diceIndex);
+							this.dice3D.restoreDieState(d.diceIndex, vd);
+
+							d.value = vd.value;
+							d.selected = vd.selected;
+							d.locked = vd.locked;
+
 							this.updateDieScreenPosition(d);
+							console.log('Restored die', d);
 						}
 					});
 				}
@@ -290,15 +278,12 @@ export class FarkleGame {
 	private handleRemoteDieMove(index: number, position: { x: number; y: number; z: number }) {
 		const die = this.dice.find((d) => d.diceIndex === index);
 		if (die) {
-			if (!die.remoteDragging || !die.targetPosition) {
-				die.targetPosition = new THREE.Vector3(position.x, position.y, position.z);
-				die.remoteDragging = true;
-				// If distance is huge, snap immediately
-				if (die.currentPosition.distanceTo(die.targetPosition) > 5) {
-					die.currentPosition.copy(die.targetPosition);
-				}
+			const state = this.dice3D.getDieState(index);
+			if (state && (state.moveType !== 'drag' || !state.targetPosition)) {
+				this.dice3D.setTargetPosition(index, { x: position.x, y: position.y, z: position.z });
+				this.dice3D.setRemoteDragging(index, true);
 			} else {
-				die.targetPosition.set(position.x, position.y, position.z);
+				this.dice3D.setTargetPosition(index, { x: position.x, y: position.y, z: position.z });
 			}
 			this.remoteUpdatePending = true;
 		}
@@ -307,9 +292,9 @@ export class FarkleGame {
 	private handleRemoteDieSettle(index: number, targetPosition: { x: number; y: number; z: number }) {
 		const die = this.dice.find((d) => d.diceIndex === index);
 		if (die) {
-			die.remoteDragging = false; // Stop remote dragging
-			die.targetPosition = new THREE.Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
-			die.settling = true;
+			this.dice3D.setRemoteDragging(index, false);
+			this.dice3D.setTargetPosition(index, { x: targetPosition.x, y: targetPosition.y, z: targetPosition.z });
+			this.dice3D.setSettle(index, true);
 		}
 	}
 
@@ -329,13 +314,7 @@ export class FarkleGame {
 			const row = Math.floor(i / 3);
 
 			// Posición 3D en la escena (distribuir dados en grid)
-			// const position3D = new THREE.Vector3(
-			// 	(col - 1) * 1.5, // -1.5, 0, 1.5
-			// 	0,
-			// 	(row - 0.5) * 1.5 // -0.75, 0.75
-			// );
-
-			const position3D = new THREE.Vector3(0, 0, 10);
+			const position3D = { x: 0, y: 0, z: 10 };
 
 			const diceIndex = this.dice3D.addDice(position3D);
 
@@ -345,15 +324,7 @@ export class FarkleGame {
 				locked: false,
 				x: startX + col * (this.DIE_SIZE + this.DIE_PADDING),
 				y: startY + row * (this.DIE_SIZE + this.DIE_PADDING),
-				rolling: false,
-				targetValue: 1,
-				rollTime: 0,
-				rotation: new THREE.Euler(0, 0, 0),
-				targetRotation: new THREE.Euler(0, 0, 0),
 				diceIndex,
-				currentPosition: position3D.clone(),
-				settling: false,
-				collecting: false,
 			};
 
 			this.dice.push(die);
@@ -386,16 +357,17 @@ export class FarkleGame {
 
 			const die = this.dice[index];
 			// Clear remote drag target to avoid conflict
-			die.remoteDragging = false;
+			this.dice3D.setRemoteDragging(index, false);
 
+			let targetPos: Vector3D;
 			if (die.selected) {
 				// Move to selection area (left side)
-				die.targetPosition = new THREE.Vector3(-3 + Math.random(), 0, Math.random() * 4 - 2);
+				targetPos = { x: -3 + Math.random(), y: 0, z: Math.random() * 4 - 2 };
 			} else {
 				// Move to play area (right side)
-				die.targetPosition = new THREE.Vector3(2.5 + Math.random(), 0, Math.random() * 4 - 2);
+				targetPos = { x: 2.5 + Math.random(), y: 0, z: Math.random() * 4 - 2 };
 			}
-			die.collecting = true;
+			this.dice3D.collectDice([index], targetPos);
 		}
 	}
 
@@ -410,7 +382,6 @@ export class FarkleGame {
 			}
 		}
 
-		this.isRolling = true;
 		this.actionsDisabled = true;
 
 		// Logic handles the rules of what to roll
@@ -426,10 +397,11 @@ export class FarkleGame {
 
 		// Pre-calculate positions for online sync
 		this.repositionDice(diceToRoll, forcedPositions);
-		const calculatedPositions = new Map<number, THREE.Vector3>();
+		const calculatedPositions = new Map<number, Vector3D>();
 		diceToRoll.forEach((d) => {
-			if (d.targetPosition) {
-				calculatedPositions.set(d.diceIndex, d.targetPosition.clone());
+			const state = this.dice3D.getDieState(d.diceIndex);
+			if (state && state.targetPosition) {
+				calculatedPositions.set(d.diceIndex, { ...state.targetPosition });
 			}
 		});
 
@@ -443,14 +415,12 @@ export class FarkleGame {
 		}
 
 		// Animate collection of dice to be rolled
-		const collectionPoint = new THREE.Vector3(10, 0, 10);
-
-		diceToRoll.forEach((die) => {
-			die.collecting = true;
-			die.targetPosition = collectionPoint.clone();
-			die.targetPosition.x += Math.random() * 4;
-			die.targetPosition.z += Math.random() * 4;
-		});
+		const collectionPoint = { x: 10, y: 0, z: 10 };
+		this.dice3D.collectDice(
+			diceToRoll.map((d) => d.diceIndex),
+			collectionPoint,
+			4
+		);
 
 		await sleep(500);
 
@@ -471,28 +441,24 @@ export class FarkleGame {
 		// Restore calculated positions
 		diceToRoll.forEach((d) => {
 			const pos = calculatedPositions.get(d.diceIndex);
-			if (pos) d.targetPosition = pos;
+			if (pos) this.dice3D.setTargetPosition(d.diceIndex, pos);
 		});
 
 		// Start rolling animation with 3D effect
-		diceToRoll.forEach((die) => {
-			die.rolling = true;
-			die.rollTime = 0;
-			die.targetValue = die.value;
+		const indices = diceToRoll.map((d) => d.diceIndex);
+		const targetValues = diceToRoll.map((d) => d.value); // Value is already updated by logic.rollDice? No, logic.rollDice returns indices.
+		// Wait, logic.rollDice updates internal state. syncDiceState updates visualDie.value.
+		// So d.value is correct target value.
 
-			// Set start position (off-screen, bottom-right approx)
-			die.startPosition = new THREE.Vector3(10 + Math.random() * 4, 2 + Math.random() * 1.5, 10 + Math.random() * 4);
-			this.dice3D.setPosition(die.diceIndex, die.startPosition);
+		this.dice3D.rollDice(indices, targetValues);
+		this.isRolling = true;
 
-			// Set target rotations based on target value
-			this.setDiceRotationForValue(die);
-		});
 		this.actionsDisabled = false;
 	}
 
 	private repositionDice(diceToRoll: VisualDie[], forcedPositions?: DicePositions) {
 		const lockedDice = this.dice.filter((d) => !diceToRoll.includes(d));
-		const occupiedPositions: THREE.Vector3[] = [];
+		const occupiedPositions: Vector3D[] = [];
 
 		// Get positions of locked dice
 		lockedDice.forEach((d) => {
@@ -506,12 +472,12 @@ export class FarkleGame {
 		diceToRoll.forEach((die) => {
 			if (forcedPositions && forcedPositions[die.diceIndex]) {
 				const pos = forcedPositions[die.diceIndex];
-				die.targetPosition = new THREE.Vector3(pos.x, pos.y, pos.z);
+				this.dice3D.setTargetPosition(die.diceIndex, { x: pos.x, y: pos.y, z: pos.z });
 				return;
 			}
 
 			let validPosition = false;
-			let newPos = new THREE.Vector3();
+			let newPos = { x: 0, y: 0, z: 0 };
 			let attempts = 0;
 
 			while (!validPosition && attempts < 100) {
@@ -519,12 +485,12 @@ export class FarkleGame {
 				const angle = Math.random() * Math.PI * 2;
 				const r = Math.sqrt(Math.random()) * radius; // Distribución uniforme en círculo
 				const centerX = 2.5; // Desplazamiento a la derecha (ajustado para centrar en los 2/3 derechos)
-				newPos.set(centerX + Math.cos(angle) * r, 0, Math.sin(angle) * r);
+				newPos = { x: centerX + Math.cos(angle) * r, y: 0, z: Math.sin(angle) * r };
 
 				// Verificar colisiones con dados bloqueados y dados ya posicionados en esta tirada
 				let collision = false;
 				for (const pos of occupiedPositions) {
-					if (newPos.distanceTo(pos) < minDistance) {
+					if (distance(newPos, pos) < minDistance) {
 						collision = true;
 						break;
 					}
@@ -538,7 +504,7 @@ export class FarkleGame {
 			}
 
 			if (validPosition) {
-				die.targetPosition = newPos;
+				this.dice3D.setTargetPosition(die.diceIndex, newPos);
 			}
 		});
 	}
@@ -552,114 +518,45 @@ export class FarkleGame {
 
 		let needsUpdate = false;
 
-		// Time-based constants
-		const ROLL_DURATION = 1.0;
-		// Calculate lerp factors: 1 - (1 - factor)^ (deltaTime * 60)
-		const lerpFactor = 1 - Math.pow(1 - 0.1, deltaTime * 60);
-		const dragLerpFactor = 1 - Math.pow(1 - 0.2, deltaTime * 60);
-		const collectLerpFactor = 1 - Math.pow(1 - 0.05, deltaTime * 60);
-		let anyAnimating = false;
+		// Update 3D dice animations
+		const anyAnimating = this.dice3D.update(deltaTime);
 
-		this.dice.forEach((die) => {
-			let animatingDie = true;
-			// Rolling Animation
-			if (die.rolling) {
-				needsUpdate = true;
-				die.rollTime += deltaTime;
-				const progress = Math.min(die.rollTime / ROLL_DURATION, 1);
-				const easeProgress = 1 - Math.pow(1 - progress, 3);
-
-				die.rotation.x = die.targetRotation.x * easeProgress;
-				die.rotation.y = die.targetRotation.y * easeProgress;
-				die.rotation.z = die.targetRotation.z * easeProgress;
-
-				if (die.startPosition && die.targetPosition) {
-					die.currentPosition.lerpVectors(die.startPosition, die.targetPosition, easeProgress);
-					this.dice3D.setPosition(die.diceIndex, die.currentPosition);
-				}
-
-				// if (progress < 0.85) {
-				// 	die.value = Math.floor(Math.random() * 6) + 1;
-				// } else {
-				// 	die.value = die.targetValue;
-				// }
-
-				if (progress >= 1) {
-					die.rolling = false;
-					die.value = die.targetValue;
-					if (die.targetPosition) {
-						die.currentPosition.copy(die.targetPosition);
-						this.dice3D.setPosition(die.diceIndex, die.currentPosition);
-						this.updateDieScreenPosition(die);
-					}
-
-					// Ensure final rotation matches target
-					die.rotation.copy(die.targetRotation);
-					// Check if all dice finished rolling
-					if (!this.dice.some((d) => d.rolling)) {
-						this.isRolling = false;
-						this.checkForScore();
-					}
+		// Handle dragging logic (still in Farkle for input handling, but updates position via dice3D)
+		if (this.draggedDieIndex !== -1) {
+			const die = this.dice.find((d) => d.diceIndex === this.draggedDieIndex);
+			if (die) {
+				const state = this.dice3D.getDieState(die.diceIndex);
+				if (state) {
+					// Target Y is 0.5 when dragging
+					const targetY = 0.5;
+					const dragLerpFactor = 1 - Math.pow(1 - 0.2, deltaTime * 60);
+					const currentPos = { ...state.currentPosition };
+					currentPos.y += (targetY - currentPos.y) * dragLerpFactor;
+					this.dice3D.setDiePosition(die.diceIndex, currentPos);
+					needsUpdate = true;
 				}
 			}
-			// Dragging Animation (Smooth Lift)
-			else if (this.isDragging && die.diceIndex === this.draggedDieIndex) {
-				needsUpdate = true;
-				// Target Y is 0.5 when dragging
-				const targetY = 0.5;
-				die.currentPosition.y += (targetY - die.currentPosition.y) * dragLerpFactor;
+		}
 
-				this.dice3D.setPosition(die.diceIndex, die.currentPosition);
-				this.updateDieScreenPosition(die);
-			}
-			// Remote Dragging Animation
-			else if (die.remoteDragging && die.targetPosition) {
-				needsUpdate = true;
-				// Interpolate towards remote target
-				die.currentPosition.lerp(die.targetPosition, 0.3);
-				this.dice3D.setPosition(die.diceIndex, die.currentPosition);
-				this.updateDieScreenPosition(die);
-			}
-			// Settling Animation (Drop & Collision Avoidance)
-			else if (die.settling && die.targetPosition) {
-				needsUpdate = true;
-				die.currentPosition.lerp(die.targetPosition, lerpFactor);
-				this.dice3D.setPosition(die.diceIndex, die.currentPosition);
-				this.updateDieScreenPosition(die);
+		// Check if rolling finished to trigger score check
+		// We need to know if we were rolling and now we are not
+		// But here we just check if any die is rolling
+		// The original code checked: if (!this.dice.some((d) => d.rolling)) { ... }
+		// We can check dice3D state
 
-				if (die.currentPosition.distanceTo(die.targetPosition) < 0.01) {
-					die.currentPosition.copy(die.targetPosition);
-					this.dice3D.setPosition(die.diceIndex, die.currentPosition);
-					die.settling = false;
-				}
-			}
-			// Collecting Animation
-			else if (die.collecting && die.targetPosition) {
-				needsUpdate = true;
-				die.currentPosition.lerp(die.targetPosition, collectLerpFactor);
-				this.dice3D.setPosition(die.diceIndex, die.currentPosition);
-				this.updateDieScreenPosition(die);
+		if (this.isRolling) {
+			const stillRolling = this.dice.some((d) => this.dice3D.getMoveType(d.diceIndex) === 'roll');
 
-				if (die.currentPosition.distanceTo(die.targetPosition) < 0.1) {
-					die.currentPosition.copy(die.targetPosition);
-					this.dice3D.setPosition(die.diceIndex, die.currentPosition);
-					die.collecting = false;
-				}
+			if (!stillRolling) {
+				this.isRolling = false;
+				this.checkForScore();
 			}
-			// Idle - Ensure Y is 0
-			else if (!die.locked && !die.selected && Math.abs(die.currentPosition.y) > 0.01) {
-				needsUpdate = true;
-				die.currentPosition.y += (0 - die.currentPosition.y) * dragLerpFactor;
-				this.dice3D.setPosition(die.diceIndex, die.currentPosition);
-			} else {
-				animatingDie = false;
-			}
-			if (animatingDie) {
-				anyAnimating = true;
-			}
-		});
+		}
 
-		if (needsUpdate || this.isDragging || this.remoteUpdatePending) {
+		// Update screen positions for UI
+		this.dice.forEach((die) => this.updateDieScreenPosition(die));
+
+		if (needsUpdate || anyAnimating || this.remoteUpdatePending) {
 			this.draw();
 			this.remoteUpdatePending = false;
 		}
@@ -788,21 +685,21 @@ export class FarkleGame {
 		if (clickedIndex !== null) {
 			const die = this.dice.find((d) => d.diceIndex === clickedIndex);
 			if (die && !die.locked) {
-				this.isDragging = true;
 				this.draggedDieIndex = clickedIndex;
 
 				// Calcular offset para arrastre suave
 				const intersection = this.dice3D.getPlaneIntersection(x, y);
 				const diePos = this.dice3D.getPosition(clickedIndex);
+				this.dice3D.stop(clickedIndex);
 				if (intersection && diePos) {
-					this.dragOffset.subVectors(diePos, intersection);
+					this.dragOffset = subVectors(diePos, intersection);
 				}
 			}
 		}
 	}
 
 	private onInputMove(clientX: number, clientY: number) {
-		if (!this.isDragging || this.draggedDieIndex === -1) return;
+		if (this.draggedDieIndex === -1) return;
 
 		const rect = this.canvas.getBoundingClientRect();
 		const x = clientX - rect.left;
@@ -810,21 +707,24 @@ export class FarkleGame {
 
 		const intersection = this.dice3D.getPlaneIntersection(x, y);
 		if (intersection) {
-			const newPos = new THREE.Vector3().addVectors(intersection, this.dragOffset);
+			const newPos = addVectors(intersection, this.dragOffset);
 
 			// Update currentPosition X and Z immediately for responsiveness
 			const die = this.dice.find((d) => d.diceIndex === this.draggedDieIndex);
 			if (die) {
-				die.currentPosition.x = newPos.x;
-				die.currentPosition.z = newPos.z;
-				// Y is handled in animate() for smoothness
+				const state = this.dice3D.getDieState(die.diceIndex);
+				if (!state) return;
+				this.dice3D.setDiePosition(die.diceIndex, { x: newPos.x, z: newPos.z });
+				if (state.targetPosition) {
+					this.dice3D.setTargetPosition(die.diceIndex, { x: newPos.x, z: newPos.z });
+				}
 
 				if (this.roomId) {
 					const now = Date.now();
 					if (now - this.lastMoveSendTime > 30) {
 						this.onlineManager.sendGameAction(this.roomId, 'die_move', {
 							index: die.diceIndex,
-							position: die.currentPosition,
+							position: this.dice3D.getPosition(die.diceIndex),
 						});
 						this.lastMoveSendTime = now;
 					}
@@ -834,54 +734,18 @@ export class FarkleGame {
 	}
 
 	private onInputEnd() {
-		if (!this.isDragging) return;
+		if (this.draggedDieIndex === -1) return;
 
 		const die = this.dice.find((d) => d.diceIndex === this.draggedDieIndex);
 		if (die) {
+			const state = this.dice3D.getDieState(die.diceIndex);
+			if (!state) return;
+
 			// Check for collisions and find valid position
-			const otherDice = this.dice.filter((d) => d.diceIndex !== die.diceIndex);
-			let targetPos = die.currentPosition.clone();
-			targetPos.y = 0; // Target floor
+			const targetPos = this.dice3D.findValidPosition(die.diceIndex, state.currentPosition);
 
-			// Physics-based relaxation to find closest valid position
-			const minDistance = 1.6;
-			let iterations = 0;
-			const maxIterations = 20;
-
-			while (iterations < maxIterations) {
-				let moveVector = new THREE.Vector3(0, 0, 0);
-				let collisionCount = 0;
-
-				for (const other of otherDice) {
-					// Use other.targetPosition if settling/rolling, else currentPosition
-					const otherPos = other.targetPosition || other.currentPosition;
-					const dist = targetPos.distanceTo(otherPos);
-
-					if (dist < minDistance) {
-						collisionCount++;
-						const pushDir = new THREE.Vector3().subVectors(targetPos, otherPos);
-
-						// If exact overlap, pick random direction
-						if (pushDir.lengthSq() < 0.0001) {
-							pushDir.set(Math.random() - 0.5, 0, Math.random() - 0.5);
-						}
-
-						pushDir.normalize();
-						const overlap = minDistance - dist;
-						// Add push vector (weighted by overlap)
-						moveVector.add(pushDir.multiplyScalar(overlap));
-					}
-				}
-
-				if (collisionCount === 0) break;
-
-				// Apply correction (with some damping factor if needed, but 0.8 works well)
-				targetPos.add(moveVector.multiplyScalar(0.5));
-				iterations++;
-			}
-
-			die.targetPosition = targetPos;
-			die.settling = true;
+			this.dice3D.setTargetPosition(die.diceIndex, targetPos);
+			this.dice3D.setSettle(die.diceIndex, true);
 
 			const screenPos = this.dice3D.getScreenPosition(this.draggedDieIndex);
 			if (screenPos) {
@@ -905,13 +769,12 @@ export class FarkleGame {
 				if (this.roomId) {
 					this.onlineManager.sendGameAction(this.roomId, 'die_settle', {
 						index: die.diceIndex,
-						targetPosition: die.targetPosition,
+						targetPosition: targetPos,
 					});
 				}
 			}
 		}
 
-		this.isDragging = false;
 		this.draggedDieIndex = -1;
 		// draw() is called by animate loop
 	}
@@ -1061,14 +924,16 @@ export class FarkleGame {
 				const visualDie = this.dice[dieToSelect.index];
 				visualDie.selected = true;
 
-				const targetPos = visualDie.currentPosition.clone();
+				const pos = this.dice3D.getPosition(visualDie.diceIndex);
+				if (!pos) continue;
+				const targetPos = { ...pos };
 				// Truquito para evitar solapamientos: distribuir en X y Z según índice
 				const i = lockedDiceCount + d++;
 				targetPos.x = i * 0.2 - 5.0 + Math.random() * 0.5;
 				targetPos.z = i * 1.5 - 3.5 + Math.random() * 0.5;
 
-				visualDie.targetPosition = targetPos;
-				visualDie.settling = true;
+				this.dice3D.setTargetPosition(visualDie.diceIndex, targetPos);
+				this.dice3D.setSettle(visualDie.diceIndex, true);
 
 				this.draw();
 				this.updateScoreDisplay(); // Update to new player
@@ -1109,15 +974,9 @@ export class FarkleGame {
 		// Target position: Bottom-left corner (off-screen)
 		// Camera is at (1, 12, 6), looking at (0, 0, 0).
 		// Moving to negative X (left) and positive Z (down/forward).
-		const collectionPoint = new THREE.Vector3(-5, 0, 14);
-
-		this.dice.forEach((die) => {
-			die.collecting = true;
-			die.targetPosition = collectionPoint.clone();
-			// Add some randomness to avoid perfect stacking
-			die.targetPosition.x += (Math.random() - 0.5) * 1;
-			die.targetPosition.z += (Math.random() - 0.5) * 1;
-		});
+		const collectionPoint = { x: -5, y: 0, z: 14 };
+		const indices = this.dice.map((d) => d.diceIndex);
+		this.dice3D.collectDice(indices, collectionPoint, 1);
 	}
 
 	public updateUI() {
@@ -1178,67 +1037,8 @@ export class FarkleGame {
 		this.ctx.restore();
 	}
 
-	private setDiceRotationForValue(die: VisualDie): void {
-		// Añadir múltiplos de 2π para dar vueltas completas (n >= 1)
-		const extraRotationsX = getExtraRotations(2);
-		const extraRotationsY = getExtraRotations(2);
-		const extraRotationsZ = getExtraRotations(2);
-
-		// Rotación aleatoria para el eje vertical
-		const randomVerticalRotation = Math.random() * Math.PI * 2;
-
-		// Set target rotation to show the correct face
-		switch (die.targetValue) {
-			case 1:
-				die.targetRotation.set(
-					-Math.PI / 2 + extraRotationsX, // X
-					0 + extraRotationsY, // Y
-					randomVerticalRotation + extraRotationsZ // Z
-				);
-				break;
-			case 2:
-				die.targetRotation.set(
-					Math.PI + extraRotationsX, // X
-					randomVerticalRotation + extraRotationsY, // Y
-					0 + extraRotationsZ // Z
-				);
-				break;
-			case 3:
-				die.targetRotation.set(
-					0 + extraRotationsX, // X
-					randomVerticalRotation + extraRotationsY, // Y
-					Math.PI / 2 + extraRotationsZ // Z
-				);
-				break;
-			case 4:
-				die.targetRotation.set(
-					0 + extraRotationsX, // X
-					randomVerticalRotation + extraRotationsY, // Y
-					-Math.PI / 2 + extraRotationsZ // Z
-				);
-				break;
-			case 5:
-				die.targetRotation.set(
-					0 + extraRotationsX, // X
-					randomVerticalRotation + extraRotationsY, // Y
-					0 + extraRotationsZ // Z
-				);
-				break;
-			case 6:
-				die.targetRotation.set(
-					Math.PI / 2 + extraRotationsX, // X
-					0 + extraRotationsY, // Y
-					randomVerticalRotation + extraRotationsZ // Z
-				);
-				break;
-		}
-	}
-
 	private drawDie(die: VisualDie) {
 		const { selected, locked } = die;
-
-		// Update 3D dice rotation
-		this.dice3D.setRotation(die.diceIndex, die.rotation.x, die.rotation.y, die.rotation.z);
 
 		// Update 3D visual state
 		this.dice3D.setDiceState(die.diceIndex, selected, locked);
@@ -1247,12 +1047,9 @@ export class FarkleGame {
 	public setTestDiceRotation(xDegrees: number, yDegrees: number, zDegrees: number): void {
 		if (this.dice.length > 0) {
 			const testDie = this.dice[0];
-			testDie.rotation.set((xDegrees * Math.PI) / 180, (yDegrees * Math.PI) / 180, (zDegrees * Math.PI) / 180);
+			const rotation = { x: (xDegrees * Math.PI) / 180, y: (yDegrees * Math.PI) / 180, z: (zDegrees * Math.PI) / 180 };
+			this.dice3D.setDieRotation(testDie.diceIndex, rotation);
 			this.draw();
 		}
 	}
-}
-
-function getExtraRotations(max: number): number {
-	return Math.PI * 2 * (Math.floor(Math.random() * max) + 1);
 }

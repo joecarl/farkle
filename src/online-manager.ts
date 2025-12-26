@@ -70,6 +70,7 @@ export class OnlineManager {
 		});
 
 		this.socket.on('state_sync', (data) => {
+			if (data.targetId !== this.getUserId()) return;
 			if (this.onStateSync) this.onStateSync(data);
 		});
 
@@ -139,8 +140,8 @@ export class OnlineManager {
 		this.socket.emit('rejoin_game', { roomId });
 	}
 
-	public sendStateSync(targetId: string, state: any) {
-		this.socket.emit('state_sync', { targetId, state });
+	public sendStateSync(targetId: string, roomId: string, state: any) {
+		this.socket.emit('state_sync', { targetId, roomId, state });
 	}
 
 	public setReady(roomId: string, isReady: boolean) {

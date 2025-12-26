@@ -35,6 +35,18 @@ interface Room {
 const rooms: Record<string, Room> = {};
 const usersSocketMap: Record<string, string> = {}; // userId -> socketId
 
+function printRooms() {
+	console.log('Current Rooms:');
+	for (const roomId in rooms) {
+		const room = rooms[roomId];
+		let players = '';
+		room.players.forEach((p) => {
+			players += `${p.name}${p.disconnected ? ' (disconnected)' : ''}, `;
+		});
+		console.log(`- Room ${roomId}: started=${room.gameStarted}, players(${players.length})=[${players}]`);
+	}
+}
+
 // Note: per-connection bound user id is stored locally inside the connection handler.
 
 io.on('connection', (socket: Socket) => {
@@ -222,6 +234,7 @@ io.on('connection', (socket: Socket) => {
 					// We can't easily target by socket ID since we don't store it in room.players (we store user ID)
 					// But we can broadcast to room "request_state_sync" and anyone can answer
 					socket.to(data.roomId).emit('request_state_sync', { requesterId: userId });
+					console.log(`Requesting state sync for user ${userId} in room ${data.roomId} from other players`);
 				} else {
 					// No one else? Maybe game over or wait.
 					console.log(`User ${userId} rejoined room ${data.roomId} but no other players to sync from`);
@@ -231,7 +244,7 @@ io.on('connection', (socket: Socket) => {
 		}
 	});
 
-	socket.on('state_sync', (data: { targetId: string; state: any }) => {
+	socket.on('state_sync', (data: { targetId: string; roomId: string; state: any }) => {
 		// Relay state to the target user
 		// We need to find the socket for targetId.
 		// Since we don't have a map of userId -> socket, we can broadcast to room with "for: targetId"
@@ -242,8 +255,8 @@ io.on('connection', (socket: Socket) => {
 		const userId = getUserId();
 		if (!userId) return;
 		// Find room
-		const room = Object.values(rooms).find((r) => r.players.some((p) => p.id === userId));
-		if (room) {
+		const room = rooms[data.roomId];
+		if (room && room.players.some((p) => p.id === userId)) {
 			io.to(room.id).emit('state_sync', { state: data.state, targetId: data.targetId });
 		}
 	});
@@ -322,27 +335,26 @@ io.on('connection', (socket: Socket) => {
 			const room = rooms[roomId];
 			const player = room.players.find((p) => p.id === userId);
 
-			if (player) {
-				if (room.gameStarted) {
-					// Mark as disconnected but keep in room for reconnection
-					player.disconnected = true;
-					io.to(roomId).emit('player_disconnected', { playerId: userId });
-					console.log(`Player ${userId} disconnected from active game in room ${roomId}`);
-				} else {
-					// Not started, remove completely
-					const playerIndex = room.players.indexOf(player);
-					room.players.splice(playerIndex, 1);
-					io.to(roomId).emit('player_left', { players: room.players });
-					console.log(`Player ${userId} removed from lobby ${roomId}`);
+			if (!player) continue;
+			if (room.gameStarted) {
+				// Mark as disconnected but keep in room for reconnection
+				player.disconnected = true;
+				io.to(roomId).emit('player_disconnected', { playerId: userId });
+				console.log(`Player ${userId} disconnected from active game in room ${roomId}`);
+			} else {
+				// Not started, remove completely
+				const playerIndex = room.players.indexOf(player);
+				room.players.splice(playerIndex, 1);
+				io.to(roomId).emit('player_left', { players: room.players });
+				console.log(`Player ${userId} removed from lobby ${roomId}`);
 
-					if (room.players.length === 0) {
-						delete rooms[roomId];
-						console.log(`Room ${roomId} deleted (empty)`);
-					}
+				if (room.players.length === 0) {
+					delete rooms[roomId];
+					console.log(`Room ${roomId} deleted (empty)`);
 				}
-				break;
 			}
 		}
+		printRooms();
 	});
 });
 
