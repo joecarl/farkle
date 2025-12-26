@@ -272,7 +272,7 @@
 .primary-btn {
 	background-color: var(--p-color-1);
 	color: white;
-	border: none;
+	border: 1px solid #fff5;
 	padding: 0.4em 1.2em;
 	border-radius: 5px;
 	font-size: 1.5em;
@@ -289,13 +289,11 @@
 	background-color: rgba(255, 255, 255, 0.1);
 	color: white;
 	border: 1px solid rgba(255, 255, 255, 0.3);
-	padding: 1cqw 2cqw;
+	padding: 0.4em 1.2em;
 	border-radius: 5px;
-	font-size: 2.2cqw;
+	font-size: 1.5em;
 	cursor: pointer;
 	font-family: inherit;
-	width: 100%;
-	margin-top: 1cqw;
 	transition: background 0.2s;
 }
 

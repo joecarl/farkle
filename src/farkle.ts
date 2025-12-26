@@ -187,9 +187,10 @@ export class FarkleGame {
 	}
 
 	private setupOnlineListeners() {
-		this.onlineManager.onRejoinPrompt = (data) => {
+		this.onlineManager.onRejoinPrompt = async (data) => {
 			// Simple confirm for now. In a real app, use a nice modal.
-			if (confirm(`Tienes una partida en curso en la sala ${data.roomId}. ¿Quieres volver a unirte?`)) {
+			const res = await this.overlayManager.prompt('Reconectar', `Tienes una partida en curso en la sala ${data.roomId}. ¿Quieres volver a unirte?`);
+			if (res) {
 				this.roomId = data.roomId;
 				this.isOnline = true;
 				this.onlineManager.rejoinGame(data.roomId);
@@ -233,7 +234,7 @@ export class FarkleGame {
 					this.dice.forEach((d) => {
 						const vd = visualState.dice[d.diceIndex];
 						if (vd) {
-							console.log('Restoring visual die', d.diceIndex);
+							//console.log('Restoring visual die', d.diceIndex);
 							this.dice3D.restoreDieState(d.diceIndex, vd);
 
 							d.value = vd.value;
@@ -241,7 +242,7 @@ export class FarkleGame {
 							d.locked = vd.locked;
 
 							this.updateDieScreenPosition(d);
-							console.log('Restored die', d);
+							//console.log('Restored die', d);
 						}
 					});
 				}

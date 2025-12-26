@@ -12,6 +12,12 @@ export class OverlayManager {
 	private winnerRanking!: HTMLUListElement;
 	private winnerNewGameBtn!: HTMLButtonElement;
 
+	private promptOverlay!: HTMLDivElement;
+	private promptTitle!: HTMLHeadingElement;
+	private promptMessage!: HTMLHeadingElement;
+	private promptAcceptBtn!: HTMLButtonElement;
+	private promptCancelBtn!: HTMLButtonElement;
+
 	constructor(parent: HTMLElement, onNewGame: () => void) {
 		this.parent = parent;
 		this.onNewGame = onNewGame;
@@ -34,13 +40,24 @@ export class OverlayManager {
 					<h1 id="nextPlayerName" style="color: var(--p-color-1); margin: 20px 0;">Player Name</h1>
 				</div>
 			</div>
+			
+			<div id="promptOverlay" class="overlay hidden">
+				<div class="overlay-content" style="max-width: 400px; text-align: center;">
+					<h2 id="promptTitle" style="color: var(--p-color-1); ">Prompt title</h2>
+					<div id="promptMessage" style="font-size: 1.2em; margin: 20px 0;">Prompt message</div>
+					<div id="promptButtons" style="margin-top: 20px;">
+						<button id="promptAcceptBtn" class="primary-btn">Sí</button>
+						<button id="promptCancelBtn" class="secondary-btn">No</button>
+					</div>
+				</div>
+			</div>
 
 			<div id="winnerOverlay" class="overlay hidden">
 				<div class="overlay-content" style="max-width: 400px; text-align: center;">
 					<h2 style="margin: 0;">¡Ganador!</h2>
 					<h1 id="winnerName" style="color: var(--p-color-1); margin: 1vh 0;">Player Name</h1>
 					<ul id="winnerRanking" class="winner-ranking" style="list-style: none; padding: 0; text-align: left;"></ul>
-					<button id="winnerNewGameBtn" class="primary-btn" style="margin-top: 20px;">Nuevo Juego</button>
+					<button id="winnerNewGameBtn" class="primary-btn" style="margin-top: 20px;">Menú principal</button>
 				</div>
 			</div>
 		`;
@@ -57,9 +74,31 @@ export class OverlayManager {
 		this.winnerRanking = this.parent.querySelector('#winnerRanking')!;
 		this.winnerNewGameBtn = this.parent.querySelector('#winnerNewGameBtn')!;
 
+		this.promptOverlay = this.parent.querySelector('#promptOverlay')!;
+		this.promptTitle = this.parent.querySelector('#promptTitle')!;
+		this.promptMessage = this.parent.querySelector('#promptMessage')!;
+		this.promptAcceptBtn = this.parent.querySelector('#promptAcceptBtn')!;
+		this.promptCancelBtn = this.parent.querySelector('#promptCancelBtn')!;
+
 		this.winnerNewGameBtn.addEventListener('click', () => {
 			this.hideWinner();
 			this.onNewGame();
+		});
+	}
+
+	public async prompt(title: string, message: string) {
+		this.promptTitle.textContent = title;
+		this.promptMessage.textContent = message;
+		this.promptOverlay.classList.remove('hidden');
+		return new Promise<boolean>((resolve) => {
+			this.promptAcceptBtn.onclick = () => {
+				this.promptOverlay.classList.add('hidden');
+				resolve(true);
+			};
+			this.promptCancelBtn.onclick = () => {
+				this.promptOverlay.classList.add('hidden');
+				resolve(false);
+			};
 		});
 	}
 

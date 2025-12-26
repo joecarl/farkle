@@ -104,7 +104,7 @@ export class NewGameMenu {
 							!isRandom
 								? `
 						<div class="lobby-actions">
-							<button id="toggleReadyBtn" class="secondary-btn ${isReady ? 'ready-active' : ''}">
+							<button id="toggleReadyBtn" style="font-size: 1.2em;" class="secondary-btn ${isReady ? 'ready-active' : ''}">
 								${isReady ? 'Listo ✓' : 'Marcar como Listo'}
 							</button>
 							${
@@ -463,7 +463,7 @@ export class NewGameMenu {
 								<button id="addPlayerToGameBtn" type="button"> <div class="inline-icon beer-icon-small"></div> Añadir</button>
 							</div>
 							<div class="add-bot-group">
-								<button id="addBotBtn" type="button" class="secondary-btn">🤖 Añadir Bot</button>
+								<button id="addBotBtn" type="button" class="secondary-btn" style="width: 100%; margin-top: 0.4em; font-size: 2.2cqw;">🤖 Añadir Bot</button>
 							</div>
 						</div>
 						<div class="suggested-names-section">

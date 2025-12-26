@@ -84,7 +84,9 @@ io.on('connection', (socket: Socket) => {
 
 			// Check if this user is part of any ongoing game (so they can be prompted to rejoin)
 			ongoingRoom =
-				Object.values(rooms).find((r) => r.players.some((p) => p.id === userId) && r.players.some((p) => !p.disconnected) && r.gameStarted) ?? null;
+				Object.values(rooms).find(
+					(r) => r.players.some((p) => p.id === userId) && r.players.some((p) => !p.disconnected && p.id !== userId) && r.gameStarted
+				) ?? null;
 		} else {
 			// Generate a new random id and persist
 			userId = crypto.randomBytes(12).toString('hex');
