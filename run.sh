@@ -20,4 +20,3 @@ echo "Starting containers..."
 docker compose up --build -d
 
 echo "Application started!"
-echo "Client: http://localhost:8080"
