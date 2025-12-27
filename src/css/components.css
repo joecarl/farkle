@@ -46,13 +46,12 @@
 }
 
 .score-goal-display {
+	pointer-events: none;
 	position: absolute;
 	right: 1vw;
 	top: calc(8vw + 8vh);
 
 	font-size: clamp(14px, 2.2vmin, 40px);
-	color: var(--p-color-1);
-
 	font-weight: bold;
 	color: rgb(189, 146, 60);
 
