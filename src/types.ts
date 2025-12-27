@@ -19,6 +19,7 @@ export interface Player {
 
 export interface GameState {
 	players: Player[];
+	scoreGoal: number;
 	currentPlayerIndex: number;
 	turnScore: number;
 	isFarkle: boolean;

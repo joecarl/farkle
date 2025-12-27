@@ -9,6 +9,7 @@ export class FarkleLogic {
 	private dice: DieState[];
 	private isFarkleState: boolean = false;
 	private isStartOfTurn: boolean = true;
+	private gameFinished: boolean = false;
 	public scoreGoal: number;
 
 	constructor(players?: Player[], scoreGoal: number = DEFAULT_SCORE_GOAL) {
@@ -59,6 +60,7 @@ export class FarkleLogic {
 
 		return {
 			players: this.players,
+			scoreGoal: this.scoreGoal,
 			currentPlayerIndex: this.currentPlayerIndex,
 			turnScore: this.accumulatedTurnScore + scoring.score,
 			isFarkle: this.isFarkleState,
@@ -72,6 +74,7 @@ export class FarkleLogic {
 
 	public restoreState(state: GameState) {
 		this.players = state.players;
+		this.scoreGoal = state.scoreGoal;
 		this.currentPlayerIndex = state.currentPlayerIndex;
 		this.dice = state.dice;
 		this.isFarkleState = state.isFarkle;
@@ -247,7 +250,32 @@ export class FarkleLogic {
 	private nextTurn() {
 		this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
 		this.isFarkleState = false;
+		if (this.isFinalRound() && this.currentPlayerIndex === 0) {
+			this.gameFinished = true;
+			return;
+		}
 		this.isStartOfTurn = true;
+	}
+
+	public hasGameFinished(): boolean {
+		return this.gameFinished;
+	}
+
+	public getWinner(): Player | null {
+		if (!this.gameFinished) return null;
+		let highestScore = -1;
+		let winner: Player | null = null;
+		for (const p of this.players) {
+			if (p.score > highestScore) {
+				highestScore = p.score;
+				winner = p;
+			}
+		}
+		return winner;
+	}
+
+	public isFinalRound(): boolean {
+		return this.players.some((p) => p.score >= this.scoreGoal);
 	}
 
 	public resetDice() {

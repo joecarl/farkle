@@ -45,6 +45,58 @@
 	min-width: 2em;
 }
 
+.score-goal-display {
+	position: absolute;
+	right: 1vw;
+	top: calc(8vw + 8vh);
+
+	font-size: clamp(14px, 2.2vmin, 40px);
+	color: var(--p-color-1);
+
+	font-weight: bold;
+	color: rgb(189, 146, 60);
+
+	background-color: rgba(151, 87, 38, 0.6);
+	display: flex;
+	align-items: center;
+	gap: 1vmin;
+	padding: 0.3vw 1.2vw 0.2vw 1.2vw;
+	border: 2px solid;
+	border-radius: 1vmin;
+}
+
+#scoreGoalValue::after {
+	content: ' p';
+	opacity: 0.8;
+	font-size: 0.8em;
+}
+
+#finalRoundIndicator {
+	--color: #fc6a5a;
+	font-size: clamp(16px, 2.2vmin, 45px);
+	font-weight: bold;
+	color: var(--color);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-shadow: 0px 0 1vmin rgb(0, 0, 0);
+	background-color: rgba(65, 18, 18, 0.556);
+	padding: 0.6vw 1.6vw 0.5vw 1.6vw;
+	border: 0.2vw solid var(--color);
+	border-radius: 1.5vmin;
+	animation: finalRoundFlash 1s ease-in-out infinite;
+}
+
+@keyframes finalRoundFlash {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}
+
 .icon-btn {
 	background-color: transparent !important;
 	border: none !important;

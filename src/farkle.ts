@@ -30,6 +30,8 @@ export class FarkleGame {
 	private topBarPlayerName!: HTMLElement;
 	private topBarTurnScore!: HTMLElement;
 	private topBarTotalScore!: HTMLElement;
+	private scoreGoalValue!: HTMLElement;
+	private finalRoundIndicator!: HTMLElement;
 	private playersList!: HTMLUListElement;
 
 	private readonly DIE_SIZE = 60;
@@ -79,6 +81,7 @@ export class FarkleGame {
 
 		window.addEventListener('resize', () => this.handleResize());
 		this.handleResize();
+		this.scoreGoalValue.textContent = this.logic.scoreGoal.toString();
 
 		this.draw();
 	}
@@ -98,12 +101,14 @@ export class FarkleGame {
 						<span class="score-label">Turno</span>
 						<span id="topBarTurnScore" class="score-value">0</span>
 					</div>
+					<div id="finalRoundIndicator" class="hidden">Ronda final</div>
 					
 					<div style="flex: 1 1 auto"></div>
-
+					
 					<button id="easterEggBtn" class="icon-btn hidden" type="button"></button>
 					<button id="newGameBtn" class="icon-btn" type="button" title="Nuevo Juego"></button>
 				</div>		
+				<div class="score-goal-display">Meta: <span id="scoreGoalValue">---</span></div>
 					
 				<canvas id="gameCanvas"></canvas>
 
@@ -159,6 +164,8 @@ export class FarkleGame {
 		this.topBarPlayerName = document.querySelector('#topBarPlayerName')!;
 		this.topBarTurnScore = document.querySelector('#topBarTurnScore')!;
 		this.topBarTotalScore = document.querySelector('#topBarTotalScore')!;
+		this.finalRoundIndicator = document.querySelector('#finalRoundIndicator')!;
+		this.scoreGoalValue = document.querySelector('#scoreGoalValue')!;
 
 		this.playersList = document.querySelector('#playersList')!;
 
@@ -182,6 +189,8 @@ export class FarkleGame {
 		this.logic = new FarkleLogic(config.players, config.scoreGoal);
 		this.roomId = config.roomId || null;
 		this.isOnline = !!config.roomId;
+		this.finalRoundIndicator.classList.add('hidden');
+		this.scoreGoalValue.textContent = this.logic.scoreGoal.toString();
 
 		this.endTurn();
 	}
@@ -847,13 +856,13 @@ export class FarkleGame {
 		const gameState = this.logic.getGameState();
 		const numPlayers = gameState.players.length;
 		const previousPlayerIndex = (gameState.currentPlayerIndex - 1 + numPlayers) % numPlayers;
-		const previousPlayer = gameState.players[previousPlayerIndex];
 
-		if (previousPlayer.score >= this.logic.scoreGoal) {
-			this.overlayManager.showWinner(previousPlayer.name, gameState.players);
+		if (this.logic.hasGameFinished()) {
+			const winner = this.logic.getWinner()!;
+			this.overlayManager.showWinner(winner.name, gameState.players);
 
 			if (this.roomId) {
-				const payload = { winnerName: previousPlayer.name, players: gameState.players };
+				const payload = { winnerName: winner.name, players: gameState.players };
 				console.log('Sending game over action', payload);
 				this.onlineManager.sendGameAction(this.roomId, 'game_over', payload);
 				this.onlineManager.leaveRoom(); // Clean up local state
@@ -861,6 +870,10 @@ export class FarkleGame {
 
 			this.startNewGame(); // Reset for next game
 			return;
+		}
+
+		if (this.logic.isFinalRound()) {
+			this.finalRoundIndicator.classList.remove('hidden');
 		}
 
 		this.updateScoreDisplay(previousPlayerIndex);
