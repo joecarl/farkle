@@ -81,9 +81,14 @@ export class FarkleGame {
 
 		window.addEventListener('resize', () => this.handleResize());
 		this.handleResize();
-		this.scoreGoalValue.textContent = this.logic.scoreGoal.toString();
+		this.updateUI();
 
 		this.draw();
+
+		// Periodic resize check (some devices/browsers like iOS Safari don't fire resize events properly)
+		setInterval(() => {
+			this.handleResize();
+		}, 2000);
 	}
 
 	private injectHtml() {
@@ -190,8 +195,7 @@ export class FarkleGame {
 		this.roomId = config.roomId || null;
 		this.isOnline = !!config.roomId;
 		this.finalRoundIndicator.classList.add('hidden');
-		this.scoreGoalValue.textContent = this.logic.scoreGoal.toString();
-
+		this.updateUI();
 		this.endTurn();
 	}
 
@@ -995,6 +999,7 @@ export class FarkleGame {
 
 	public updateUI() {
 		this.updateScoreDisplay();
+		this.scoreGoalValue.textContent = this.logic.scoreGoal.toString();
 	}
 
 	private updateScoreDisplay(playerIndex?: number) {
