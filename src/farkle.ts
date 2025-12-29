@@ -10,8 +10,6 @@ import { interval, sleep } from './utils';
 // Visual representation of a die, extending the logical state
 interface VisualDie extends DieState {
 	diceIndex: number;
-	x: number;
-	y: number;
 }
 
 export class FarkleGame {
@@ -33,9 +31,6 @@ export class FarkleGame {
 	private scoreGoalValue!: HTMLElement;
 	private finalRoundIndicator!: HTMLElement;
 	private playersList!: HTMLUListElement;
-
-	private readonly DIE_SIZE = 60;
-	private readonly DIE_PADDING = 20;
 
 	private canvas3D!: HTMLCanvasElement;
 	private dice3D!: Dice3D;
@@ -253,9 +248,6 @@ export class FarkleGame {
 							d.value = vd.value;
 							d.selected = vd.selected;
 							d.locked = vd.locked;
-
-							this.updateDieScreenPosition(d);
-							//console.log('Restored die', d);
 						}
 					});
 				}
@@ -295,7 +287,7 @@ export class FarkleGame {
 			const state = this.dice3D.getDieState(index);
 			if (state && (state.moveType !== 'drag' || !state.targetPosition)) {
 				this.dice3D.setTargetPosition(index, { x: position.x, y: position.y, z: position.z });
-				this.dice3D.setRemoteDragging(index, true);
+				this.dice3D.setDragging(index, true);
 			} else {
 				this.dice3D.setTargetPosition(index, { x: position.x, y: position.y, z: position.z });
 			}
@@ -306,7 +298,7 @@ export class FarkleGame {
 	private handleRemoteDieSettle(index: number, targetPosition: { x: number; y: number; z: number }) {
 		const die = this.dice.find((d) => d.diceIndex === index);
 		if (die) {
-			this.dice3D.setRemoteDragging(index, false);
+			this.dice3D.setDragging(index, false);
 			this.dice3D.setTargetPosition(index, { x: targetPosition.x, y: targetPosition.y, z: targetPosition.z });
 			this.dice3D.setSettle(index, true);
 		}
@@ -314,8 +306,6 @@ export class FarkleGame {
 
 	private initializeDice() {
 		this.dice = [];
-		const startX = 100;
-		const startY = 150;
 
 		// Crear un único canvas 3D compartido con fondo transparente
 		this.canvas3D = document.createElement('canvas');
@@ -324,20 +314,14 @@ export class FarkleGame {
 		this.dice3D = new Dice3D(this.canvas3D, true, () => this.draw());
 
 		for (let i = 0; i < 6; i++) {
-			const col = i % 3;
-			const row = Math.floor(i / 3);
-
 			// Posición 3D en la escena (distribuir dados en grid)
 			const position3D = { x: 0, y: 0, z: 10 };
-
 			const diceIndex = this.dice3D.addDice(position3D);
 
 			const die: VisualDie = {
 				value: 1,
 				selected: false,
 				locked: false,
-				x: startX + col * (this.DIE_SIZE + this.DIE_PADDING),
-				y: startY + row * (this.DIE_SIZE + this.DIE_PADDING),
 				diceIndex,
 			};
 
@@ -371,7 +355,7 @@ export class FarkleGame {
 
 			const die = this.dice[index];
 			// Clear remote drag target to avoid conflict
-			this.dice3D.setRemoteDragging(index, false);
+			this.dice3D.setDragging(index, false);
 
 			let targetPos: Vector3D;
 			if (die.selected) {
@@ -530,27 +514,8 @@ export class FarkleGame {
 		const deltaTime = Math.min((time - this.lastTime) / 1000, 0.1);
 		this.lastTime = time;
 
-		let needsUpdate = false;
-
 		// Update 3D dice animations
 		const anyAnimating = this.dice3D.update(deltaTime);
-
-		// Handle dragging logic (still in Farkle for input handling, but updates position via dice3D)
-		if (this.draggedDieIndex !== -1) {
-			const die = this.dice.find((d) => d.diceIndex === this.draggedDieIndex);
-			if (die) {
-				const state = this.dice3D.getDieState(die.diceIndex);
-				if (state) {
-					// Target Y is 0.5 when dragging
-					const targetY = 0.5;
-					const dragLerpFactor = 1 - Math.pow(1 - 0.2, deltaTime * 60);
-					const currentPos = { ...state.currentPosition };
-					currentPos.y += (targetY - currentPos.y) * dragLerpFactor;
-					this.dice3D.setDiePosition(die.diceIndex, currentPos);
-					needsUpdate = true;
-				}
-			}
-		}
 
 		// Check if rolling finished to trigger score check
 		// We need to know if we were rolling and now we are not
@@ -567,10 +532,7 @@ export class FarkleGame {
 			}
 		}
 
-		// Update screen positions for UI
-		this.dice.forEach((die) => this.updateDieScreenPosition(die));
-
-		if (needsUpdate || anyAnimating || this.remoteUpdatePending) {
+		if (anyAnimating || this.remoteUpdatePending) {
 			this.draw();
 			this.remoteUpdatePending = false;
 		}
@@ -583,14 +545,6 @@ export class FarkleGame {
 		}
 
 		requestAnimationFrame((t) => this.animate(t));
-	}
-
-	private updateDieScreenPosition(die: VisualDie) {
-		const screenPos = this.dice3D.getScreenPosition(die.diceIndex);
-		if (screenPos) {
-			die.x = screenPos.x - this.DIE_SIZE / 2;
-			die.y = screenPos.y - this.DIE_SIZE / 2;
-		}
 	}
 
 	private checkForScore() {
@@ -700,6 +654,7 @@ export class FarkleGame {
 			const die = this.dice.find((d) => d.diceIndex === clickedIndex);
 			if (die && !die.locked) {
 				this.draggedDieIndex = clickedIndex;
+				this.dice3D.setDragging(clickedIndex, true);
 
 				// Calcular offset para arrastre suave
 				const intersection = this.dice3D.getPlaneIntersection(x, y);
@@ -728,17 +683,27 @@ export class FarkleGame {
 			if (die) {
 				const state = this.dice3D.getDieState(die.diceIndex);
 				if (!state) return;
+				this.dice3D.setDragging(die.diceIndex, true);
 				this.dice3D.setDiePosition(die.diceIndex, { x: newPos.x, z: newPos.z });
-				if (state.targetPosition) {
-					this.dice3D.setTargetPosition(die.diceIndex, { x: newPos.x, z: newPos.z });
+				let targetPos = { x: newPos.x, z: newPos.z, y: 0.5 };
+
+				// Hey que verificar que no hay dados debajo, en caso de que los haya subir un poco más
+				while (true) {
+					const closest = this.dice3D.closestDie(targetPos, [die.diceIndex]);
+					if (closest.dist < 1.0) {
+						targetPos.y += 0.5;
+					} else {
+						break;
+					}
 				}
+				this.dice3D.setTargetPosition(die.diceIndex, targetPos);
 
 				if (this.roomId) {
 					const now = Date.now();
 					if (now - this.lastMoveSendTime > 30) {
 						this.onlineManager.sendGameAction(this.roomId, 'die_move', {
 							index: die.diceIndex,
-							position: this.dice3D.getPosition(die.diceIndex),
+							position: targetPos,
 						});
 						this.lastMoveSendTime = now;
 					}
@@ -749,6 +714,8 @@ export class FarkleGame {
 
 	private onInputEnd() {
 		if (this.draggedDieIndex === -1) return;
+
+		this.dice3D.setDragging(this.draggedDieIndex, false);
 
 		const die = this.dice.find((d) => d.diceIndex === this.draggedDieIndex);
 		if (die) {

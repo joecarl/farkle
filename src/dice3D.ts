@@ -273,7 +273,7 @@ export class Dice3D {
 		}
 	}
 
-	public setRemoteDragging(index: number, dragging: boolean) {
+	public setDragging(index: number, dragging: boolean) {
 		const die = this.visualDice.get(index);
 		if (die) {
 			//die.remoteDragging = dragging;
@@ -576,6 +576,30 @@ export class Dice3D {
 			return die.moveType;
 		}
 		return null;
+	}
+
+	public closestDie(position: Vector3D, excludeIndices: number[] = []) {
+		const pos = new THREE.Vector3(position.x, position.y, position.z);
+		let closestDist = Infinity;
+		let closestDieIndex: number | null = null;
+
+		this.visualDice.forEach((otherState, otherIndex) => {
+			if (excludeIndices.includes(otherIndex)) return;
+
+			const otherPos = otherState.currentPosition;
+
+			const otherVector = new THREE.Vector3(otherPos.x, otherPos.y, otherPos.z);
+			const dist = pos.distanceTo(otherVector);
+			if (dist < closestDist) {
+				closestDist = dist;
+				closestDieIndex = otherIndex;
+			}
+		});
+
+		return {
+			dist: closestDist,
+			dieIndex: closestDieIndex,
+		};
 	}
 
 	public findValidPosition(index: number, desiredPosition: Vector3D): Vector3D {
