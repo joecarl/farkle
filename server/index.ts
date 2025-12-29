@@ -22,6 +22,8 @@ app.get('/api/stats', (req, res) => {
 	res.json(getStats());
 });
 
+const MAX_PLAYERS_PER_ROOM = 8;
+
 interface Room {
 	id: string;
 	players: { id: string; name: string; ready: boolean; disconnected?: boolean }[];
@@ -180,7 +182,7 @@ io.on('connection', (socket: Socket) => {
 				socket.emit('error', { message: 'Game already started' });
 				return;
 			}
-			if (room.players.length >= 6) {
+			if (room.players.length >= MAX_PLAYERS_PER_ROOM) {
 				// Max players
 				socket.emit('error', { message: 'Room is full' });
 				return;
