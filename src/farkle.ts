@@ -650,20 +650,21 @@ export class FarkleGame {
 
 		const clickedIndex = this.dice3D.getIntersectedDice(x, y);
 
-		if (clickedIndex !== null) {
-			const die = this.dice.find((d) => d.diceIndex === clickedIndex);
-			if (die && !die.locked) {
-				this.draggedDieIndex = clickedIndex;
-				this.dice3D.setDragging(clickedIndex, true);
+		if (clickedIndex === null) return;
+		const die = this.dice.find((d) => d.diceIndex === clickedIndex);
+		if (!die || die.locked) return;
 
-				// Calcular offset para arrastre suave
-				const intersection = this.dice3D.getPlaneIntersection(x, y);
-				const diePos = this.dice3D.getPosition(clickedIndex);
-				this.dice3D.stop(clickedIndex);
-				if (intersection && diePos) {
-					this.dragOffset = subVectors(diePos, intersection);
-				}
-			}
+		this.draggedDieIndex = clickedIndex;
+		this.actionsDisabled = true;
+		this.dice3D.stop(clickedIndex);
+		this.dice3D.setDragging(clickedIndex, true);
+		this.dice3D.setTargetPosition(clickedIndex, { y: 0.5 });
+
+		// Calcular offset para arrastre suave
+		const intersection = this.dice3D.getPlaneIntersection(x, y);
+		const diePos = this.dice3D.getPosition(clickedIndex);
+		if (intersection && diePos) {
+			this.dragOffset = subVectors(diePos, intersection);
 		}
 	}
 
@@ -687,7 +688,7 @@ export class FarkleGame {
 				this.dice3D.setDiePosition(die.diceIndex, { x: newPos.x, z: newPos.z });
 				let targetPos = { x: newPos.x, z: newPos.z, y: 0.5 };
 
-				// Hey que verificar que no hay dados debajo, en caso de que los haya subir un poco más
+				// Hay que verificar que no hay dados debajo, en caso de que los haya subir un poco más
 				while (true) {
 					const closest = this.dice3D.closestDie(targetPos, [die.diceIndex]);
 					if (closest.dist < 1.0) {
@@ -714,6 +715,8 @@ export class FarkleGame {
 
 	private onInputEnd() {
 		if (this.draggedDieIndex === -1) return;
+
+		this.actionsDisabled = false;
 
 		this.dice3D.setDragging(this.draggedDieIndex, false);
 
