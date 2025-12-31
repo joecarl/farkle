@@ -20,6 +20,7 @@ export class OnlineManager {
 	public onPlayerUpdate?: (data: { players: any[] }) => void;
 	public onGameStarted?: (data: { players: any[]; currentPlayerIndex: number; scoreGoal: number }) => void;
 	public onGameAction?: (data: { action: string; payload: any; senderId: string }) => void;
+	public onRoomsUpdated?: (rooms: any[]) => void;
 	public onError?: (data: { message: string }) => void;
 	public onRejoinPrompt?: (data: { roomId: string; players: any[]; scoreGoal: number; gameStarted: boolean; gameId: any }) => void;
 	public onStateSyncRequest?: (data: { requesterId: string }) => void;
@@ -29,6 +30,18 @@ export class OnlineManager {
 		const socketPath = getPathname() + '/socket.io';
 		this.socket = io(SERVER_URL, { path: socketPath });
 		this.setupListeners();
+	}
+
+	// Fetch current public rooms via REST API
+	public async fetchRooms() {
+		try {
+			const res = await fetch(SERVER_URL + '/api/rooms');
+			if (!res.ok) return;
+			const data = await res.json();
+			if (this.onRoomsUpdated) this.onRoomsUpdated(data);
+		} catch (e) {
+			console.warn('Failed to fetch rooms', e);
+		}
 	}
 
 	public static getInstance(): OnlineManager {
@@ -49,6 +62,11 @@ export class OnlineManager {
 			} catch (err) {
 				console.warn('Could not access localStorage for userId', err);
 			}
+		});
+
+		// Rooms list updates
+		this.socket.on('rooms_updated', (rooms: any[]) => {
+			if (this.onRoomsUpdated) this.onRoomsUpdated(rooms);
 		});
 
 		// Server will reply with assigned/confirmed userId
@@ -130,6 +148,7 @@ export class OnlineManager {
 	}
 
 	public joinRoom(roomId: string, playerName: string) {
+		roomId = roomId.toUpperCase();
 		this.currentRoomId = roomId;
 		this.isHost = false;
 		this.socket.emit('join_room', { roomId, playerName });

@@ -58,6 +58,11 @@ export class NewGameMenu {
 		this.onlineManager.onError = (data) => {
 			alert(data.message);
 		};
+
+		this.onlineManager.onRoomsUpdated = (rooms) => {
+			const listContainer = this.modal.querySelector('#availableRoomsList');
+			if (listContainer) this.renderAvailableRooms(rooms);
+		};
 	}
 
 	private renderLobby(players: any[]) {
@@ -399,13 +404,25 @@ export class NewGameMenu {
 			<div class="online-setup">
 				<button id="backToRoomMenuBtn" class="back-btn"></button>
 				<h2>Unirse a Sala</h2>
-				<div class="input-group">
-					<label for="onlineUsername">Nombre de usuario</label>
-					<input type="text" id="onlineUsername" value="${storedName}" placeholder="Tu nombre">
-				</div>
-				<div class="input-group">
-					<label for="roomCode">Código de sala</label>
-					<input type="text" id="roomCode" placeholder="Código">
+				<div class="online-setup-row">
+					<div class="online-setup-column">
+						<div class="input-group">
+							<label for="onlineUsername">Nombre de usuario</label>
+							<input type="text" id="onlineUsername" value="${storedName}" placeholder="Tu nombre">
+						</div>
+						<div class="input-group">
+							<label for="roomCode">Código de sala</label>
+							<input type="text" id="roomCode" placeholder="Código">
+						</div>
+					</div>
+					<div class="online-setup-column">
+						<div class="available-rooms-header">
+							<h3>Salas disponibles <button id="refreshRoomsBtn" class="hidden">R</button></h3>
+						</div>
+						<div id="availableRoomsList" class="rooms-list-container list-container" style="flex: 1 1 auto;">
+							<!-- Lista de salas se renderiza aquí -->
+						</div>
+					</div>
 				</div>
 				<div class="action-buttons">
 					<button id="doJoinRoomBtn" class="primary-btn">Entrar en la sala</button>
@@ -437,6 +454,33 @@ export class NewGameMenu {
 			this.setStoredUsername(name);
 			console.log('Joining room:', code, 'as', name);
 			this.onlineManager.joinRoom(code, name);
+		});
+
+		// Rooms list: refresh button and initial fetch
+		const refreshBtn = container.querySelector('#refreshRoomsBtn') as HTMLButtonElement | null;
+		if (refreshBtn) {
+			refreshBtn.addEventListener('click', () => {
+				this.onlineManager.fetchRooms();
+			});
+		}
+
+		// Trigger initial fetch to populate list
+		this.onlineManager.fetchRooms();
+
+		// Clicking on a room entry will attempt to join it
+		container.addEventListener('click', (e) => {
+			const target = e.target as HTMLElement;
+			const row = target.closest('.room-row') as HTMLElement | null;
+			if (!row) return;
+			const roomId = row.dataset.roomId;
+			if (!roomId) return;
+			const name = (container.querySelector('#onlineUsername') as HTMLInputElement).value.trim();
+			if (!name) {
+				(container.querySelector('#onlineUsername') as HTMLInputElement).focus();
+				return;
+			}
+			this.setStoredUsername(name);
+			this.onlineManager.joinRoom(roomId, name);
 		});
 	}
 
@@ -548,6 +592,37 @@ export class NewGameMenu {
 			tag.appendChild(deleteBtn);
 			list.appendChild(tag);
 		});
+	}
+
+	private renderAvailableRooms(rooms: any[]) {
+		const container = this.modal.querySelector('#availableRoomsList');
+		if (!container) return;
+		if (!rooms || rooms.length === 0) {
+			container.innerHTML = '<div class="no-rooms">No hay salas disponibles</div>';
+			return;
+		}
+
+		const ul = document.createElement('ul');
+		ul.className = 'rooms-list';
+		rooms.forEach((r) => {
+			const li = document.createElement('li');
+			li.className = 'room-row';
+			li.dataset.roomId = r.id;
+			li.innerHTML = `
+				<div class="room-main">
+					<span class="room-id">${r.id}</span>
+					<span class="separator"></span>
+					<span class="room-host">${r.hostName}</span>
+					<span class="separator"></span>
+					<span class="room-players">${r.players} </span>
+					<span class="separator"></span>
+					<span class="room-score">${r.scoreGoal} pts</span>
+				</div>
+			`;
+			ul.appendChild(li);
+		});
+		container.innerHTML = '';
+		container.appendChild(ul);
 	}
 
 	private removeSuggestedName(name: string) {

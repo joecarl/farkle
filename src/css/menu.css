@@ -33,6 +33,13 @@
 	text-shadow: 0 0 10px black;
 }
 
+.new-game-menu-content h3 {
+	margin: 0;
+	font-size: 3cqw;
+	text-align: left;
+	text-shadow: 0 0 5px #000e;
+}
+
 .menu-buttons {
 	display: flex;
 	justify-content: space-evenly;
@@ -89,6 +96,7 @@
 }
 
 /* Players List */
+.new-game-menu-content .list-container,
 .players-list-container {
 	flex-grow: 1;
 	font-size: 3cqw;
@@ -97,7 +105,6 @@
 	padding: 1cqw;
 	border-radius: 5px;
 	border: 1px solid rgba(23, 15, 2, 0.5);
-	overflow-y: auto;
 	scrollbar-width: thin;
 }
 
@@ -138,7 +145,8 @@
 	opacity: 1;
 }
 
-.no-players-warning {
+.no-players-warning,
+.no-rooms {
 	color: #ffaa00;
 	text-align: center;
 	padding: 4cqw;
@@ -447,10 +455,26 @@
 .online-setup {
 	display: flex;
 	flex-direction: column;
-	gap: 2cqw;
+	gap: 3.4cqw;
 	height: 100%;
 	align-items: center;
 	justify-content: center;
+}
+
+.online-setup-row {
+	display: flex;
+	gap: 3cqw;
+	width: 100%;
+	justify-content: center;
+	overflow: hidden;
+	flex: 1 1 auto;
+}
+
+.online-setup-column {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 1.5cqw;
 }
 
 .input-group {
@@ -476,8 +500,39 @@
 	background: rgba(255, 255, 255, 0.9);
 }
 
-.online-setup .action-buttons {
-	margin-top: 2cqw;
+ul.rooms-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	font-size: 2cqw;
+}
+
+ul.rooms-list .room-main {
+	display: flex;
+	gap: 0.5em;
+	align-items: center;
+	padding: 0.5em;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	color: white;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+ul.rooms-list .room-main > .separator {
+	height: 1em;
+	border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+ul.rooms-list .room-main > .room-id {
+	font-weight: bold;
+	font-size: 1.2em;
+}
+
+ul.rooms-list .room-main > .room-host {
+	opacity: 0.8;
+}
+ul.rooms-list .room-main > .room-players {
+}
+ul.rooms-list .room-main > .room-score {
+	opacity: 0.8;
 }
 
 /* Online Lobby Layout */
@@ -505,13 +560,6 @@
 	display: flex;
 	flex-direction: column;
 	gap: 1cqw;
-}
-
-.lobby-left h3 {
-	margin: 0;
-	font-size: 3cqw;
-	text-align: left;
-	text-shadow: 0 0 5px #000e;
 }
 
 .lobby-right {

@@ -22,6 +22,19 @@ app.get('/api/stats', (req, res) => {
 	res.json(getStats());
 });
 
+// Public API to list available rooms (joinable non-random lobbies)
+app.get('/api/rooms', (req, res) => {
+	const list = Object.values(rooms)
+		.filter((r) => !r.gameStarted && !r.isRandom && r.players.length < MAX_PLAYERS_PER_ROOM)
+		.map((r) => ({
+			id: r.id,
+			players: r.players.length,
+			scoreGoal: r.scoreGoal,
+			hostName: r.players[0]?.name ?? 'Host',
+		}));
+	res.json(list);
+});
+
 const MAX_PLAYERS_PER_ROOM = 8;
 
 interface Room {
@@ -46,6 +59,25 @@ function printRooms() {
 			players += `${p.name}${p.disconnected ? ' (disconnected)' : ''}, `;
 		});
 		console.log(`- Room ${roomId}: started=${room.gameStarted}, players(${players.length})=[${players}]`);
+	}
+}
+
+function getPublicRooms() {
+	return Object.values(rooms)
+		.filter((r) => !r.gameStarted && !r.isRandom && r.players.length < MAX_PLAYERS_PER_ROOM)
+		.map((r) => ({
+			id: r.id,
+			players: r.players.length,
+			scoreGoal: r.scoreGoal,
+			hostName: r.players[0]?.name ?? 'Host',
+		}));
+}
+
+function broadcastRooms() {
+	try {
+		io.emit('rooms_updated', getPublicRooms());
+	} catch (e) {
+		console.error('Failed to broadcast rooms', e);
 	}
 }
 
@@ -128,6 +160,8 @@ io.on('connection', (socket: Socket) => {
 		socket.join(roomId);
 		socket.emit('room_created', { roomId, players: rooms[roomId].players, scoreGoal: rooms[roomId].scoreGoal, isRandom: false });
 		console.log(`Room created: ${roomId} by ${data.playerName} with score goal ${rooms[roomId].scoreGoal}`);
+		// Notify clients about updated rooms
+		broadcastRooms();
 	});
 
 	// Random matchmaking: independent pool, 2 players, 10000 points, auto-start
@@ -166,6 +200,7 @@ io.on('connection', (socket: Socket) => {
 			socket.join(roomId);
 			socket.emit('room_created', { roomId, players: rooms[roomId].players, scoreGoal: rooms[roomId].scoreGoal, isRandom: true });
 			console.log(`Matchmaking created random room: ${roomId} for ${data.playerName}`);
+			// random rooms are not listed publicly
 		}
 	});
 
@@ -192,6 +227,8 @@ io.on('connection', (socket: Socket) => {
 			socket.join(data.roomId);
 			io.to(data.roomId).emit('player_joined', { players: room.players, scoreGoal: room.scoreGoal, isRandom: false });
 			console.log(`${data.playerName} joined room ${data.roomId}`);
+			// Notify public list changed
+			broadcastRooms();
 		} else {
 			socket.emit('error', { message: 'Room not found' });
 		}
@@ -213,6 +250,8 @@ io.on('connection', (socket: Socket) => {
 				if (room.players.length === 0) {
 					delete rooms[roomId];
 					console.log(`Room ${roomId} deleted (empty)`);
+					// Public list changed
+					broadcastRooms();
 				}
 				break;
 			}
@@ -282,6 +321,8 @@ io.on('connection', (socket: Socket) => {
 				}
 			}
 		}
+		// readiness doesn't affect listing but emit updated rooms to be safe
+		broadcastRooms();
 	});
 
 	socket.on('start_game', (data: { roomId: string }) => {
@@ -297,6 +338,8 @@ io.on('connection', (socket: Socket) => {
 				currentPlayerIndex: 0,
 				scoreGoal: room.scoreGoal,
 			});
+			// Room no longer joinable -> update public list
+			broadcastRooms();
 		}
 	});
 
@@ -322,6 +365,8 @@ io.on('connection', (socket: Socket) => {
 					endGameRecord(room.gameId, winnerName, finalPlayers);
 				}
 				delete rooms[data.roomId]; // Cleanup
+				// Room removed -> update public list
+				broadcastRooms();
 			}
 		}
 	});
@@ -355,6 +400,8 @@ io.on('connection', (socket: Socket) => {
 				if (room.players.length === 0) {
 					delete rooms[roomId];
 					console.log(`Room ${roomId} deleted (empty)`);
+					// reflect deletion publicly
+					broadcastRooms();
 				}
 			}
 		}
