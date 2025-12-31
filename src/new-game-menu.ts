@@ -614,7 +614,7 @@ export class NewGameMenu {
 					<span class="separator"></span>
 					<span class="room-host">${r.hostName}</span>
 					<span class="separator"></span>
-					<span class="room-players">${r.players} </span>
+					<span class="room-players">${r.players} <span class="inline-icon beer-icon-small" style="vertical-align: bottom;"></span></span>
 					<span class="separator"></span>
 					<span class="room-score">${r.scoreGoal} pts</span>
 				</div>
