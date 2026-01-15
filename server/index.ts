@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
-import { logConnection, createGameRecord, endGameRecord, getStats, getUser, createUser, touchUser } from './db';
+import { logConnection, createGameRecord, endGameRecord, getStats, getUser, createUser, touchUser, updateUserPreferences, updateDisplayName } from './db';
 import crypto from 'crypto';
 
 const app = express();
@@ -131,8 +131,19 @@ io.on('connection', (socket: Socket) => {
 		boundUserId = userId;
 		usersSocketMap[userId] = socket.id;
 
-		// Acknowledge identification
-		socket.emit('identified', { userId });
+		// Fetch fresh full user data to return
+		const freshUser = getUser(userId)!;
+
+		// Acknowledge identification and return full profile
+		socket.emit('identified', {
+			userId,
+			profile: {
+				displayName: freshUser.display_name,
+				wins: freshUser.wins,
+				losses: freshUser.losses,
+				preferences: freshUser.preferences_json ? JSON.parse(freshUser.preferences_json) : {},
+			},
+		});
 
 		if (ongoingRoom) {
 			console.log(`Socket ${socket.id} has an ongoing game in room ${ongoingRoom.id}, prompting to rejoin`);
@@ -146,10 +157,44 @@ io.on('connection', (socket: Socket) => {
 		}
 	});
 
+	socket.on('update_phrases', (data: { phrases: string[] }) => {
+		const userId = getUserId();
+		if (!userId) return;
+
+		const user = getUser(userId);
+		let prefs: any = {};
+		if (user && user.preferences_json) {
+			try {
+				prefs = JSON.parse(user.preferences_json);
+			} catch (e) {}
+		}
+
+		prefs['phrases'] = data.phrases;
+		updateUserPreferences(userId, prefs);
+		socket.emit('phrases_updated', { phrases: data.phrases });
+		// Send updated profile as well to keep client sync simpler if they listen to 'profile_updated' (future)
+	});
+
+	socket.on('send_reaction', (data: { roomId: string; content: string; type: 'text' | 'emoji' }) => {
+		const userId = getUserId();
+		if (!userId) return;
+		const user = getUser(userId);
+		const userName = user ? user.display_name || 'Unknown' : 'Unknown';
+		io.to(data.roomId).emit('reaction_received', {
+			senderId: userId,
+			senderName: userName,
+			content: data.content,
+			type: data.type,
+		});
+	});
+
 	socket.on('create_room', (data: { playerName: string; scoreGoal?: number }) => {
 		const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
 		const userId = getUserId();
 		if (!userId) return;
+
+		updateDisplayName(userId, data.playerName);
+
 		rooms[roomId] = {
 			id: roomId,
 			players: [{ id: userId, name: data.playerName, ready: false }],
@@ -171,6 +216,8 @@ io.on('connection', (socket: Socket) => {
 
 		const userId = getUserId();
 		if (!userId) return;
+
+		updateDisplayName(userId, data.playerName);
 
 		if (candidate) {
 			candidate.players.push({ id: userId, name: data.playerName, ready: true }); // Auto-ready
@@ -207,6 +254,9 @@ io.on('connection', (socket: Socket) => {
 	socket.on('join_room', (data: { roomId: string; playerName: string }) => {
 		const userId = getUserId();
 		if (!userId) return;
+
+		updateDisplayName(userId, data.playerName);
+
 		const room = rooms[data.roomId];
 		if (room) {
 			if (room.isRandom) {

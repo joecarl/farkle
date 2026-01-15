@@ -5,6 +5,8 @@ import { AudioManager } from './audio';
 import { NewGameMenu } from './new-game-menu';
 import { OverlayManager } from './overlay-manager';
 import { OnlineManager } from './online-manager';
+import { ReactionManager } from './reaction-manager';
+import { ProfileManager } from './profile-manager';
 import { interval, sleep } from './utils';
 
 // Visual representation of a die, extending the logical state
@@ -20,8 +22,12 @@ export class FarkleGame {
 	private rollBtn!: HTMLButtonElement;
 	private bankBtn!: HTMLButtonElement;
 	private newGameBtn!: HTMLButtonElement;
+	private profileBtn!: HTMLButtonElement;
+	private chatBtn!: HTMLButtonElement;
 
 	private overlayManager!: OverlayManager;
+	private reactionManager!: ReactionManager;
+	private profileManager!: ProfileManager;
 
 	private newGameMenu!: NewGameMenu;
 
@@ -106,10 +112,13 @@ export class FarkleGame {
 					<div style="flex: 1 1 auto"></div>
 					
 					<button id="easterEggBtn" class="icon-btn hidden" type="button"></button>
+					<button id="profileBtn" class="icon-btn" type="button" title="Configuración"></button>
 					<button id="newGameBtn" class="icon-btn" type="button" title="Nuevo Juego"></button>
+					<div class="right-floating-area">
+						<div class="score-goal-display">Meta: <span id="scoreGoalValue">---</span></div>
+						<button id="chatBtn" class="icon-btn hidden" type="button" title="Enviar Reacción"></button>							
+					</div>
 				</div>		
-				<div class="score-goal-display">Meta: <span id="scoreGoalValue">---</span></div>
-					
 				<canvas id="gameCanvas"></canvas>
 
 				<div class="players-overlay">
@@ -155,11 +164,19 @@ export class FarkleGame {
 		this.rollBtn = document.querySelector('#rollBtn')!;
 		this.bankBtn = document.querySelector('#bankBtn')!;
 		this.newGameBtn = document.querySelector('#newGameBtn')!;
+		this.profileBtn = document.querySelector('#profileBtn')!;
+		this.chatBtn = document.querySelector('#chatBtn')!;
 
 		this.newGameMenu = new NewGameMenu((cfg) => this.startNewGame(cfg));
 
 		const gameContainer = this.container.querySelector('.game-container') as HTMLElement;
 		this.overlayManager = new OverlayManager(gameContainer, () => this.newGameMenu.show());
+
+		this.reactionManager = new ReactionManager(gameContainer);
+		this.profileManager = new ProfileManager(gameContainer);
+
+		this.profileBtn.addEventListener('click', () => this.profileManager.open());
+		this.chatBtn.addEventListener('click', () => this.reactionManager.openReactionPicker());
 
 		this.topBarPlayerName = document.querySelector('#topBarPlayerName')!;
 		this.topBarTurnScore = document.querySelector('#topBarTurnScore')!;
@@ -970,6 +987,9 @@ export class FarkleGame {
 	public updateUI() {
 		this.updateScoreDisplay();
 		this.scoreGoalValue.textContent = this.logic.scoreGoal.toString();
+
+		if (this.isOnline) this.chatBtn.classList.remove('hidden');
+		else this.chatBtn.classList.add('hidden');
 	}
 
 	private updateScoreDisplay(playerIndex?: number) {

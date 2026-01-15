@@ -34,3 +34,7 @@ h3 {
 .hidden {
 	display: none !important;
 }
+
+input {
+	outline: none;
+}

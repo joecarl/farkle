@@ -85,6 +85,11 @@ export const touchUser = (id: string) => {
 	stmt.run(id);
 };
 
+export const updateDisplayName = (id: string, name: string) => {
+	const stmt = db.prepare('UPDATE users SET display_name = ? WHERE id = ?');
+	stmt.run(name, id);
+};
+
 export const updateUserPreferences = (id: string, preferences: any) => {
 	const stmt = db.prepare('UPDATE users SET preferences_json = ? WHERE id = ?');
 	stmt.run(JSON.stringify(preferences), id);

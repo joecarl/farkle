@@ -25,6 +25,20 @@ export class OnlineManager {
 	public onRejoinPrompt?: (data: { roomId: string; players: any[]; scoreGoal: number; gameStarted: boolean; gameId: any }) => void;
 	public onStateSyncRequest?: (data: { requesterId: string }) => void;
 	public onStateSync?: (data: { state: any; targetId: string }) => void;
+	public onPhrasesUpdated?: (data: { phrases: string[] }) => void;
+	public onReactionReceived?: (data: { senderId: string; senderName: string; content: string; type: 'text' | 'emoji' }) => void;
+
+	// Cache for current user profile
+	public currentUserProfile: any = null;
+	// Support multiple listeners
+	private profileListeners: ((profile: any) => void)[] = [];
+	public addProfileListener(listener: (profile: any) => void) {
+		this.profileListeners.push(listener);
+		if (this.currentUserProfile) listener(this.currentUserProfile);
+	}
+	public removeProfileListener(listener: (profile: any) => void) {
+		this.profileListeners = this.profileListeners.filter((l) => l !== listener);
+	}
 
 	private constructor() {
 		const socketPath = getPathname() + '/socket.io';
@@ -70,12 +84,15 @@ export class OnlineManager {
 		});
 
 		// Server will reply with assigned/confirmed userId
-		this.socket.on('identified', (data: { userId: string }) => {
+		this.socket.on('identified', (data: { userId: string; profile: any }) => {
 			try {
 				localStorage.setItem(FARKLE_USER_ID, data.userId);
-				console.log('Stored User ID in localStorage', data.userId);
+				this.currentUserProfile = data.profile;
+				console.log('Identified. User:', data.userId, 'Profile:', data.profile);
+
+				this.profileListeners.forEach((l) => l(this.currentUserProfile));
 			} catch (err) {
-				console.warn('Could not store User ID in localStorage', err);
+				console.warn('Could not store User ID or process profile', err);
 			}
 		});
 
@@ -90,6 +107,21 @@ export class OnlineManager {
 		this.socket.on('state_sync', (data) => {
 			if (data.targetId !== this.getUserId()) return;
 			if (this.onStateSync) this.onStateSync(data);
+		});
+
+		this.socket.on('phrases_updated', (data) => {
+			// Update local cache
+			if (this.currentUserProfile) {
+				if (!this.currentUserProfile.preferences) this.currentUserProfile.preferences = {};
+				this.currentUserProfile.preferences.phrases = data.phrases;
+				this.profileListeners.forEach((l) => l(this.currentUserProfile));
+			}
+
+			if (this.onPhrasesUpdated) this.onPhrasesUpdated(data);
+		});
+
+		this.socket.on('reaction_received', (data) => {
+			if (this.onReactionReceived) this.onReactionReceived(data);
 		});
 
 		this.socket.on('room_created', (data) => {
@@ -184,6 +216,15 @@ export class OnlineManager {
 		this.currentRoomId = null;
 		this.isHost = false;
 		this.isRandom = false;
+	}
+
+	public updatePhrases(phrases: string[]) {
+		this.socket.emit('update_phrases', { phrases });
+	}
+
+	public sendReaction(content: string, type: 'text' | 'emoji') {
+		if (!this.currentRoomId) return;
+		this.socket.emit('send_reaction', { roomId: this.currentRoomId, content, type });
 	}
 
 	public getUserId(): string | null {

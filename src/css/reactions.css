@@ -1,0 +1,117 @@
+/* Reaction Picker & Settings */
+.phrases-config {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin: 20px 0;
+}
+
+.phrases-config input {
+	padding: 10px;
+	font-size: 1.2em;
+	border-radius: 5px;
+	border: 1px solid #444;
+	background: #333;
+	color: white;
+}
+
+.reaction-picker-container {
+	text-align: center;
+}
+.reaction-picker-content {
+	display: flex;
+	gap: 1em;
+	align-items: center;
+
+	.phrases-list {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.emojis-grid {
+		display: grid;
+		grid-template-columns: repeat(5, 1fr);
+		gap: 10px;
+	}
+}
+
+.reaction-btn {
+	background: #444;
+	border: 1px solid #666;
+	border-radius: 8px;
+	padding: 10px;
+	color: white;
+	cursor: pointer;
+	transition: transform 0.1s;
+}
+
+.reaction-btn:active {
+	transform: scale(0.95);
+}
+
+.phrase-btn {
+	font-size: 1.1em;
+	background: #2a2a2a;
+}
+
+.emoji-btn {
+	font-size: 2em;
+	background: transparent;
+	border: none;
+}
+
+/* Reaction Display */
+.reaction-display {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 2000;
+	pointer-events: none;
+	text-align: center;
+	background: rgba(0, 0, 0, 0.8);
+	padding: 1vw 4vw;
+	border-radius: 20px;
+	border: 2px solid var(--p-color-1);
+	box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.reaction-content {
+	font-weight: bold;
+	color: white;
+	margin-bottom: 10px;
+}
+
+.reaction-sender {
+	font-size: 1em;
+	color: var(--p-color-1);
+}
+
+.animate-pop {
+	animation: popAndFade 3s forwards;
+}
+
+@keyframes popAndFade {
+	0% {
+		opacity: 0;
+		transform: translate(-50%, -50%) scale(0.5);
+	}
+	10% {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1.1);
+	}
+	20% {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1);
+	}
+	80% {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1);
+	}
+	100% {
+		opacity: 0;
+		transform: translate(-50%, -50%) scale(0.8);
+	}
+}
