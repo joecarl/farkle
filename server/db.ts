@@ -53,9 +53,24 @@ const addColumnIfMissing = (table: string, columnName: string, columnCfg: string
 // Run migration additions (no-op if columns already present)
 addColumnIfMissing('users', 'display_name', 'TEXT');
 
+interface User {
+	id: string;
+	created_at: string;
+	last_seen: string;
+	display_name?: string;
+	email?: string;
+	avatar_url?: string;
+	role: string;
+	preferences_json?: string;
+	wins: number;
+	losses: number;
+	locale?: string;
+	last_ip?: string;
+	is_banned: number;
+}
 // User helpers
 export const getUser = (id: string) => {
-	const stmt = db.prepare('SELECT * FROM users WHERE id = ?');
+	const stmt = db.prepare<[string], User>('SELECT * FROM users WHERE id = ?');
 	return stmt.get(id);
 };
 
@@ -68,6 +83,11 @@ export const createUser = (id: string) => {
 export const touchUser = (id: string) => {
 	const stmt = db.prepare('UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = ?');
 	stmt.run(id);
+};
+
+export const updateUserPreferences = (id: string, preferences: any) => {
+	const stmt = db.prepare('UPDATE users SET preferences_json = ? WHERE id = ?');
+	stmt.run(JSON.stringify(preferences), id);
 };
 
 export const logConnection = (ip: string, socketId: string, event: 'connect' | 'disconnect') => {
