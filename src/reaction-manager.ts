@@ -84,6 +84,7 @@ export class ReactionManager {
 	private renderPickerContent() {
 		const phrasesContainer = document.getElementById('pickerPhrases')!;
 		phrasesContainer.innerHTML = '';
+
 		this.savedPhrases.forEach((phrase) => {
 			if (phrase) {
 				const btn = document.createElement('button');
@@ -96,6 +97,13 @@ export class ReactionManager {
 				phrasesContainer.appendChild(btn);
 			}
 		});
+
+		if (this.savedPhrases.filter((p) => p).length === 0) {
+			const noPhrasesMsg = document.createElement('div');
+			noPhrasesMsg.className = 'no-phrases-msg';
+			noPhrasesMsg.textContent = 'No hay frases guardadas.';
+			phrasesContainer.appendChild(noPhrasesMsg);
+		}
 
 		const emojisContainer = document.getElementById('pickerEmojis')!;
 		emojisContainer.innerHTML = '';
@@ -129,7 +137,7 @@ export class ReactionManager {
 
 		this.reactionDisplay.classList.add('hidden');
 		this.reactionDisplay.classList.remove('animate-pop');
-		await sleep(1); // Allow DOM to update
+		await sleep(10); // Allow DOM to update
 
 		contentEl.textContent = data.content;
 		contentEl.style.fontSize = isEmoji ? '4rem' : '2rem';
