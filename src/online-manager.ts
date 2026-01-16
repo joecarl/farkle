@@ -49,10 +49,14 @@ export class OnlineManager {
 		this.setupListeners();
 	}
 
+	private apiFetch(path: string, options?: RequestInit) {
+		return fetch(SERVER_URL + getPathname() + path, options);
+	}
+
 	// Fetch current public rooms via REST API
 	public async fetchRooms() {
 		try {
-			const res = await fetch(SERVER_URL + '/api/rooms');
+			const res = await this.apiFetch('/api/rooms');
 			if (!res.ok) return;
 			const data = await res.json();
 			if (this.onRoomsUpdated) this.onRoomsUpdated(data);

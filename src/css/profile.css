@@ -83,10 +83,6 @@
 		border-bottom: 1px solid #333;
 		padding-bottom: 5px;
 	}
-	.recent-games-list {
-		max-height: 20vh;
-		overflow-y: auto;
-	}
 	.recent-game-item {
 		display: flex;
 		justify-content: space-between;

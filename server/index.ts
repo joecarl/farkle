@@ -212,7 +212,7 @@ io.on('connection', (socket: Socket) => {
 	});
 
 	socket.on('create_room', (data: { playerName: string; scoreGoal?: number }) => {
-		const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+		const roomId = Math.random().toString(36).substring(2, 7).toUpperCase().replaceAll(/[0O]/g, 'X');
 		const userId = getUserId();
 		if (!userId) return;
 
