@@ -15,6 +15,8 @@ export interface Player {
 	score: number;
 	isBot?: boolean;
 	id?: string;
+	maxTurnScore?: number;
+	maxRollScore?: number;
 }
 
 export interface GameState {

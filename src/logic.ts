@@ -15,11 +15,12 @@ export class FarkleLogic {
 	constructor(players?: Player[], scoreGoal: number = DEFAULT_SCORE_GOAL) {
 		this.scoreGoal = scoreGoal;
 		if (players && players.length >= 2) {
-			this.players = players.map((p) => ({ ...p, score: 0 }));
+			// Inicializamos jugadores con campos de récords de sesión para tracking interno
+			this.players = players.map((p) => ({ ...p, score: 0, maxTurnScore: 0, maxRollScore: 0 }));
 		} else {
 			this.players = [
-				{ name: 'Player 1', score: 0 },
-				{ name: 'Player 2', score: 0 },
+				{ name: 'Player 1', score: 0, maxTurnScore: 0, maxRollScore: 0 },
+				{ name: 'Player 2', score: 0, maxTurnScore: 0, maxRollScore: 0 },
 			];
 		}
 		this.dice = Array(6)
@@ -32,7 +33,7 @@ export class FarkleLogic {
 	}
 
 	public addPlayer(name: string) {
-		this.players.push({ name, score: 0 });
+		this.players.push({ name, score: 0, maxTurnScore: 0, maxRollScore: 0 });
 	}
 
 	public getGameState(): GameState {
@@ -94,6 +95,13 @@ export class FarkleLogic {
 		const selectionScore = this.calculateScore(this.getSelectedDiceValues()).score;
 		if (selectionScore > 0) {
 			this.accumulatedTurnScore += selectionScore;
+
+			// Seguimiento de récords de la sesión.
+			// Se mantienen en la lógica para facilitar la sincronización (state_sync) entre jugadores
+			// y asegurar que los datos persistan correctamente al finalizar la partida online.
+			const currentPlayer = this.players[this.currentPlayerIndex];
+			currentPlayer.maxRollScore = Math.max(currentPlayer.maxRollScore || 0, selectionScore);
+
 			// Lock selected dice
 			this.dice
 				.filter((d) => d.selected)
@@ -241,7 +249,19 @@ export class FarkleLogic {
 
 	public bankPoints() {
 		const selectionScore = this.calculateScore(this.getSelectedDiceValues()).score;
-		this.players[this.currentPlayerIndex].score += this.accumulatedTurnScore + selectionScore;
+		const totalTurnScore = this.accumulatedTurnScore + selectionScore;
+
+		const currentPlayer = this.players[this.currentPlayerIndex];
+		currentPlayer.score += totalTurnScore;
+
+		// Actualización de récords personales de la sesión (se enviarán al servidor al terminar el juego).
+		// Nota: Se registran aquí para aprovechar el GameState que ya se sincroniza entre clientes.
+		currentPlayer.maxTurnScore = Math.max(currentPlayer.maxTurnScore || 0, totalTurnScore);
+		// También actualizamos el récord de tirada con la última selección si es mayor que el anterior
+		if (selectionScore > 0) {
+			currentPlayer.maxRollScore = Math.max(currentPlayer.maxRollScore || 0, selectionScore);
+		}
+
 		this.accumulatedTurnScore = 0;
 		this.resetDice();
 		this.nextTurn();

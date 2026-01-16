@@ -34,6 +34,8 @@ db.exec(`
 		losses INTEGER DEFAULT 0,
 		total_score INTEGER DEFAULT 0,
 		max_score INTEGER DEFAULT 0,
+		max_turn_score INTEGER DEFAULT 0,
+		max_roll_score INTEGER DEFAULT 0,
 		locale TEXT,
 		last_ip TEXT,
 		is_banned INTEGER DEFAULT 0
@@ -64,6 +66,8 @@ const addColumnIfMissing = (table: string, columnName: string, columnCfg: string
 addColumnIfMissing('users', 'display_name', 'TEXT');
 addColumnIfMissing('users', 'total_score', 'INTEGER DEFAULT 0');
 addColumnIfMissing('users', 'max_score', 'INTEGER DEFAULT 0');
+addColumnIfMissing('users', 'max_turn_score', 'INTEGER DEFAULT 0');
+addColumnIfMissing('users', 'max_roll_score', 'INTEGER DEFAULT 0');
 addColumnIfMissing('games', 'winner_id', 'TEXT');
 
 // Migration: populate winner_id for existing games
@@ -100,6 +104,8 @@ interface User {
 	losses: number;
 	total_score: number;
 	max_score: number;
+	max_turn_score: number;
+	max_roll_score: number;
 	locale?: string;
 	last_ip?: string;
 	is_banned: number;
@@ -167,10 +173,12 @@ export const endGameRecord = (gameId: number | bigint, winnerName: string | null
                 SET wins = wins + ?, 
                     losses = losses + ?, 
                     total_score = total_score + ?, 
-                    max_score = MAX(max_score, ?)
+                    max_score = MAX(max_score, ?),
+                    max_turn_score = MAX(max_turn_score, ?),
+                    max_roll_score = MAX(max_roll_score, ?)
                 WHERE id = ?
             `
-			).run(isWinner ? 1 : 0, isWinner ? 0 : 1, score, score, p.id);
+			).run(isWinner ? 1 : 0, isWinner ? 0 : 1, score, score, p.maxTurnScore || 0, p.maxRollScore || 0, p.id);
 
 			// Logic for achievements
 			// if (isWinner) {
@@ -220,6 +228,8 @@ export const getPlayerStats = (playerId: string) => {
 		losses: user.losses,
 		totalScore: user.total_score,
 		maxScore: user.max_score,
+		maxTurnScore: user.max_turn_score,
+		maxRollScore: user.max_roll_score,
 		recentGames: games,
 	};
 };

@@ -59,9 +59,17 @@ export class ProfileManager {
                                 <span class="stat-label">Derrotas</span>
                                 <span id="stat-losses" class="stat-value">-</span>
                             </div>
-                            <div class="stat-card">
+                            <div class="stat-card hidden">
                                 <span class="stat-label">Record Personal</span>
                                 <span id="stat-max-score" class="stat-value">-</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">Mejor Turno</span>
+                                <span id="stat-max-turn" class="stat-value">-</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">Mejor Tirada</span>
+                                <span id="stat-max-roll" class="stat-value">-</span>
                             </div>
                             <div class="stat-card">
                                 <span class="stat-label">Puntos Totales</span>
@@ -145,6 +153,8 @@ export class ProfileManager {
 		document.getElementById('stat-wins')!.textContent = stats.wins.toString();
 		document.getElementById('stat-losses')!.textContent = stats.losses.toString();
 		document.getElementById('stat-max-score')!.textContent = stats.maxScore.toLocaleString();
+		document.getElementById('stat-max-turn')!.textContent = (stats.maxTurnScore || 0).toLocaleString();
+		document.getElementById('stat-max-roll')!.textContent = (stats.maxRollScore || 0).toLocaleString();
 		document.getElementById('stat-total-score')!.textContent = stats.totalScore.toLocaleString();
 
 		const list = document.getElementById('recent-games-list')!;

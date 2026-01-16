@@ -50,7 +50,9 @@ export class NewGameMenu {
 				name: p.name,
 				score: 0,
 				isBot: false,
-				id: p.id, // Add ID to Player type if needed, or just map by name/index
+				id: p.id,
+				maxTurnScore: 0,
+				maxRollScore: 0,
 			}));
 			this.onStartGame({ players, roomId: this.onlineManager.currentRoomId!, scoreGoal: data.scoreGoal });
 		};
@@ -673,7 +675,7 @@ export class NewGameMenu {
 
 	private addPlayerByName(name: string, isBot: boolean = false) {
 		if (!this.tempNewGamePlayers.some((p) => p.name === name)) {
-			this.tempNewGamePlayers.push({ name, score: 0, isBot });
+			this.tempNewGamePlayers.push({ name, score: 0, isBot, maxTurnScore: 0, maxRollScore: 0 });
 			if (!isBot) {
 				this.saveSuggestedName(name);
 			}

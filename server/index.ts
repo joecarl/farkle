@@ -150,6 +150,8 @@ io.on('connection', (socket: Socket) => {
 				losses: freshUser.losses,
 				totalScore: freshUser.total_score,
 				maxScore: freshUser.max_score,
+				maxTurnScore: freshUser.max_turn_score,
+				maxRollScore: freshUser.max_roll_score,
 				preferences: freshUser.preferences_json ? JSON.parse(freshUser.preferences_json) : {},
 			},
 		});

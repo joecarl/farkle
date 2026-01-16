@@ -1,4 +1,7 @@
 #profileOverlay {
+	.overlay-content {
+		height: min(100vh, 350px);
+	}
 	.profile-tabs {
 		display: flex;
 		gap: 10px;
@@ -47,12 +50,14 @@
 	}
 
 	.stats-container {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
+		display: flex;
+		flex-wrap: wrap;
 		gap: 15px;
 		margin-top: 10px;
 	}
 	.stat-card {
+		flex: 1 1 auto;
+		width: 40%;
 		background: rgba(255, 255, 255, 0.05);
 		padding: 12px;
 		border-radius: 8px;
