@@ -1,4 +1,5 @@
 import { OnlineManager } from './online-manager';
+import { sleep } from './utils';
 
 export class ReactionManager {
 	private parent: HTMLElement;
@@ -114,20 +115,29 @@ export class ReactionManager {
 		this.onlineManager.sendReaction(content, type);
 	}
 
-	private showReaction(data: { senderId: string; senderName: string; content: string; type: 'text' | 'emoji' }) {
+	private timeoutHandle: any = null;
+
+	private async showReaction(data: { senderId: string; senderName: string; content: string; type: 'text' | 'emoji' }) {
 		const contentEl = document.getElementById('reactionContent')!;
 		const senderEl = document.getElementById('reactionSender')!;
 
 		const isEmoji = data.type === 'emoji';
 
+		if (this.timeoutHandle) {
+			clearTimeout(this.timeoutHandle);
+		}
+
+		this.reactionDisplay.classList.add('hidden');
+		this.reactionDisplay.classList.remove('animate-pop');
+		await sleep(1); // Allow DOM to update
+
 		contentEl.textContent = data.content;
 		contentEl.style.fontSize = isEmoji ? '4rem' : '2rem';
 		senderEl.textContent = data.senderName;
-
 		this.reactionDisplay.classList.remove('hidden');
 		this.reactionDisplay.classList.add('animate-pop');
 
-		setTimeout(() => {
+		this.timeoutHandle = setTimeout(() => {
 			this.reactionDisplay.classList.add('hidden');
 			this.reactionDisplay.classList.remove('animate-pop');
 		}, 3000);
