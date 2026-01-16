@@ -21,21 +21,21 @@ export class ReactionManager {
 
 	private injectHtml() {
 		const html = `
-            <div id="reactionPicker" class="overlay hidden click-outside-close">
-                <div class="overlay-content reaction-picker-container">
-                    <h3>Enviar Reacción</h3>
+			<div id="reactionPicker" class="overlay hidden click-outside-close">
+				<div class="overlay-content reaction-picker-container">
+					<h3>Enviar Reacción</h3>
+					<button id="closePickerBtn" class="close-btn">×</button>
 					<div class="reaction-picker-content">
-                    <div class="phrases-list" id="pickerPhrases"></div>
-                    <div class="emojis-grid" id="pickerEmojis"></div>
+						<div class="phrases-list" id="pickerPhrases"></div>
+						<div class="emojis-grid" id="pickerEmojis"></div>
 					</div>
-                    <button id="closePickerBtn" class="secondary-btn" style="margin-top:10px;">Cerrar</button>
-                </div>
-            </div>
+				</div>
+			</div>
 
-            <div id="reactionDisplay" class="reaction-display hidden">
-                <div id="reactionContent" class="reaction-content"></div>
-                <div id="reactionSender" class="reaction-sender"></div>
-            </div>
+			<div id="reactionDisplay" class="reaction-display hidden">
+				<div id="reactionContent" class="reaction-content"></div>
+				<div id="reactionSender" class="reaction-sender"></div>
+			</div>
         `;
 		this.parent.insertAdjacentHTML('beforeend', html);
 	}
