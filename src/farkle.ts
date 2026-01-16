@@ -34,6 +34,7 @@ export class FarkleGame {
 	private topBarPlayerName!: HTMLElement;
 	private topBarTurnScore!: HTMLElement;
 	private topBarTotalScore!: HTMLElement;
+	private turnTimerDisplay!: HTMLElement;
 	private scoreGoalValue!: HTMLElement;
 	private finalRoundIndicator!: HTMLElement;
 	private playersList!: HTMLUListElement;
@@ -49,6 +50,8 @@ export class FarkleGame {
 	private previousTurnScore: number = 0;
 	private isBanking: boolean = false;
 	private actionsDisabled: boolean = false;
+	private turnTimer: number = 50;
+	private turnTimerInterval: any = null;
 
 	private onlineManager: OnlineManager;
 	private roomId: string | null = null;
@@ -106,6 +109,8 @@ export class FarkleGame {
 						<span class="separator">|</span>
 						<span class="score-label">Turno</span>
 						<span id="topBarTurnScore" class="score-value">0</span>
+						<span class="separator">|</span>
+						<span id="turnTimer" class="score-value timer-value">50</span>
 					</div>
 					<div id="finalRoundIndicator" class="hidden">Ronda final</div>
 					
@@ -181,6 +186,7 @@ export class FarkleGame {
 		this.topBarPlayerName = document.querySelector('#topBarPlayerName')!;
 		this.topBarTurnScore = document.querySelector('#topBarTurnScore')!;
 		this.topBarTotalScore = document.querySelector('#topBarTotalScore')!;
+		this.turnTimerDisplay = document.querySelector('#turnTimer')!;
 		this.finalRoundIndicator = document.querySelector('#finalRoundIndicator')!;
 		this.scoreGoalValue = document.querySelector('#scoreGoalValue')!;
 
@@ -216,6 +222,7 @@ export class FarkleGame {
 	}
 
 	private startNewGame(config: GameConfig = {}) {
+		this.stopTimer();
 		this.logic = new FarkleLogic(config.players, config.scoreGoal);
 		this.roomId = config.roomId || null;
 		this.isOnline = !!config.roomId;
@@ -399,8 +406,63 @@ export class FarkleGame {
 		}
 	}
 
+	private stopTimer() {
+		if (this.turnTimerInterval) {
+			clearInterval(this.turnTimerInterval);
+			this.turnTimerInterval = null;
+		}
+	}
+
+	private startTimer() {
+		this.stopTimer();
+
+		// Don't start timer if it's a bot turn or if game is over
+		if (this.currentPlayerIsBot() || this.logic.hasGameFinished()) {
+			this.turnTimerDisplay.textContent = '50';
+			return;
+		}
+
+		this.turnTimer = 50;
+		this.turnTimerDisplay.textContent = this.turnTimer.toString();
+		this.turnTimerDisplay.classList.remove('timer-low');
+
+		this.turnTimerInterval = setInterval(() => {
+			if (this.isRolling || this.isBanking) return;
+
+			this.turnTimer--;
+			this.turnTimerDisplay.textContent = this.turnTimer.toString();
+
+			if (this.turnTimer <= 10) {
+				this.turnTimerDisplay.classList.add('timer-low');
+			}
+
+			if (this.turnTimer <= 0) {
+				this.stopTimer();
+
+				// Only trigger auto-pass if it's our turn
+				let isOurTurn = true;
+				if (this.isOnline) {
+					const state = this.logic.getGameState();
+					const currentPlayer = state.players[state.currentPlayerIndex];
+					isOurTurn = currentPlayer.id === this.onlineManager.getUserId();
+				}
+
+				if (isOurTurn) {
+					this.handleAutoPass();
+				}
+			}
+		}, 1000);
+	}
+
+	private async handleAutoPass() {
+		console.log('Timer expired, auto-passing turn');
+		// Determine best action: bank if possible, or just bank (which will end turn)
+		await this.bankPoints();
+	}
+
 	private async rollDice(isRemote: boolean = false, forcedValues?: number[], forcedPositions?: DicePositions) {
 		if (this.isRolling) return;
+		this.stopTimer();
 
 		if (this.isOnline && !isRemote) {
 			const state = this.logic.getGameState();
@@ -577,6 +639,10 @@ export class FarkleGame {
 		requestAnimationFrame((t) => this.animate(t));
 	}
 
+	/**
+	 * Checks the game state after a roll to see if there is a score or a Farkle.
+	 * This event is triggered after the rolling animation ends.
+	 */
 	private checkForScore() {
 		// Logic already checked for Farkle during rollDice, but we need to handle the UI consequences
 		// after animation finishes.
@@ -589,10 +655,12 @@ export class FarkleGame {
 			this.updateScoreDisplay();
 			this.draw();
 			this.checkBotTurn();
+			this.startTimer();
 		}
 	}
 
 	private async handleFarkleSequence() {
+		this.stopTimer();
 		// 1. Wait 1 second after dice stop
 		await sleep(1000);
 
@@ -794,6 +862,7 @@ export class FarkleGame {
 	}
 
 	private async bankPoints(isRemote: boolean = false) {
+		this.stopTimer();
 		if (this.isOnline && !isRemote) {
 			const state = this.logic.getGameState();
 			const currentPlayer = state.players[state.currentPlayerIndex];
@@ -896,6 +965,7 @@ export class FarkleGame {
 		this.updateScoreDisplay(); // Update to new player
 		this.checkBotTurn();
 		this.updateButtonsState();
+		this.startTimer();
 	}
 
 	private currentPlayerIsBot(): boolean {
