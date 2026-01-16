@@ -14,6 +14,7 @@ export class OnlineManager {
 	public isHost: boolean = false;
 	public isRandom: boolean = false;
 	public scoreGoal: number = DEFAULT_SCORE_GOAL;
+	public isInGame: boolean = false;
 
 	public onRoomCreated?: (data: { roomId: string; players: any[]; scoreGoal: number; isRandom?: boolean }) => void;
 	public onPlayerJoined?: (data: { players: any[]; scoreGoal?: number; isRandom?: boolean }) => void;
@@ -157,10 +158,14 @@ export class OnlineManager {
 		});
 
 		this.socket.on('game_started', (data) => {
+			this.isInGame = true;
 			if (this.onGameStarted) this.onGameStarted(data);
 		});
 
 		this.socket.on('game_action', (data) => {
+			if (data.action === 'game_over') {
+				this.isInGame = false;
+			}
 			if (this.onGameAction) this.onGameAction(data);
 		});
 
@@ -170,12 +175,14 @@ export class OnlineManager {
 			if (data.message === 'Room not found' || data.message === 'Room is full' || data.message === 'Game already started') {
 				this.currentRoomId = null;
 				this.isHost = false;
+				this.isInGame = false;
 			}
 			if (this.onError) this.onError(data);
 		});
 	}
 
 	public createRoom(playerName: string, scoreGoal: number) {
+		this.isInGame = false;
 		this.socket.emit('create_room', { playerName, scoreGoal });
 	}
 
@@ -183,11 +190,13 @@ export class OnlineManager {
 		roomId = roomId.toUpperCase();
 		this.currentRoomId = roomId;
 		this.isHost = false;
+		this.isInGame = false;
 		this.socket.emit('join_room', { roomId, playerName });
 	}
 
 	public rejoinGame(roomId: string) {
 		this.currentRoomId = roomId;
+		this.isInGame = true;
 		this.socket.emit('rejoin_game', { roomId });
 	}
 
@@ -216,6 +225,7 @@ export class OnlineManager {
 		this.currentRoomId = null;
 		this.isHost = false;
 		this.isRandom = false;
+		this.isInGame = false;
 	}
 
 	public updatePhrases(phrases: string[]) {

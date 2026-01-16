@@ -74,6 +74,7 @@ export class NewGameMenu {
 
 		container.innerHTML = `
 			<div class="online-setup lobby-layout">
+				<button id="backToRoomSetupBtn" class="back-btn"></button>
 				<div class="lobby-header">
 					<h2>${isRandom ? 'Buscando oponente...' : `Sala: ${this.onlineManager.currentRoomId}`}</h2>
 				</div>
@@ -131,6 +132,14 @@ export class NewGameMenu {
 				</div>
 			</div>
 		`;
+
+		const backBtn = container.querySelector('#backToRoomSetupBtn') as HTMLButtonElement;
+		if (backBtn) {
+			backBtn.addEventListener('click', () => {
+				this.onlineManager.leaveRoom();
+				this.renderMainMenu();
+			});
+		}
 
 		if (!isRandom) {
 			const readyBtn = container.querySelector('#toggleReadyBtn') as HTMLButtonElement;
@@ -202,6 +211,9 @@ export class NewGameMenu {
 	}
 
 	public hide() {
+		if (!this.onlineManager.isInGame && this.onlineManager.currentRoomId) {
+			this.onlineManager.leaveRoom();
+		}
 		this.modal.classList.add('hidden');
 	}
 
@@ -417,7 +429,7 @@ export class NewGameMenu {
 					</div>
 					<div class="online-setup-column">
 						<div class="available-rooms-header">
-							<h3>Salas disponibles <button id="refreshRoomsBtn" class="hidden">R</button></h3>
+							<h3 style="display: flex; align-items: center; gap: 0.5em;">Salas disponibles <button id="refreshRoomsBtn"></button></h3>
 						</div>
 						<div id="availableRoomsList" class="rooms-list-container list-container" style="flex: 1 1 auto;">
 							<!-- Lista de salas se renderiza aquí -->
@@ -466,22 +478,6 @@ export class NewGameMenu {
 
 		// Trigger initial fetch to populate list
 		this.onlineManager.fetchRooms();
-
-		// Clicking on a room entry will attempt to join it
-		container.addEventListener('click', (e) => {
-			const target = e.target as HTMLElement;
-			const row = target.closest('.room-row') as HTMLElement | null;
-			if (!row) return;
-			const roomId = row.dataset.roomId;
-			if (!roomId) return;
-			const name = (container.querySelector('#onlineUsername') as HTMLInputElement).value.trim();
-			if (!name) {
-				(container.querySelector('#onlineUsername') as HTMLInputElement).focus();
-				return;
-			}
-			this.setStoredUsername(name);
-			this.onlineManager.joinRoom(roomId, name);
-		});
 	}
 
 	private renderLocalGameSetup() {
@@ -602,6 +598,8 @@ export class NewGameMenu {
 			return;
 		}
 
+		const usernameInput = this.modal.querySelector('.online-setup #onlineUsername') as HTMLInputElement;
+
 		const ul = document.createElement('ul');
 		ul.className = 'rooms-list';
 		rooms.forEach((r) => {
@@ -619,6 +617,21 @@ export class NewGameMenu {
 					<span class="room-score">${r.scoreGoal} pts</span>
 				</div>
 			`;
+
+			// Clicking on a room entry will attempt to join it
+			li.addEventListener('click', () => {
+				const roomId = r.id;
+				if (!roomId) return;
+				const name = usernameInput.value.trim();
+				if (!name) {
+					usernameInput.focus();
+					return;
+				}
+				console.log('Joining room from list:', roomId, 'as', name);
+				this.setStoredUsername(name);
+				this.onlineManager.joinRoom(roomId, name);
+			});
+
 			ul.appendChild(li);
 		});
 		container.innerHTML = '';

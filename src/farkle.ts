@@ -170,7 +170,7 @@ export class FarkleGame {
 		this.newGameMenu = new NewGameMenu((cfg) => this.startNewGame(cfg));
 
 		const gameContainer = this.container.querySelector('.game-container') as HTMLElement;
-		this.overlayManager = new OverlayManager(gameContainer, () => this.newGameMenu.show());
+		this.overlayManager = new OverlayManager(gameContainer, () => this.openNewGameMenu());
 
 		this.reactionManager = new ReactionManager(gameContainer);
 		this.profileManager = new ProfileManager(gameContainer);
@@ -188,7 +188,20 @@ export class FarkleGame {
 
 		this.rollBtn.addEventListener('click', () => this.rollDice());
 		this.bankBtn.addEventListener('click', () => this.bankPoints());
-		this.newGameBtn.addEventListener('click', () => this.newGameMenu.show());
+		this.newGameBtn.addEventListener('click', () => this.openNewGameMenu());
+	}
+
+	private async openNewGameMenu() {
+		if (this.onlineManager.isInGame) {
+			const res = await this.overlayManager.prompt('¿Abandonar partida?', 'Hay una partida online en curso. ¿Deseas abandonarla para crear una nueva?');
+			if (!res) return;
+
+			this.onlineManager.leaveRoom();
+			this.isOnline = false;
+			this.roomId = null;
+			this.updateUI();
+		}
+		this.newGameMenu.show();
 	}
 
 	public setAudioManager(audioManager: AudioManager) {

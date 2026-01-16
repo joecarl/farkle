@@ -277,6 +277,17 @@
 	color: white;
 }
 
+#refreshRoomsBtn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	display: inline-block;
+	background: url(../assets/icons/back.png) no-repeat center center;
+	width: 3.5cqw;
+	height: 3.5cqw;
+	background-size: contain;
+}
+
 .primary-btn {
 	background-color: var(--p-color-1);
 	color: white;
