@@ -28,6 +28,8 @@ export class OnlineManager {
 	public onStateSync?: (data: { state: any; targetId: string }) => void;
 	public onPhrasesUpdated?: (data: { phrases: string[] }) => void;
 	public onReactionReceived?: (data: { senderId: string; senderName: string; content: string; type: 'text' | 'emoji' }) => void;
+	public onAchievementsData?: (data: { achievements: any[] }) => void;
+	public onStatsData?: (data: { stats: any }) => void;
 
 	// Cache for current user profile
 	public currentUserProfile: any = null;
@@ -119,6 +121,14 @@ export class OnlineManager {
 			}
 
 			if (this.onPhrasesUpdated) this.onPhrasesUpdated(data);
+		});
+
+		this.socket.on('achievements_data', (data) => {
+			if (this.onAchievementsData) this.onAchievementsData(data);
+		});
+
+		this.socket.on('stats_data', (data) => {
+			if (this.onStatsData) this.onStatsData(data);
 		});
 
 		this.socket.on('reaction_received', (data) => {
@@ -230,6 +240,14 @@ export class OnlineManager {
 
 	public updatePhrases(phrases: string[]) {
 		this.socket.emit('update_phrases', { phrases });
+	}
+
+	public getAchievements() {
+		this.socket.emit('get_achievements');
+	}
+
+	public getStats() {
+		this.socket.emit('get_stats');
 	}
 
 	public sendReaction(content: string, type: 'text' | 'emoji') {

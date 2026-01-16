@@ -18,6 +18,7 @@ db.exec(`
 		start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
 		end_time DATETIME,
 		winner_name TEXT,
+		winner_id TEXT,
 		players_json TEXT
 	);
 	CREATE TABLE IF NOT EXISTS users (
@@ -31,9 +32,18 @@ db.exec(`
 		preferences_json TEXT,
 		wins INTEGER DEFAULT 0,
 		losses INTEGER DEFAULT 0,
+		total_score INTEGER DEFAULT 0,
+		max_score INTEGER DEFAULT 0,
 		locale TEXT,
 		last_ip TEXT,
 		is_banned INTEGER DEFAULT 0
+	);
+	CREATE TABLE IF NOT EXISTS achievements (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		player_id TEXT,
+		achievement_key TEXT,
+		unlocked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		UNIQUE(player_id, achievement_key)
 	);
 `);
 
@@ -52,6 +62,30 @@ const addColumnIfMissing = (table: string, columnName: string, columnCfg: string
 
 // Run migration additions (no-op if columns already present)
 addColumnIfMissing('users', 'display_name', 'TEXT');
+addColumnIfMissing('users', 'total_score', 'INTEGER DEFAULT 0');
+addColumnIfMissing('users', 'max_score', 'INTEGER DEFAULT 0');
+addColumnIfMissing('games', 'winner_id', 'TEXT');
+
+// Migration: populate winner_id for existing games
+try {
+	const gamesToMigrate = db
+		.prepare('SELECT id, winner_name, players_json FROM games WHERE end_time IS NOT NULL AND winner_id IS NULL AND winner_name IS NOT NULL')
+		.all() as any[];
+	for (const game of gamesToMigrate) {
+		try {
+			const players = JSON.parse(game.players_json);
+			const winner = players.find((p: any) => p.name === game.winner_name || p.displayName === game.winner_name);
+			if (winner && winner.id) {
+				db.prepare('UPDATE games SET winner_id = ? WHERE id = ?').run(winner.id, game.id);
+				console.log(`Migrated game ${game.id}: winner ${winner.id}`);
+			}
+		} catch (e) {
+			console.error(`Error migrating game ${game.id}:`, e);
+		}
+	}
+} catch (e) {
+	console.error('Migration error:', e);
+}
 
 interface User {
 	id: string;
@@ -64,6 +98,8 @@ interface User {
 	preferences_json?: string;
 	wins: number;
 	losses: number;
+	total_score: number;
+	max_score: number;
 	locale?: string;
 	last_ip?: string;
 	is_banned: number;
@@ -109,28 +145,82 @@ export const createGameRecord = (players: any[]) => {
 	return info.lastInsertRowid;
 };
 
-export const endGameRecord = (gameId: number | bigint, winnerName: string | null, players?: any[]) => {
-	const stmt = db.prepare('UPDATE games SET end_time = CURRENT_TIMESTAMP, winner_name = ?, players_json = ? WHERE id = ?');
-	stmt.run(winnerName, players ? JSON.stringify(players) : null, gameId);
-};
-
-export const getStats = () => {
-	const games = db.prepare('SELECT * FROM games WHERE end_time IS NOT NULL ORDER BY start_time DESC LIMIT 10').all();
-
-	let connectionCount = 0;
-	try {
-		if (fs.existsSync(logPath)) {
-			// Simple line count. For very large logs, this should be optimized.
-			const content = fs.readFileSync(logPath, 'utf-8');
-			connectionCount = content.trim().split('\n').length;
-		}
-	} catch (error) {
-		console.error('Error reading connection log:', error);
+export const endGameRecord = (gameId: number | bigint, winnerName: string | null, players?: any[], providedWinnerId?: string | null) => {
+	let winnerId: string | null = providedWinnerId ?? null;
+	if (!winnerId && players && winnerName) {
+		const winner = players.find((p: any) => p.name === winnerName || p.displayName === winnerName);
+		if (winner) winnerId = winner.id;
 	}
 
+	const stmt = db.prepare('UPDATE games SET end_time = CURRENT_TIMESTAMP, winner_name = ?, winner_id = ?, players_json = ? WHERE id = ?');
+	stmt.run(winnerName, winnerId, players ? JSON.stringify(players) : null, gameId);
+
+	if (players) {
+		for (const p of players) {
+			if (!p.id) continue;
+			const isWinner = p.id === winnerId;
+			const score = p.totalScore || p.score || 0;
+
+			db.prepare(
+				`
+                UPDATE users 
+                SET wins = wins + ?, 
+                    losses = losses + ?, 
+                    total_score = total_score + ?, 
+                    max_score = MAX(max_score, ?)
+                WHERE id = ?
+            `
+			).run(isWinner ? 1 : 0, isWinner ? 0 : 1, score, score, p.id);
+
+			// Logic for achievements
+			// if (isWinner) {
+			// 	unlockAchievement(p.id, 'first_win');
+			// }
+			// if (score >= 5000) {
+			// 	unlockAchievement(p.id, 'high_scorer');
+			// }
+			// const user = getUser(p.id);
+			// if (user && user.wins + user.losses >= 10) {
+			// 	unlockAchievement(p.id, 'veteran');
+			// }
+			// if (score >= 10000) {
+			// 	unlockAchievement(p.id, 'puntuacion_perfecta');
+			// }
+		}
+	}
+};
+
+export const unlockAchievement = (playerId: string, achievementKey: string) => {
+	const stmt = db.prepare('INSERT OR IGNORE INTO achievements (player_id, achievement_key) VALUES (?, ?)');
+	return stmt.run(playerId, achievementKey).changes > 0;
+};
+
+export const getPlayerAchievements = (playerId: string) => {
+	return db.prepare('SELECT * FROM achievements WHERE player_id = ?').all(playerId);
+};
+
+export const getPlayerStats = (playerId: string) => {
+	const user = getUser(playerId);
+	if (!user) return null;
+
+	const games = db
+		.prepare(
+			`
+		SELECT id, start_time, end_time, winner_id, winner_name, players_json
+		FROM games 
+		WHERE players_json LIKE ? 
+		ORDER BY start_time DESC 
+		LIMIT 15
+	`
+		)
+		.all(`%"${playerId}"%`);
+
 	return {
+		wins: user.wins,
+		losses: user.losses,
+		totalScore: user.total_score,
+		maxScore: user.max_score,
 		recentGames: games,
-		totalConnections: connectionCount,
 	};
 };
 

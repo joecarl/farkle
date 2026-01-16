@@ -2,7 +2,19 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
-import { logConnection, createGameRecord, endGameRecord, getStats, getUser, createUser, touchUser, updateUserPreferences, updateDisplayName } from './db';
+import {
+	logConnection,
+	createGameRecord,
+	endGameRecord,
+	getUser,
+	createUser,
+	touchUser,
+	updateUserPreferences,
+	updateDisplayName,
+	getPlayerAchievements,
+	getPlayerStats,
+	unlockAchievement,
+} from './db';
 import crypto from 'crypto';
 
 const app = express();
@@ -16,11 +28,6 @@ const io = new Server(httpServer, {
 
 app.use(cors());
 app.use(express.json());
-
-// API to get stats
-app.get('/api/stats', (req, res) => {
-	res.json(getStats());
-});
 
 // Public API to list available rooms (joinable non-random lobbies)
 app.get('/api/rooms', (req, res) => {
@@ -141,6 +148,8 @@ io.on('connection', (socket: Socket) => {
 				displayName: freshUser.display_name,
 				wins: freshUser.wins,
 				losses: freshUser.losses,
+				totalScore: freshUser.total_score,
+				maxScore: freshUser.max_score,
 				preferences: freshUser.preferences_json ? JSON.parse(freshUser.preferences_json) : {},
 			},
 		});
@@ -173,6 +182,20 @@ io.on('connection', (socket: Socket) => {
 		updateUserPreferences(userId, prefs);
 		socket.emit('phrases_updated', { phrases: data.phrases });
 		// Send updated profile as well to keep client sync simpler if they listen to 'profile_updated' (future)
+	});
+
+	socket.on('get_achievements', () => {
+		const userId = getUserId();
+		if (!userId) return;
+		const achievements = getPlayerAchievements(userId);
+		socket.emit('achievements_data', { achievements });
+	});
+
+	socket.on('get_stats', () => {
+		const userId = getUserId();
+		if (!userId) return;
+		const stats = getPlayerStats(userId);
+		socket.emit('stats_data', { stats });
 	});
 
 	socket.on('send_reaction', (data: { roomId: string; content: string; type: 'text' | 'emoji' }) => {
@@ -412,7 +435,9 @@ io.on('connection', (socket: Socket) => {
 				if (room.gameId) {
 					const finalPlayers = data.payload?.players ?? room.players;
 					const winnerName = data.payload?.winnerName ?? null;
-					endGameRecord(room.gameId, winnerName, finalPlayers);
+					const winnerId = data.payload?.winnerId ?? null;
+					console.log('GAME OVER', data.payload);
+					endGameRecord(room.gameId, winnerName, finalPlayers, winnerId);
 				}
 				delete rooms[data.roomId]; // Cleanup
 				// Room removed -> update public list

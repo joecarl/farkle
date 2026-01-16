@@ -45,4 +45,104 @@
 		pointer-events: none;
 		opacity: 0.5;
 	}
+
+	.stats-container {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 15px;
+		margin-top: 10px;
+	}
+	.stat-card {
+		background: rgba(255, 255, 255, 0.05);
+		padding: 12px;
+		border-radius: 8px;
+		text-align: center;
+		display: flex;
+		flex-direction: column;
+	}
+	.stat-label {
+		font-size: 0.8em;
+		color: #aaa;
+		text-transform: uppercase;
+		letter-spacing: 1px;
+	}
+	.stat-value {
+		font-size: 1.4em;
+		font-weight: bold;
+		color: var(--p-color-1);
+		margin-top: 5px;
+	}
+	.recent-games {
+		margin-top: 20px;
+		text-align: left;
+	}
+	.recent-games h3 {
+		font-size: 1em;
+		color: #ccc;
+		margin-bottom: 10px;
+		border-bottom: 1px solid #333;
+		padding-bottom: 5px;
+	}
+	.recent-games-list {
+		max-height: 20vh;
+		overflow-y: auto;
+	}
+	.recent-game-item {
+		display: flex;
+		justify-content: space-between;
+		padding: 8px 0;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+		font-size: 0.85em;
+	}
+	.winner-marker {
+		color: #4caf50;
+		font-weight: bold;
+	}
+	.loser-marker {
+		color: #f44336;
+	}
+
+	.achievements-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 10px;
+		margin-top: 10px;
+		max-height: 350px;
+		overflow-y: auto;
+		padding-right: 5px;
+	}
+	.achievement-item {
+		background: rgba(255, 255, 255, 0.05);
+		padding: 12px;
+		border-radius: 8px;
+		display: flex;
+		align-items: center;
+		gap: 15px;
+		text-align: left;
+		border: 1px solid rgba(255, 255, 255, 0.05);
+	}
+	.achievement-icon {
+		font-size: 2em;
+		min-width: 40px;
+		display: flex;
+		justify-content: center;
+	}
+	.achievement-info {
+		flex: 1;
+	}
+	.achievement-info h4 {
+		margin: 0;
+		font-size: 0.95em;
+		color: var(--p-color-1);
+	}
+	.achievement-info p {
+		margin: 2px 0 0;
+		font-size: 0.8em;
+		color: #aaa;
+	}
+	.achievement-date {
+		font-size: 0.7em;
+		color: #666;
+		margin-top: 4px;
+	}
 }

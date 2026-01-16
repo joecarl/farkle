@@ -935,7 +935,7 @@ export class FarkleGame {
 			this.overlayManager.showWinner(winner.name, gameState.players);
 
 			if (this.roomId) {
-				const payload = { winnerName: winner.name, players: gameState.players };
+				const payload = { winnerName: winner.name, winnerId: winner.id ?? null, players: gameState.players };
 				console.log('Sending game over action', payload);
 				this.onlineManager.sendGameAction(this.roomId, 'game_over', payload);
 				this.onlineManager.leaveRoom(); // Clean up local state
