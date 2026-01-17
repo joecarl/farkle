@@ -119,7 +119,7 @@ export class NewGameMenu {
 								this.onlineManager.isHost
 									? `<button id="hostStartGameBtn" class="primary-btn" ${
 											players.length >= 2 && players.every((p) => p.ready) ? '' : 'disabled'
-									  }>Comenzar partida</button>`
+										}>Comenzar partida</button>`
 									: ''
 							}
 						</div>
@@ -429,7 +429,7 @@ export class NewGameMenu {
 							<input type="text" id="roomCode" placeholder="Código">
 						</div>
 					</div>
-					<div class="online-setup-column">
+					<div class="online-setup-column" style="gap: 0.5cqw;">
 						<div class="available-rooms-header">
 							<h3 style="display: flex; align-items: center; gap: 0.5em;">Salas disponibles <button id="refreshRoomsBtn"></button></h3>
 						</div>
@@ -438,7 +438,7 @@ export class NewGameMenu {
 						</div>
 					</div>
 				</div>
-				<div class="action-buttons">
+				<div class="action-buttons" style="padding: 0.5cqw 0;">
 					<button id="doJoinRoomBtn" class="primary-btn">Entrar en la sala</button>
 				</div>
 			</div>
