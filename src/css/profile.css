@@ -90,17 +90,89 @@
 	}
 	.recent-game-item {
 		display: flex;
-		justify-content: space-between;
+		align-items: center;
+		gap: 10px;
 		padding: 8px 0;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 		font-size: 0.85em;
 	}
-	.winner-marker {
-		color: #4caf50;
-		font-weight: bold;
+	.recent-game-item .game-left {
+		min-width: 120px;
+		display: flex;
+		flex-direction: column;
 	}
-	.loser-marker {
+	.recent-game-item .game-date {
+		color: #ccc;
+		font-size: 0.9em;
+	}
+	.recent-game-item .game-id {
+		font-size: 0.75em;
+		color: #666;
+	}
+	.recent-game-item .game-players {
+		flex: 1;
+		display: flex;
+		gap: 6px;
+		justify-content: flex-start;
+		align-items: center;
+		overflow: hidden;
+	}
+	.player-chip {
+		background: rgba(255, 255, 255, 0.03);
+		padding: 4px 6px;
+		border-radius: 12px;
+		display: inline-flex;
+		gap: 6px;
+		align-items: center;
+		font-size: 0.8em;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		max-width: 140px;
+	}
+	.player-chip .player-score {
+		color: #999;
+		margin-left: 6px;
+		font-size: 0.75em;
+	}
+	.player-winner {
+		color: var(--p-color-1);
+		font-weight: 600;
+	}
+	.player-self-winner {
+		border: 1px solid rgba(76, 175, 80, 0.2);
+		background: rgba(76, 175, 80, 0.06);
+	}
+	.player-self-loser {
+		border: 1px solid rgba(244, 67, 54, 0.18);
+		background: rgba(244, 67, 54, 0.04);
 		color: #f44336;
+		font-weight: 700;
+	}
+	.recent-game-item .game-status {
+		min-width: 110px;
+		text-align: right;
+	}
+	.recent-game-item .game-goal {
+		font-size: 0.75em;
+		color: #888;
+		margin-top: 3px;
+	}
+	.status-win {
+		color: #4caf50;
+		font-weight: 700;
+	}
+	.status-lose {
+		color: #f44336;
+		font-weight: 700;
+	}
+	.status-neutral {
+		color: #ccc;
+	}
+	.player-self {
+		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+		border: 1px solid rgba(255, 255, 255, 0.06);
+		font-weight: 600;
 	}
 
 	.achievements-grid {

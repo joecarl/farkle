@@ -1,4 +1,5 @@
 import { OnlineManager } from './online-manager';
+import { GameStatsLogic } from './game-stats-logic';
 
 const ACHIEVEMENT_META: Record<string, { title: string; desc: string; icon: string }> = {
 	first_win: { title: '¡Primera Victoria!', desc: 'Has ganado tu primera partida de Farkle.', icon: '🏆' },
@@ -159,16 +160,32 @@ export class ProfileManager {
 
 		const list = document.getElementById('recent-games-list')!;
 		if (stats.recentGames && stats.recentGames.length > 0) {
+			const curId = this.onlineManager.getUserId();
 			list.innerHTML = stats.recentGames
 				.map((g: any) => {
-					console.log(g);
-					const date = new Date(g.end_time || g.start_time).toLocaleDateString();
-					const isWinner = g.winner_id === this.onlineManager.getUserId();
-					const status = isWinner ? '<span class="winner-marker">Victoria</span>' : '<span class="loser-marker">Derrota</span>';
+					const data = GameStatsLogic.processGameRecord(g, curId);
+					const playersHtml = data.players
+						.map((p) => {
+							const scoreText = p.score !== null ? `<span class="player-score">${p.score.toLocaleString()}</span>` : '';
+							const winnerIcon = p.isWinner ? '🏆 ' : '';
+							const classAttr = p.classes.length > 0 ? ` class="player-chip ${p.classes.join(' ')}"` : ' class="player-chip"';
+							return `<div${classAttr} title="${p.title}">${winnerIcon}<span class="player-name">${p.name}</span>${scoreText}</div>`;
+						})
+						.join('');
+
+					const moreHtml = data.moreCount > 0 ? `<div class="player-chip">+${data.moreCount}</div>` : '';
+					const goalHtml = data.goalText ? `<div class="game-goal">${data.goalText}</div>` : '';
+
 					return `
                     <div class="recent-game-item">
-                        <span>${date}</span>
-                        <span>${status}</span>
+                        <div class="game-left">
+                            <div class="game-date">${data.date}</div>
+                            ${goalHtml}
+                        </div>
+                        <div class="game-players">${playersHtml}${moreHtml}</div>
+                        <div class="game-status">
+                            <div class="game-status ${data.statusClass}">${data.statusText}</div>
+                        </div>
                     </div>
                 `;
 				})
@@ -238,5 +255,12 @@ export class ProfileManager {
 		} else {
 			tabPhrases.classList.remove('tab-disabled');
 		}
+
+		// Ensure the currently visible tab updates its data when the overlay opens.
+		// If the "phrases" tab is disabled while it was previously active, switch to "profile".
+		const activeBtn = this.profileOverlay.querySelector('.tab-btn.active') as HTMLButtonElement | null;
+		let activeTab = activeBtn?.dataset.tab ?? 'phrases';
+
+		this.switchTab(activeTab);
 	}
 }

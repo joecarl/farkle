@@ -168,10 +168,15 @@ describe('FarkleLogic', () => {
 			game.rollDice();
 
 			const state = game.getGameState();
-			// Previous score (150) should be accumulated
-			expect(state.turnScore).toBeGreaterThanOrEqual(150);
+			// If the roll resulted in a Farkle, the accumulated turn score will be reset to 0;
+			// otherwise we should have accumulated at least 150 (1 + 5 selected).
+			if (state.isFarkle) {
+				expect(state.turnScore).toBe(0);
+			} else {
+				expect(state.turnScore).toBeGreaterThanOrEqual(150);
+			}
 
-			// Dice 0 and 1 should be locked
+			// Dice 0 and 1 should be locked (they were selected before the roll)
 			const newDice = game.getDice();
 			expect(newDice[0].locked).toBe(true);
 			expect(newDice[1].locked).toBe(true);

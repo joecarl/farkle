@@ -19,6 +19,7 @@ db.exec(`
 		end_time DATETIME,
 		winner_name TEXT,
 		winner_id TEXT,
+		score_goal INTEGER,
 		players_json TEXT
 	);
 	CREATE TABLE IF NOT EXISTS users (
@@ -69,6 +70,7 @@ addColumnIfMissing('users', 'max_score', 'INTEGER DEFAULT 0');
 addColumnIfMissing('users', 'max_turn_score', 'INTEGER DEFAULT 0');
 addColumnIfMissing('users', 'max_roll_score', 'INTEGER DEFAULT 0');
 addColumnIfMissing('games', 'winner_id', 'TEXT');
+addColumnIfMissing('games', 'score_goal', 'INTEGER');
 
 // Migration: populate winner_id for existing games
 try {
@@ -145,9 +147,9 @@ export const logConnection = (ip: string, socketId: string, event: 'connect' | '
 	});
 };
 
-export const createGameRecord = (players: any[]) => {
-	const stmt = db.prepare('INSERT INTO games (players_json) VALUES (?)');
-	const info = stmt.run(JSON.stringify(players));
+export const createGameRecord = (players: any[], scoreGoal?: number) => {
+	const stmt = db.prepare('INSERT INTO games (players_json, score_goal) VALUES (?, ?)');
+	const info = stmt.run(JSON.stringify(players), scoreGoal ?? null);
 	return info.lastInsertRowid;
 };
 
@@ -214,12 +216,12 @@ export const getPlayerStats = (playerId: string) => {
 	const games = db
 		.prepare(
 			`
-		SELECT id, start_time, end_time, winner_id, winner_name, players_json
-		FROM games 
-		WHERE players_json LIKE ? 
-		ORDER BY start_time DESC 
-		LIMIT 15
-	`
+			SELECT id, start_time, end_time, winner_id, winner_name, score_goal, players_json
+			FROM games 
+			WHERE end_time IS NOT NULL AND players_json LIKE ? 
+			ORDER BY start_time DESC 
+			LIMIT 15
+		`
 		)
 		.all(`%"${playerId}"%`);
 

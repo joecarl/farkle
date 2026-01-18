@@ -253,7 +253,7 @@ io.on('connection', (socket: Socket) => {
 			// Auto-start if full (2 players)
 			if (candidate.players.length === 2) {
 				candidate.gameStarted = true;
-				candidate.gameId = createGameRecord(candidate.players);
+				candidate.gameId = createGameRecord(candidate.players, candidate.scoreGoal);
 				io.to(candidate.id).emit('game_started', {
 					players: candidate.players,
 					currentPlayerIndex: 0,
@@ -407,7 +407,7 @@ io.on('connection', (socket: Socket) => {
 		if (room && room.players[0].id === userId) {
 			// Only host can start
 			room.gameStarted = true;
-			room.gameId = createGameRecord(room.players);
+			room.gameId = createGameRecord(room.players, room.scoreGoal);
 			io.to(data.roomId).emit('game_started', {
 				players: room.players,
 				currentPlayerIndex: 0,
