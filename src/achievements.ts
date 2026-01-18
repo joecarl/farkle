@@ -1,4 +1,5 @@
 import { OnlineManager } from './online-manager';
+import { FarkleLogic } from './logic';
 
 export interface Achievement {
 	id: string;
@@ -50,8 +51,17 @@ export class AchievementManager {
 	private onlineManager: OnlineManager;
 	private container: HTMLElement;
 
-	constructor(onlineManager: OnlineManager) {
+	// Internal state tracking for achievements
+	private lastRolledCount: number = 0;
+	private consecutiveFarkles: number = 0;
+	private turnWasWinning: boolean = false;
+	private hotDiceCount: number = 0;
+
+	private logic: FarkleLogic;
+
+	constructor(onlineManager: OnlineManager, logic: FarkleLogic) {
 		this.onlineManager = onlineManager;
+		this.logic = logic;
 		this.container = document.createElement('div');
 		this.container.id = 'achievement-container';
 		document.body.appendChild(this.container);
@@ -76,6 +86,124 @@ export class AchievementManager {
 
 		if (this.onlineManager) {
 			this.onlineManager.unlockAchievement(id);
+		}
+	}
+
+	public checkAchievements(context: string, data: any = {}) {
+		const currentUserId = this.onlineManager.getUserId();
+
+		if (this.onlineManager.isInGame && context !== 'gameOver') {
+			const gameState = this.logic.getGameState();
+			const activePlayerId = gameState.players[gameState.currentPlayerIndex]?.id;
+			// If it's not our turn, we generally don't process achievements
+			if (activePlayerId && activePlayerId !== currentUserId) {
+				return;
+			}
+		}
+
+		// Update internal state
+		switch (context) {
+			case 'startTurn':
+				const gameState = this.logic.getGameState();
+				if (gameState && gameState.players) {
+					const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+					const isMyTurn = currentPlayer.id === currentUserId;
+					if (isMyTurn) {
+						this.hotDiceCount = 0;
+						const sorted = [...gameState.players].sort((a: any, b: any) => b.score - a.score);
+						const leader = sorted[0];
+						this.turnWasWinning = currentPlayer.score >= leader.score;
+					}
+				}
+				break;
+			case 'roll':
+				this.lastRolledCount = data.diceCount || 0;
+				if (this.lastRolledCount === 6) {
+					this.hotDiceCount++;
+				}
+				break;
+			case 'bank':
+				this.consecutiveFarkles = 0;
+				break;
+			case 'farkle':
+				this.consecutiveFarkles++;
+				break;
+		}
+
+		switch (context) {
+			case 'startTurn':
+				// Handle Start of turn checks if any
+				break;
+
+			case 'roll':
+				// SIX_ONES, LUCKY_CLOVER
+				const targetValues: number[] = data.targetValues || [];
+				const diceCount: number = data.diceCount || 0;
+				if (diceCount === 6) {
+					const sorted = [...targetValues].sort((a, b) => a - b).join('');
+					if (sorted === '111111') this.unlock('SIX_ONES');
+					if (sorted === '123456') this.unlock('LUCKY_CLOVER');
+				}
+				break;
+
+			case 'beforeRoll':
+				// BIG_ROLL: High selection score before rolling again
+				const gs = this.logic.getGameState();
+				const selectionScore = gs.turnScore - (gs.accumulatedTurnScore || 0);
+				if (selectionScore > 1500) {
+					this.unlock('BIG_ROLL');
+				}
+				break;
+
+			case 'farkle':
+				// FARKLE_6, BLOOD_AND_DICE
+				const turnScoreLost = this.logic.getGameState().turnScore;
+				if (this.lastRolledCount === 6) {
+					this.unlock('FARKLE_6');
+				}
+				if (turnScoreLost > 1000) {
+					this.unlock('BLOOD_AND_DICE');
+				}
+				if (this.consecutiveFarkles >= 3) {
+					this.unlock('CURSED_DICE');
+				}
+				break;
+
+			case 'bank':
+				// DRAGON_FIRE, SURVIVOR_1, PERFECT_AIM
+				const bankedScore = this.logic.getGameState().turnScore;
+				if (bankedScore > 3000) {
+					this.unlock('DRAGON_FIRE');
+				}
+				if (this.lastRolledCount === 1) {
+					this.unlock('SURVIVOR_1');
+				}
+				if (this.hotDiceCount >= 2) {
+					this.unlock('PERFECT_AIM');
+				}
+				break;
+
+			case 'gameOver':
+				// DUEL_WINNER, LEGENDARY_VICTORY, AGAINST_TIME
+				const winner = this.logic.getWinner();
+				const winnerId = winner?.id;
+				const currentUserId = this.onlineManager.getUserId();
+
+				if (this.onlineManager.isInGame && winnerId && winnerId === currentUserId) {
+					const playersCount = this.logic.getGameState().players.length;
+					const winScore = winner?.score || 0;
+
+					if (playersCount === 2) {
+						this.unlock('DUEL_WINNER');
+					}
+					if (winScore === 10000) {
+						this.unlock('LEGENDARY_VICTORY');
+					}
+					if (!this.turnWasWinning && playersCount > 1) {
+						this.unlock('AGAINST_TIME');
+					}
+				}
+				break;
 		}
 	}
 

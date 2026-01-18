@@ -7,6 +7,7 @@ import { OverlayManager } from './overlay-manager';
 import { OnlineManager } from './online-manager';
 import { ReactionManager } from './reaction-manager';
 import { ProfileManager } from './profile-manager';
+import { AchievementManager } from './achievements';
 import { interval, sleep } from './utils';
 
 // Visual representation of a die, extending the logical state
@@ -28,6 +29,7 @@ export class FarkleGame {
 	private overlayManager!: OverlayManager;
 	private reactionManager!: ReactionManager;
 	private profileManager!: ProfileManager;
+	private achievementManager!: AchievementManager;
 
 	private newGameMenu!: NewGameMenu;
 
@@ -58,6 +60,7 @@ export class FarkleGame {
 	private isOnline: boolean = false;
 	private lastMoveSendTime: number = 0;
 	private remoteUpdatePending: boolean = false;
+	private processingRemoteAction: boolean = false;
 
 	private readonly container: HTMLDivElement;
 
@@ -68,6 +71,7 @@ export class FarkleGame {
 		this.ctx = this.canvas.getContext('2d')!;
 		this.logic = new FarkleLogic();
 		this.onlineManager = OnlineManager.getInstance();
+		this.achievementManager = new AchievementManager(this.onlineManager, this.logic);
 	}
 
 	init() {
@@ -228,10 +232,16 @@ export class FarkleGame {
 		this.isOnline = !!config.roomId;
 		this.finalRoundIndicator.classList.add('hidden');
 		this.updateUI();
-		this.endTurn();
+		this.startNextTurn();
 	}
 
 	private setupOnlineListeners() {
+		this.onlineManager.addStatsListener((data) => {
+			if (data.stats) {
+				this.achievementManager.checkStats(data.stats);
+			}
+		});
+
 		this.onlineManager.onRejoinPrompt = async (data) => {
 			// Simple confirm for now. In a real app, use a nice modal.
 			const res = await this.overlayManager.prompt('Reconectar', `Tienes una partida en curso en la sala ${data.roomId}. ¿Quieres volver a unirte?`);
@@ -297,23 +307,28 @@ export class FarkleGame {
 		this.onlineManager.onGameAction = (data) => {
 			if (data.senderId === this.onlineManager.getUserId()) return;
 
-			switch (data.action) {
-				case 'roll':
-					console.log('Received remote roll action', data.payload);
-					this.rollDice(true, data.payload.values, data.payload.positions);
-					break;
-				case 'bank':
-					this.bankPoints(true);
-					break;
-				case 'select_die':
-					this.toggleDieSelection(data.payload.index, true);
-					break;
-				case 'die_move':
-					this.handleRemoteDieMove(data.payload.index, data.payload.position);
-					break;
-				case 'die_settle':
-					this.handleRemoteDieSettle(data.payload.index, data.payload.targetPosition);
-					break;
+			this.processingRemoteAction = true;
+			try {
+				switch (data.action) {
+					case 'roll':
+						console.log('Received remote roll action', data.payload);
+						this.rollDice(data.payload.values, data.payload.positions);
+						break;
+					case 'bank':
+						this.bankPoints();
+						break;
+					case 'select_die':
+						this.handleRemoteDieSelection(data.payload.index);
+						break;
+					case 'die_move':
+						this.handleRemoteDieMove(data.payload.index, data.payload.position);
+						break;
+					case 'die_settle':
+						this.handleRemoteDieSettle(data.payload.index, data.payload.targetPosition);
+						break;
+				}
+			} finally {
+				this.processingRemoteAction = false;
 			}
 		};
 	}
@@ -385,25 +400,23 @@ export class FarkleGame {
 		}
 	}
 
-	private toggleDieSelection(index: number, isRemote: boolean = false) {
-		if (isRemote) {
-			this.logic.toggleSelection(index);
-			this.syncDiceState();
+	private handleRemoteDieSelection(index: number) {
+		this.logic.toggleSelection(index);
+		this.syncDiceState();
 
-			const die = this.dice[index];
-			// Clear remote drag target to avoid conflict
-			this.dice3D.setDragging(index, false);
+		const die = this.dice[index];
+		// Clear remote drag target to avoid conflict
+		this.dice3D.setDragging(index, false);
 
-			let targetPos: Vector3D;
-			if (die.selected) {
-				// Move to selection area (left side)
-				targetPos = { x: -3 + Math.random(), y: 0, z: Math.random() * 4 - 2 };
-			} else {
-				// Move to play area (right side)
-				targetPos = { x: 2.5 + Math.random(), y: 0, z: Math.random() * 4 - 2 };
-			}
-			this.dice3D.collectDice([index], targetPos);
+		let targetPos: Vector3D;
+		if (die.selected) {
+			// Move to selection area (left side)
+			targetPos = { x: -3 + Math.random(), y: 0, z: Math.random() * 4 - 2 };
+		} else {
+			// Move to play area (right side)
+			targetPos = { x: 2.5 + Math.random(), y: 0, z: Math.random() * 4 - 2 };
 		}
+		this.dice3D.collectDice([index], targetPos);
 	}
 
 	private stopTimer() {
@@ -460,9 +473,11 @@ export class FarkleGame {
 		await this.bankPoints();
 	}
 
-	private async rollDice(isRemote: boolean = false, forcedValues?: number[], forcedPositions?: DicePositions) {
+	private async rollDice(forcedValues?: number[], forcedPositions?: DicePositions) {
 		if (this.isRolling) return;
 		this.stopTimer();
+
+		const isRemote = this.processingRemoteAction;
 
 		if (this.isOnline && !isRemote) {
 			const state = this.logic.getGameState();
@@ -473,6 +488,8 @@ export class FarkleGame {
 		}
 
 		this.actionsDisabled = true;
+
+		this.achievementManager.checkAchievements('beforeRoll');
 
 		// Logic handles the rules of what to roll
 		const rolledIndices = this.logic.rollDice(forcedValues);
@@ -536,7 +553,14 @@ export class FarkleGame {
 
 		// Start rolling animation with 3D effect
 		const indices = diceToRoll.map((d) => d.diceIndex);
-		const targetValues = diceToRoll.map((d) => d.value); // Value is already updated by logic.rollDice? No, logic.rollDice returns indices.
+		const targetValues = diceToRoll.map((d) => d.value);
+
+		this.achievementManager.checkAchievements('roll', {
+			diceCount: diceToRoll.length,
+			targetValues,
+		});
+
+		// Value is already updated by logic.rollDice? No, logic.rollDice returns indices.
 		// Wait, logic.rollDice updates internal state. syncDiceState updates visualDie.value.
 		// So d.value is correct target value.
 
@@ -660,6 +684,9 @@ export class FarkleGame {
 	}
 
 	private async handleFarkleSequence() {
+		// Check for achievements
+		this.achievementManager.checkAchievements('farkle');
+
 		this.stopTimer();
 		// 1. Wait 1 second after dice stop
 		await sleep(1000);
@@ -861,8 +888,11 @@ export class FarkleGame {
 		// draw() is called by animate loop
 	}
 
-	private async bankPoints(isRemote: boolean = false) {
+	private async bankPoints() {
 		this.stopTimer();
+
+		const isRemote = this.processingRemoteAction;
+
 		if (this.isOnline && !isRemote) {
 			const state = this.logic.getGameState();
 			const currentPlayer = state.players[state.currentPlayerIndex];
@@ -884,6 +914,8 @@ export class FarkleGame {
 			this.endTurn();
 			return;
 		}
+
+		this.achievementManager.checkAchievements('bank');
 
 		this.isBanking = true;
 
@@ -932,6 +964,11 @@ export class FarkleGame {
 
 		if (this.logic.hasGameFinished()) {
 			const winner = this.logic.getWinner()!;
+
+			// Achievement Checks for Winner
+			// Note: All clients evaluate gameOver locally. The achievement logic checks if winnerId matches current user.
+			this.achievementManager.checkAchievements('gameOver');
+
 			this.overlayManager.showWinner(winner.name, gameState.players);
 
 			if (this.roomId) {
@@ -939,6 +976,9 @@ export class FarkleGame {
 				console.log('Sending game over action', payload);
 				this.onlineManager.sendGameAction(this.roomId, 'game_over', payload);
 				this.onlineManager.leaveRoom(); // Clean up local state
+
+				// Fetch stats to check for meta-achievements (wins, games played etc)
+				setTimeout(() => this.onlineManager.getStats(), 2000);
 			}
 
 			this.startNewGame(); // Reset for next game
@@ -952,9 +992,16 @@ export class FarkleGame {
 		this.updateScoreDisplay(previousPlayerIndex);
 		this.draw();
 
+		await this.startNextTurn();
+	}
+
+	private async startNextTurn() {
+		const gameState = this.logic.getGameState();
+		const currentPlayer = gameState.players[gameState.currentPlayerIndex];
 		this.collectDice();
 
-		const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+		// Setup tracking for next turn
+		this.achievementManager.checkAchievements('startTurn');
 
 		await sleep(500);
 		this.overlayManager.showNextTurn(currentPlayer.name);
