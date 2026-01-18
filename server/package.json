@@ -6,7 +6,8 @@
 	"main": "index.ts",
 	"scripts": {
 		"start": "tsx index.ts",
-		"dev": "tsx watch index.ts"
+		"dev": "tsx watch index.ts",
+		"recompute-stats": "tsx scripts/recompute-stats.ts"
 	},
 	"dependencies": {
 		"better-sqlite3": "^12.5.0",
