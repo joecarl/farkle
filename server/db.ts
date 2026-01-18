@@ -33,6 +33,7 @@ db.exec(`
 		preferences_json TEXT,
 		wins INTEGER DEFAULT 0,
 		losses INTEGER DEFAULT 0,
+		total_games INTEGER DEFAULT 0,
 		total_score INTEGER DEFAULT 0,
 		max_score INTEGER DEFAULT 0,
 		max_turn_score INTEGER DEFAULT 0,
@@ -69,6 +70,7 @@ addColumnIfMissing('users', 'total_score', 'INTEGER DEFAULT 0');
 addColumnIfMissing('users', 'max_score', 'INTEGER DEFAULT 0');
 addColumnIfMissing('users', 'max_turn_score', 'INTEGER DEFAULT 0');
 addColumnIfMissing('users', 'max_roll_score', 'INTEGER DEFAULT 0');
+addColumnIfMissing('users', 'total_games', 'INTEGER DEFAULT 0');
 addColumnIfMissing('games', 'winner_id', 'TEXT');
 addColumnIfMissing('games', 'score_goal', 'INTEGER');
 
@@ -104,6 +106,7 @@ interface User {
 	preferences_json?: string;
 	wins: number;
 	losses: number;
+	total_games?: number;
 	total_score: number;
 	max_score: number;
 	max_turn_score: number;
@@ -164,23 +167,32 @@ export const endGameRecord = (gameId: number | bigint, winnerName: string | null
 	stmt.run(winnerName, winnerId, players ? JSON.stringify(players) : null, gameId);
 
 	if (players) {
+		// Determine last-place score (ties count as last)
+		const scores = players.map((pp: any) => pp.score ?? 0);
+		const minScore = Math.min(...scores);
+		const multiplePlayers = players.length > 1;
+
 		for (const p of players) {
 			if (!p.id) continue;
 			const isWinner = p.id === winnerId;
-			const score = p.totalScore || p.score || 0;
+			const score = p.score || 0;
+			const isLast = multiplePlayers && score === minScore;
+
+			const lossesToAdd = isLast && !isWinner ? 1 : 0;
 
 			db.prepare(
 				`
                 UPDATE users 
                 SET wins = wins + ?, 
                     losses = losses + ?, 
+                    total_games = total_games + ?,
                     total_score = total_score + ?, 
                     max_score = MAX(max_score, ?),
                     max_turn_score = MAX(max_turn_score, ?),
                     max_roll_score = MAX(max_roll_score, ?)
                 WHERE id = ?
             `
-			).run(isWinner ? 1 : 0, isWinner ? 0 : 1, score, score, p.maxTurnScore || 0, p.maxRollScore || 0, p.id);
+			).run(isWinner ? 1 : 0, lossesToAdd, 1, score, score, p.maxTurnScore || 0, p.maxRollScore || 0, p.id);
 
 			// Logic for achievements
 			// if (isWinner) {
@@ -228,6 +240,7 @@ export const getPlayerStats = (playerId: string) => {
 	return {
 		wins: user.wins,
 		losses: user.losses,
+		totalGames: user.total_games || 0,
 		totalScore: user.total_score,
 		maxScore: user.max_score,
 		maxTurnScore: user.max_turn_score,

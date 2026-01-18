@@ -26,10 +26,10 @@ export class ProfileManager {
 
 	private injectHtml() {
 		const html = `
-            <div id="profileOverlay" class="overlay hidden">
-                <div class="overlay-content menu-container">
+			<div id="profileOverlay" class="overlay hidden">
+				<div class="overlay-content menu-container">
 					<button id="closeProfileMgrBtn" class="close-btn">×</button>
-                    
+					
 					<div class="profile-tabs">
 						<button class="tab-btn active" data-tab="phrases">Mis Frases</button>
 						<button class="tab-btn" data-tab="profile">Perfil</button>
@@ -52,44 +52,54 @@ export class ProfileManager {
 
 					<div id="tab-profile" class="tab-content hidden">
 						<div class="stats-container">
-                            <div class="stat-card">
-                                <span class="stat-label">Victorias</span>
-                                <span id="stat-wins" class="stat-value">-</span>
-                            </div>
-                            <div class="stat-card">
-                                <span class="stat-label">Derrotas</span>
-                                <span id="stat-losses" class="stat-value">-</span>
-                            </div>
-                            <div class="stat-card hidden">
-                                <span class="stat-label">Record Personal</span>
-                                <span id="stat-max-score" class="stat-value">-</span>
-                            </div>
-                            <div class="stat-card">
-                                <span class="stat-label">Mejor Turno</span>
-                                <span id="stat-max-turn" class="stat-value">-</span>
-                            </div>
-                            <div class="stat-card">
-                                <span class="stat-label">Mejor Tirada</span>
-                                <span id="stat-max-roll" class="stat-value">-</span>
-                            </div>
-                            <div class="stat-card">
-                                <span class="stat-label">Puntos Totales</span>
-                                <span id="stat-total-score" class="stat-value">-</span>
-                            </div>
-                        </div>
-                        <div class="recent-games">
-                            <h3>Partidas Recientes</h3>
-                            <div id="recent-games-list" class="recent-games-list">Cargando...</div>
-                        </div>
+							<div class="stats-container-row">
+								<div class="stat-card">
+									<span class="stat-label">Victorias</span>
+									<span id="stat-wins" class="stat-value">-</span>
+								</div>
+								<div class="stat-card">
+									<span class="stat-label">Derrotas</span>
+									<span id="stat-losses" class="stat-value">-</span>
+								</div>
+								<div class="stat-card">
+									<span class="stat-label">Partidas</span>
+									<span id="stat-total-games" class="stat-value">-</span>
+								</div>
+							</div>
+							<div class="stats-container-row">
+								<div class="stat-card hidden">
+									<span class="stat-label">Record Personal</span>
+									<span id="stat-max-score" class="stat-value">-</span>
+								</div>
+								<div class="stat-card">
+									<span class="stat-label">Mejor Turno</span>
+									<span id="stat-max-turn" class="stat-value">-</span>
+								</div>
+								<div class="stat-card">
+									<span class="stat-label">Mejor Tirada</span>
+									<span id="stat-max-roll" class="stat-value">-</span>
+								</div>
+							</div>
+							<div class="stats-container-row">
+								<div class="stat-card">
+									<span class="stat-label">Puntos Totales</span>
+									<span id="stat-total-score" class="stat-value">-</span>
+								</div>
+							</div>
+						</div>
+						<div class="recent-games">
+							<h3>Partidas Recientes</h3>
+							<div id="recent-games-list" class="recent-games-list">Cargando...</div>
+						</div>
 					</div>
 
 					<div id="tab-achievements" class="tab-content hidden">
 						<div id="achievements-list" class="achievements-grid">
-                            Cargando logros...
-                        </div>
+							Cargando logros...
+						</div>
 					</div>
-                </div>
-            </div>
+				</div>
+			</div>
         `;
 		this.parent.insertAdjacentHTML('beforeend', html);
 	}
@@ -153,6 +163,7 @@ export class ProfileManager {
 		if (!stats) return;
 		document.getElementById('stat-wins')!.textContent = stats.wins.toString();
 		document.getElementById('stat-losses')!.textContent = stats.losses.toString();
+		document.getElementById('stat-total-games')!.textContent = (stats.totalGames || 0).toString();
 		document.getElementById('stat-max-score')!.textContent = stats.maxScore.toLocaleString();
 		document.getElementById('stat-max-turn')!.textContent = (stats.maxTurnScore || 0).toLocaleString();
 		document.getElementById('stat-max-roll')!.textContent = (stats.maxRollScore || 0).toLocaleString();

@@ -148,6 +148,7 @@ io.on('connection', (socket: Socket) => {
 				displayName: freshUser.display_name,
 				wins: freshUser.wins,
 				losses: freshUser.losses,
+				totalGames: freshUser.total_games || 0,
 				totalScore: freshUser.total_score,
 				maxScore: freshUser.max_score,
 				maxTurnScore: freshUser.max_turn_score,

@@ -55,9 +55,13 @@
 		gap: 15px;
 		margin-top: 10px;
 	}
+	.stats-container-row {
+		display: flex;
+		gap: 15px;
+		width: 100%;
+	}
 	.stat-card {
 		flex: 1 1 auto;
-		width: 40%;
 		background: rgba(255, 255, 255, 0.05);
 		padding: 12px;
 		border-radius: 8px;
