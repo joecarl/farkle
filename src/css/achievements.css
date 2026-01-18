@@ -1,0 +1,144 @@
+#achievement-container {
+	position: fixed;
+	top: 20px;
+	right: 20px;
+	z-index: 10000;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	pointer-events: none;
+}
+
+.achievement-notification {
+	background: rgba(0, 0, 0, 0.85);
+	border: 2px solid #ffd700;
+	border-radius: 8px;
+	padding: 10px;
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	width: 300px;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+	transform: translateX(120%);
+	transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.27);
+	color: white;
+	pointer-events: auto;
+}
+
+.achievement-notification.show {
+	transform: translateX(0);
+}
+
+.ach-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.ach-title {
+	font-size: 0.8em;
+	color: #ffd700;
+	text-transform: uppercase;
+	font-weight: bold;
+	letter-spacing: 1px;
+}
+
+.ach-name {
+	font-size: 1.1em;
+	font-weight: bold;
+}
+
+/* Icons Generic */
+.ach-icon {
+	width: 64px;
+	height: 64px;
+	background-image: url('../assets/achievements-set1.png');
+	background-size: 500% 500%;
+	border-radius: 4px;
+	flex-shrink: 0;
+	image-rendering: pixelated; /* Optional depending on art style */
+}
+
+/* Specific Icons - Row 1 */
+.ach-farkle-6 {
+	background-position: 0% 0%;
+}
+.ach-big-roll {
+	background-position: 25% 0%;
+}
+.ach-survivor-1 {
+	background-position: 50% 0%;
+}
+.ach-gold-hoarder {
+	background-position: 75% 0%;
+}
+.ach-tavern-king {
+	background-position: 100% 0%;
+}
+
+/* Row 2 */
+.ach-duel-winner {
+	background-position: 0% 25%;
+}
+.ach-perfect-aim {
+	background-position: 25% 25%;
+}
+.ach-hidden-treasure {
+	background-position: 50% 25%;
+}
+.ach-chronicler {
+	background-position: 75% 25%;
+}
+.ach-recognized-hero {
+	background-position: 100% 25%;
+}
+
+/* Row 3 */
+.ach-champion {
+	background-position: 0% 50%;
+}
+.ach-six-ones {
+	background-position: 25% 50%;
+}
+.ach-against-time {
+	background-position: 50% 50%;
+}
+.ach-key-destiny {
+	background-position: 75% 50%;
+}
+.ach-alchemist {
+	background-position: 100% 50%;
+}
+
+/* Row 4 */
+.ach-dragon-fire {
+	background-position: 0% 75%;
+}
+.ach-shadow-lord {
+	background-position: 25% 75%;
+}
+.ach-lucky-clover {
+	background-position: 50% 75%;
+}
+.ach-drunkard {
+	background-position: 75% 75%;
+}
+.ach-blood-dice {
+	background-position: 100% 75%;
+}
+
+/* Row 5 */
+.ach-thousand-coins {
+	background-position: 0% 100%;
+}
+.ach-veteran {
+	background-position: 25% 100%;
+}
+.ach-legendary-victory {
+	background-position: 50% 100%;
+}
+.ach-cursed-dice {
+	background-position: 75% 100%;
+}
+.ach-wise-man {
+	background-position: 100% 100%;
+}

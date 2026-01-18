@@ -181,45 +181,61 @@
 
 	.achievements-grid {
 		display: grid;
-		grid-template-columns: 1fr;
-		gap: 10px;
-		margin-top: 10px;
-		max-height: 350px;
-		overflow-y: auto;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 12px;
+		margin-top: 15px;
 		padding-right: 5px;
 	}
-	.achievement-item {
-		background: rgba(255, 255, 255, 0.05);
-		padding: 12px;
+
+	.achievement-card {
+		background: rgba(30, 30, 30, 0.6);
+		border: 1px solid rgba(255, 255, 255, 0.1);
 		border-radius: 8px;
+		padding: 10px;
 		display: flex;
 		align-items: center;
-		gap: 15px;
-		text-align: left;
-		border: 1px solid rgba(255, 255, 255, 0.05);
+		gap: 12px;
+		transition: all 0.2s;
 	}
-	.achievement-icon {
-		font-size: 2em;
-		min-width: 40px;
-		display: flex;
-		justify-content: center;
+
+	.achievement-card.locked {
+		opacity: 0.5;
+		filter: grayscale(100%);
 	}
-	.achievement-info {
+
+	.achievement-card.unlocked {
+		background: rgba(255, 215, 0, 0.1);
+		border-color: rgba(255, 215, 0, 0.3);
+	}
+
+	.achievement-card .ach-icon {
+		/* Inherits from achievements.css but we scale it down slightly for the list if needed */
+		width: 48px;
+		height: 48px;
+	}
+
+	.ach-details {
 		flex: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		text-align: left;
 	}
-	.achievement-info h4 {
-		margin: 0;
+
+	.ach-name {
 		font-size: 0.95em;
-		color: var(--p-color-1);
+		font-weight: bold;
+		color: #e0e0e0;
+		margin-bottom: 2px;
 	}
-	.achievement-info p {
-		margin: 2px 0 0;
-		font-size: 0.8em;
-		color: #aaa;
+
+	.achievement-card.unlocked .ach-name {
+		color: #ffd700;
 	}
-	.achievement-date {
-		font-size: 0.7em;
-		color: #666;
-		margin-top: 4px;
+
+	.ach-desc {
+		font-size: 0.75em;
+		color: #888;
+		line-height: 1.2;
 	}
 }

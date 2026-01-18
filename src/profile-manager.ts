@@ -1,12 +1,6 @@
 import { OnlineManager } from './online-manager';
 import { GameStatsLogic } from './game-stats-logic';
-
-const ACHIEVEMENT_META: Record<string, { title: string; desc: string; icon: string }> = {
-	first_win: { title: '¡Primera Victoria!', desc: 'Has ganado tu primera partida de Farkle.', icon: '🏆' },
-	high_scorer: { title: 'Gran Puntuador', desc: 'Has conseguido más de 5000 puntos en una partida.', icon: '🔥' },
-	veteran: { title: 'Veterano', desc: 'Has jugado 10 partidas o más.', icon: '🎖️' },
-	puntuacion_perfecta: { title: 'Maestría Total', desc: 'Has alcanzado 10000 puntos en una partida.', icon: '👑' },
-};
+import { ACHIEVEMENTS, type Achievement } from './achievements';
 
 export class ProfileManager {
 	private parent: HTMLElement;
@@ -206,28 +200,25 @@ export class ProfileManager {
 		}
 	}
 
-	private renderAchievements(achievements: any[]) {
-		const list = document.getElementById('achievements-list')!;
-		if (achievements && achievements.length > 0) {
-			list.innerHTML = achievements
-				.map((a: any) => {
-					const meta = ACHIEVEMENT_META[a.achievement_key] || { title: a.achievement_key, desc: '', icon: '❓' };
-					const date = new Date(a.unlocked_at).toLocaleDateString();
-					return `
-                    <div class="achievement-item">
-                        <div class="achievement-icon">${meta.icon}</div>
-                        <div class="achievement-info">
-                            <h4>${meta.title}</h4>
-                            <p>${meta.desc}</p>
-                            <div class="achievement-date">Obtenido el ${date}</div>
-                        </div>
-                    </div>
-                `;
-				})
-				.join('');
-		} else {
-			list.innerHTML = '<p style="text-align: center; color: #666; width: 100%;">Aún no has desbloqueado ningún logro.</p>';
-		}
+	private renderAchievements(unlocked: Achievement[]) {
+		const container = document.getElementById('achievements-list');
+		if (!container) return;
+
+		// unlocked might be [{achievement_key: 'FARKLE_6', ...}, ...] or just strings
+		const unlockedSet = new Set(unlocked.map((u) => (typeof u === 'string' ? u : u.id)));
+
+		container.innerHTML = ACHIEVEMENTS.map((ach) => {
+			const isUnlocked = unlockedSet.has(ach.id);
+			return `
+				<div class="achievement-card ${isUnlocked ? 'unlocked' : 'locked'}" title="${ach.description}">
+					<div class="ach-icon ${ach.iconClass}"></div>
+					<div class="ach-details">
+						<div class="ach-name">${ach.name}</div>
+						<div class="ach-desc">${ach.secret && !isUnlocked ? '???' : ach.description}</div>
+					</div>
+				</div>
+			`;
+		}).join('');
 	}
 
 	private updateSettingsInputs() {
