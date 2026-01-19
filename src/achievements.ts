@@ -9,20 +9,50 @@ export interface Achievement {
 	secret?: boolean;
 }
 
+export const ACHIEVEMENT_THRESHOLDS = {
+	BIG_ROLL_SCORE: 2000,
+	TAVERN_KING_WINS: 50,
+	CHRONICLER_ROOMS: 10,
+	RECOGNIZED_HERO_LEVEL: 10,
+	DRAGON_FIRE_SCORE: 4500,
+	BLOOD_AND_DICE_LOSS: 1500,
+	THOUSAND_COINS_TOTAL: 100000,
+	LEGENDARY_VICTORY_SCORE: 10000,
+	CURSED_DICE_FARKLES: 4,
+	WISE_MAN_GAMES: 100,
+	DRUNKARD_SESSIONS: 10,
+	VETERAN_HOURS: 10,
+};
+
 export const ACHIEVEMENTS: Achievement[] = [
 	// Fila 1
 	{ id: 'FARKLE_6', name: 'Farkle con 6 dados', description: '¡Farkle! con una tirada completa de 6 dados.', iconClass: 'ach-farkle-6' },
-	{ id: 'BIG_ROLL', name: 'Gran tirada', description: 'Consigue más de 1,500 puntos en una sola tirada.', iconClass: 'ach-big-roll' },
+	{
+		id: 'BIG_ROLL',
+		name: 'Gran tirada',
+		description: `Consigue ${ACHIEVEMENT_THRESHOLDS.BIG_ROLL_SCORE.toLocaleString()} puntos o más en una sola tirada.`,
+		iconClass: 'ach-big-roll',
+	},
 	{ id: 'SURVIVOR_1', name: 'Salir airoso', description: 'Consigue puntos tirando solo 1 dado.', iconClass: 'ach-survivor-1' },
 	{ id: 'GOLD_HOARDER', name: 'Acumulador de oro', description: 'Alcanza un total acumulado de monedas (Simulado).', iconClass: 'ach-gold-hoarder' },
-	{ id: 'TAVERN_KING', name: 'Rey de la taberna', description: 'Gana 50 partidas.', iconClass: 'ach-tavern-king' },
+	{ id: 'TAVERN_KING', name: 'Rey de la taberna', description: `Gana ${ACHIEVEMENT_THRESHOLDS.TAVERN_KING_WINS} partidas.`, iconClass: 'ach-tavern-king' },
 
 	// Fila 2
 	{ id: 'DUEL_WINNER', name: 'Duelista', description: 'Gana un duelo 1 contra 1.', iconClass: 'ach-duel-winner' },
-	{ id: 'PERFECT_AIM', name: 'Precisión absoluta', description: 'Termina una ronda sin desperdiciar ningún dado.', iconClass: 'ach-perfect-aim' },
+	{
+		id: 'PERFECT_AIM',
+		name: 'Precisión absoluta',
+		description: 'Termina una ronda sin desperdiciar ningún dado en varias tiradas.',
+		iconClass: 'ach-perfect-aim',
+	},
 	{ id: 'HIDDEN_TREASURE', name: 'Tesoro escondido', description: 'Logro secreto desbloqueado.', iconClass: 'ach-hidden-treasure', secret: true },
-	{ id: 'CHRONICLER', name: 'Cronista', description: 'Crea 10 salas de juego.', iconClass: 'ach-chronicler' },
-	{ id: 'RECOGNIZED_HERO', name: 'Héroe reconocido', description: 'Alcanza el nivel 10 (Simulado).', iconClass: 'ach-recognized-hero' },
+	{ id: 'CHRONICLER', name: 'Cronista', description: `Crea ${ACHIEVEMENT_THRESHOLDS.CHRONICLER_ROOMS} salas de juego.`, iconClass: 'ach-chronicler' },
+	{
+		id: 'RECOGNIZED_HERO',
+		name: 'Héroe reconocido',
+		description: `Alcanza el nivel ${ACHIEVEMENT_THRESHOLDS.RECOGNIZED_HERO_LEVEL} (Simulado).`,
+		iconClass: 'ach-recognized-hero',
+	},
 
 	// Fila 3
 	{ id: 'CHAMPION', name: 'Campeón', description: 'Gana un torneo.', iconClass: 'ach-champion' },
@@ -32,18 +62,48 @@ export const ACHIEVEMENTS: Achievement[] = [
 	{ id: 'ALCHEMIST', name: 'Alquimista', description: 'Usa una poción o habilidad especial.', iconClass: 'ach-alchemist' },
 
 	// Fila 4
-	{ id: 'DRAGON_FIRE', name: 'Fuego del dragón', description: 'Consigue mas de 3,000 puntos en un turno.', iconClass: 'ach-dragon-fire' },
+	{
+		id: 'DRAGON_FIRE',
+		name: 'Fuego del dragón',
+		description: `Consigue más de ${ACHIEVEMENT_THRESHOLDS.DRAGON_FIRE_SCORE.toLocaleString()} puntos en un turno.`,
+		iconClass: 'ach-dragon-fire',
+	},
 	{ id: 'SHADOW_LORD', name: 'Señor de las sombras', description: 'Gana sin que nadie se lo espere.', iconClass: 'ach-shadow-lord' },
 	{ id: 'LUCKY_CLOVER', name: 'Suerte del trébol', description: 'Saca escalera completa (1-6) en una tirada.', iconClass: 'ach-lucky-clover' },
-	{ id: 'DRUNKARD', name: 'Borracho de la taberna', description: 'Juega 10 partidas seguidas.', iconClass: 'ach-drunkard' },
-	{ id: 'BLOOD_AND_DICE', name: 'Sangre y dados', description: 'Pierde mas de 1000 puntos por un Farkle.', iconClass: 'ach-blood-dice' },
+	{
+		id: 'DRUNKARD',
+		name: 'Borracho de la taberna',
+		description: `Juega ${ACHIEVEMENT_THRESHOLDS.DRUNKARD_SESSIONS} partidas seguidas.`,
+		iconClass: 'ach-drunkard',
+	},
+	{
+		id: 'BLOOD_AND_DICE',
+		name: 'Sangre y dados',
+		description: `Pierde más de ${ACHIEVEMENT_THRESHOLDS.BLOOD_AND_DICE_LOSS.toLocaleString()} puntos por un Farkle.`,
+		iconClass: 'ach-blood-dice',
+	},
 
 	// Fila 5
-	{ id: 'THOUSAND_COINS', name: 'Mil monedas', description: 'Alcanza 100,000 puntos totales en tu carrera.', iconClass: 'ach-thousand-coins' },
-	{ id: 'VETERAN', name: 'Tahúr veterano', description: 'Juega por más de 10 horas totales.', iconClass: 'ach-veteran' },
-	{ id: 'LEGENDARY_VICTORY', name: 'Victoria legendaria', description: 'Gana con exactamente 10,000 puntos.', iconClass: 'ach-legendary-victory' },
-	{ id: 'CURSED_DICE', name: 'Dados malditos', description: 'Saca 3 Farkles seguidos.', iconClass: 'ach-cursed-dice' },
-	{ id: 'WISE_MAN', name: 'Sabio del azar', description: 'Juega 100 partidas.', iconClass: 'ach-wise-man' },
+	{
+		id: 'THOUSAND_COINS',
+		name: 'Mil monedas',
+		description: `Alcanza ${ACHIEVEMENT_THRESHOLDS.THOUSAND_COINS_TOTAL.toLocaleString()} puntos totales en tu carrera.`,
+		iconClass: 'ach-thousand-coins',
+	},
+	{ id: 'VETERAN', name: 'Tahúr veterano', description: `Juega por más de ${ACHIEVEMENT_THRESHOLDS.VETERAN_HOURS} horas totales.`, iconClass: 'ach-veteran' },
+	{
+		id: 'LEGENDARY_VICTORY',
+		name: 'Victoria legendaria',
+		description: `Gana con exactamente ${ACHIEVEMENT_THRESHOLDS.LEGENDARY_VICTORY_SCORE.toLocaleString()} puntos.`,
+		iconClass: 'ach-legendary-victory',
+	},
+	{
+		id: 'CURSED_DICE',
+		name: 'Dados malditos',
+		description: `Saca ${ACHIEVEMENT_THRESHOLDS.CURSED_DICE_FARKLES} Farkles seguidos.`,
+		iconClass: 'ach-cursed-dice',
+	},
+	{ id: 'WISE_MAN', name: 'Sabio del azar', description: `Juega ${ACHIEVEMENT_THRESHOLDS.WISE_MAN_GAMES} partidas.`, iconClass: 'ach-wise-man' },
 ];
 
 export interface AchievementRecord {
@@ -82,8 +142,10 @@ export class AchievementManager {
 	}
 
 	public unlock(id: string) {
-		if (this.unlockedIds.has(id)) return;
-
+		if (this.unlockedIds.has(id)) {
+			console.log(`Achievement ${id} already unlocked.`); // IGNORE
+			return;
+		}
 		const achievement = ACHIEVEMENTS.find((a) => a.id === id);
 		if (!achievement) return;
 
@@ -160,7 +222,7 @@ export class AchievementManager {
 
 			case 'beforeRoll':
 				// BIG_ROLL: High selection score before rolling again
-				if (gs.turnScore >= 2000) {
+				if (gs.turnScore >= ACHIEVEMENT_THRESHOLDS.BIG_ROLL_SCORE) {
 					this.unlock('BIG_ROLL');
 				}
 				break;
@@ -171,10 +233,10 @@ export class AchievementManager {
 				if (this.lastRolledCount === 6) {
 					this.unlock('FARKLE_6');
 				}
-				if (turnScoreLost > 1500) {
+				if (turnScoreLost > ACHIEVEMENT_THRESHOLDS.BLOOD_AND_DICE_LOSS) {
 					this.unlock('BLOOD_AND_DICE');
 				}
-				if (this.consecutiveFarkles >= 4) {
+				if (this.consecutiveFarkles >= ACHIEVEMENT_THRESHOLDS.CURSED_DICE_FARKLES) {
 					this.unlock('CURSED_DICE');
 				}
 				break;
@@ -182,7 +244,7 @@ export class AchievementManager {
 			case 'bank':
 				// DRAGON_FIRE, SURVIVOR_1, PERFECT_AIM
 				const bankedScore = gs.turnScore;
-				if (bankedScore > 4500) {
+				if (bankedScore > ACHIEVEMENT_THRESHOLDS.DRAGON_FIRE_SCORE) {
 					this.unlock('DRAGON_FIRE');
 				}
 				if (this.hotDiceCount >= 2 && gs.dice.filter((d) => d.locked || d.selected).length === 6) {
@@ -203,7 +265,7 @@ export class AchievementManager {
 					if (playersCount === 2) {
 						this.unlock('DUEL_WINNER');
 					}
-					if (winScore === 10000) {
+					if (winScore === ACHIEVEMENT_THRESHOLDS.LEGENDARY_VICTORY_SCORE) {
 						this.unlock('LEGENDARY_VICTORY');
 					}
 					if (!this.turnWasWinning && playersCount > 1) {
@@ -217,9 +279,9 @@ export class AchievementManager {
 	public checkStats(stats: any) {
 		if (!stats) return;
 
-		if (stats.wins >= 50) this.unlock('TAVERN_KING');
-		if (stats.totalGames >= 100) this.unlock('WISE_MAN');
-		if (stats.totalScore >= 100000) this.unlock('THOUSAND_COINS');
+		if (stats.wins >= ACHIEVEMENT_THRESHOLDS.TAVERN_KING_WINS) this.unlock('TAVERN_KING');
+		if (stats.totalGames >= ACHIEVEMENT_THRESHOLDS.WISE_MAN_GAMES) this.unlock('WISE_MAN');
+		if (stats.totalScore >= ACHIEVEMENT_THRESHOLDS.THOUSAND_COINS_TOTAL) this.unlock('THOUSAND_COINS');
 
 		// "Acumulador de oro" (Simulado con totalScore/10 ?)
 		// Let's assume 1 gold = 100 points

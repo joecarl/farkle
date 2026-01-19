@@ -7,7 +7,7 @@ import { OverlayManager } from './overlay-manager';
 import { OnlineManager } from './online-manager';
 import { ReactionManager } from './reaction-manager';
 import { ProfileManager } from './profile-manager';
-import { AchievementManager } from './achievements';
+import { AchievementManager, type AchievementRecord } from './achievements';
 import { interval, sleep } from './utils';
 
 // Visual representation of a die, extending the logical state
@@ -238,6 +238,7 @@ export class FarkleGame {
 	private setupOnlineListeners() {
 		this.onlineManager.addStatsListener((data) => {
 			if (data.stats) {
+				this.achievementManager.setUnlocked(data.stats.achievements.map((a: AchievementRecord) => a.achievement_key));
 				this.achievementManager.checkStats(data.stats);
 			}
 		});
