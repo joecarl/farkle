@@ -170,14 +170,14 @@ io.on('connection', (socket: Socket) => {
 	});
 
 	socket.on('unlock_achievement', (data: { id: string }) => {
-		if (!boundUserId) return;
+		const userId = getUserId();
+		if (!userId) return;
 		try {
 			// We just call the DB function. The client handles the UI display.
 			// Ideally we would validate the condition here, but for this request we trust the client's detection
 			// combined with basic server checks if possible.
 			const achievementKey = data.id;
-			unlockAchievement(boundUserId, achievementKey);
-			console.log(`User ${boundUserId} unlocked achievement: ${achievementKey}`);
+			unlockAchievement(userId, achievementKey);
 		} catch (e) {
 			console.error('Error unlocking achievement:', e);
 		}

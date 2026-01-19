@@ -46,6 +46,12 @@ export const ACHIEVEMENTS: Achievement[] = [
 	{ id: 'WISE_MAN', name: 'Sabio del azar', description: 'Juega 100 partidas.', iconClass: 'ach-wise-man' },
 ];
 
+export interface AchievementRecord {
+	achievement_key: string;
+	unlocked_at: string;
+	player_id: string;
+}
+
 export class AchievementManager {
 	private unlockedIds: Set<string> = new Set();
 	private onlineManager: OnlineManager;

@@ -1,6 +1,6 @@
 import { OnlineManager } from './online-manager';
 import { GameStatsLogic } from './game-stats-logic';
-import { ACHIEVEMENTS, type Achievement } from './achievements';
+import { ACHIEVEMENTS, type AchievementRecord } from './achievements';
 
 export class ProfileManager {
 	private parent: HTMLElement;
@@ -200,12 +200,12 @@ export class ProfileManager {
 		}
 	}
 
-	private renderAchievements(unlocked: Achievement[]) {
+	private renderAchievements(unlocked: AchievementRecord[]) {
 		const container = document.getElementById('achievements-list');
 		if (!container) return;
 
 		// unlocked might be [{achievement_key: 'FARKLE_6', ...}, ...] or just strings
-		const unlockedSet = new Set(unlocked.map((u) => (typeof u === 'string' ? u : u.id)));
+		const unlockedSet = new Set(unlocked.map((u) => u.achievement_key));
 
 		container.innerHTML = ACHIEVEMENTS.map((ach) => {
 			const isUnlocked = unlockedSet.has(ach.id);
