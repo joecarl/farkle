@@ -160,7 +160,7 @@ export class AchievementManager {
 	public checkAchievements(context: string, data: any = {}) {
 		if (!this.onlineManager.isInGame) {
 			// Achievements only in online game context
-			//return;
+			return;
 		}
 		const currentUserId = this.onlineManager.getUserId();
 		const gs = this.logic.getGameState();
