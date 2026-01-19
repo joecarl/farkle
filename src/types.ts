@@ -25,6 +25,7 @@ export interface GameState {
 	currentPlayerIndex: number;
 	turnScore: number;
 	isFarkle: boolean;
+	lostScore: number;
 	canBank: boolean;
 	canRoll: boolean;
 	dice: DieState[];

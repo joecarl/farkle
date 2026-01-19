@@ -10,6 +10,7 @@ export class FarkleLogic {
 	private isFarkleState: boolean = false;
 	private isStartOfTurn: boolean = true;
 	private gameFinished: boolean = false;
+	private lostScore: number = 0;
 	public scoreGoal: number;
 
 	constructor(players?: Player[], scoreGoal: number = DEFAULT_SCORE_GOAL) {
@@ -65,6 +66,7 @@ export class FarkleLogic {
 			currentPlayerIndex: this.currentPlayerIndex,
 			turnScore: this.accumulatedTurnScore + scoring.score,
 			isFarkle: this.isFarkleState,
+			lostScore: this.lostScore,
 			canBank,
 			canRoll,
 			dice: this.dice.map((d) => ({ ...d })), // Copy
@@ -79,6 +81,7 @@ export class FarkleLogic {
 		this.currentPlayerIndex = state.currentPlayerIndex;
 		this.dice = state.dice;
 		this.isFarkleState = state.isFarkle;
+		this.lostScore = state.lostScore;
 		if (state.isStartOfTurn !== undefined) this.isStartOfTurn = state.isStartOfTurn;
 		if (state.accumulatedTurnScore !== undefined) this.accumulatedTurnScore = state.accumulatedTurnScore;
 		// If accumulatedTurnScore is missing (legacy), try to infer or default to 0
@@ -139,9 +142,11 @@ export class FarkleLogic {
 		const bestScore = this.calculateBestScore(newRollValues);
 		if (bestScore.score === 0) {
 			// Farkle
+			this.lostScore = this.accumulatedTurnScore;
 			this.accumulatedTurnScore = 0;
 			this.isFarkleState = true;
 		} else {
+			this.lostScore = 0;
 			this.isFarkleState = false;
 		}
 

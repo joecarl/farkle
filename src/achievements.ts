@@ -96,11 +96,15 @@ export class AchievementManager {
 	}
 
 	public checkAchievements(context: string, data: any = {}) {
+		if (!this.onlineManager.isInGame) {
+			// Achievements only in online game context
+			//return;
+		}
 		const currentUserId = this.onlineManager.getUserId();
+		const gs = this.logic.getGameState();
 
-		if (this.onlineManager.isInGame && context !== 'gameOver') {
-			const gameState = this.logic.getGameState();
-			const activePlayerId = gameState.players[gameState.currentPlayerIndex]?.id;
+		if (context !== 'gameOver') {
+			const activePlayerId = gs.players[gs.currentPlayerIndex]?.id;
 			// If it's not our turn, we generally don't process achievements
 			if (activePlayerId && activePlayerId !== currentUserId) {
 				return;
@@ -110,13 +114,12 @@ export class AchievementManager {
 		// Update internal state
 		switch (context) {
 			case 'startTurn':
-				const gameState = this.logic.getGameState();
-				if (gameState && gameState.players) {
-					const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+				if (gs && gs.players) {
+					const currentPlayer = gs.players[gs.currentPlayerIndex];
 					const isMyTurn = currentPlayer.id === currentUserId;
 					if (isMyTurn) {
 						this.hotDiceCount = 0;
-						const sorted = [...gameState.players].sort((a: any, b: any) => b.score - a.score);
+						const sorted = [...gs.players].sort((a: any, b: any) => b.score - a.score);
 						const leader = sorted[0];
 						this.turnWasWinning = currentPlayer.score >= leader.score;
 					}
@@ -145,46 +148,44 @@ export class AchievementManager {
 				// SIX_ONES, LUCKY_CLOVER
 				const targetValues: number[] = data.targetValues || [];
 				const diceCount: number = data.diceCount || 0;
+				const sorted = [...targetValues].sort((a, b) => a - b).join('');
 				if (diceCount === 6) {
-					const sorted = [...targetValues].sort((a, b) => a - b).join('');
 					if (sorted === '111111') this.unlock('SIX_ONES');
 					if (sorted === '123456') this.unlock('LUCKY_CLOVER');
+				}
+				if (diceCount === 1 && !gs.isFarkle) {
+					this.unlock('SURVIVOR_1');
 				}
 				break;
 
 			case 'beforeRoll':
 				// BIG_ROLL: High selection score before rolling again
-				const gs = this.logic.getGameState();
-				const selectionScore = gs.turnScore - (gs.accumulatedTurnScore || 0);
-				if (selectionScore > 1500) {
+				if (gs.turnScore >= 2000) {
 					this.unlock('BIG_ROLL');
 				}
 				break;
 
 			case 'farkle':
 				// FARKLE_6, BLOOD_AND_DICE
-				const turnScoreLost = this.logic.getGameState().turnScore;
+				const turnScoreLost = gs.lostScore;
 				if (this.lastRolledCount === 6) {
 					this.unlock('FARKLE_6');
 				}
-				if (turnScoreLost > 1000) {
+				if (turnScoreLost > 1500) {
 					this.unlock('BLOOD_AND_DICE');
 				}
-				if (this.consecutiveFarkles >= 3) {
+				if (this.consecutiveFarkles >= 4) {
 					this.unlock('CURSED_DICE');
 				}
 				break;
 
 			case 'bank':
 				// DRAGON_FIRE, SURVIVOR_1, PERFECT_AIM
-				const bankedScore = this.logic.getGameState().turnScore;
-				if (bankedScore > 3000) {
+				const bankedScore = gs.turnScore;
+				if (bankedScore > 4500) {
 					this.unlock('DRAGON_FIRE');
 				}
-				if (this.lastRolledCount === 1) {
-					this.unlock('SURVIVOR_1');
-				}
-				if (this.hotDiceCount >= 2) {
+				if (this.hotDiceCount >= 2 && gs.dice.filter((d) => d.locked || d.selected).length === 6) {
 					this.unlock('PERFECT_AIM');
 				}
 				break;
@@ -196,7 +197,7 @@ export class AchievementManager {
 				const currentUserId = this.onlineManager.getUserId();
 
 				if (this.onlineManager.isInGame && winnerId && winnerId === currentUserId) {
-					const playersCount = this.logic.getGameState().players.length;
+					const playersCount = gs.players.length;
 					const winScore = winner?.score || 0;
 
 					if (playersCount === 2) {
@@ -222,7 +223,7 @@ export class AchievementManager {
 
 		// "Acumulador de oro" (Simulado con totalScore/10 ?)
 		// Let's assume 1 gold = 100 points
-		if (stats.totalScore >= 100000) this.unlock('GOLD_HOARDER');
+		//if (stats.totalScore >= 100000) this.unlock('GOLD_HOARDER');
 
 		// Veteran: 10 hours. Not tracked in simple stats yet.
 	}

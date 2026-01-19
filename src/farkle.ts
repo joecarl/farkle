@@ -909,13 +909,13 @@ export class FarkleGame {
 		const currentPlayer = gameState.players[gameState.currentPlayerIndex];
 		const startTotalScore = currentPlayer.score;
 
+		this.achievementManager.checkAchievements('bank');
+
 		if (startTurnScore === 0) {
 			this.logic.bankPoints();
 			this.endTurn();
 			return;
 		}
-
-		this.achievementManager.checkAchievements('bank');
 
 		this.isBanking = true;
 
