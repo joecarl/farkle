@@ -26,7 +26,7 @@ export class ProfileManager {
 					
 					<div class="profile-tabs">
 						<button class="tab-btn active" data-tab="phrases">Mis Frases</button>
-						<button class="tab-btn" data-tab="profile">Perfil</button>
+						<button class="tab-btn" data-tab="profile">Estadísticas</button>
 						<button class="tab-btn" data-tab="achievements">Logros</button>
 					</div>
 
