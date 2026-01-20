@@ -237,6 +237,10 @@ export class FarkleGame {
 	}
 
 	private setupOnlineListeners() {
+		this.onlineManager.onVersionMismatch = (data) => {
+			this.overlayManager.showUpdateRequired(data.serverVersion, data.clientVersion);
+		};
+
 		this.onlineManager.addStatsListener((data) => {
 			if (data.stats) {
 				this.achievementManager.setUnlocked(data.stats.achievements.map((a: AchievementRecord) => a.achievement_key));

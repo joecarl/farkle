@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { DEFAULT_SCORE_GOAL } from './logic';
 import { getPathname } from './utils';
+import { APP_VERSION } from '../server/version';
 
 const SERVER_URL = import.meta.env.DEV ? 'http://localhost:3000' : location.origin;
 
@@ -29,6 +30,15 @@ export class OnlineManager {
 	public onPhrasesUpdated?: (data: { phrases: string[] }) => void;
 	public onReactionReceived?: (data: { senderId: string; senderName: string; content: string; type: 'text' | 'emoji' }) => void;
 	public onAchievementsData?: (data: { achievements: any[] }) => void;
+
+	private _onVersionMismatch?: (data: { serverVersion: string; clientVersion: string }) => void;
+	private versionMismatchData: { serverVersion: string; clientVersion: string } | null = null;
+	public set onVersionMismatch(listener: (data: { serverVersion: string; clientVersion: string }) => void) {
+		this._onVersionMismatch = listener;
+		if (this.versionMismatchData && listener) {
+			listener(this.versionMismatchData);
+		}
+	}
 
 	private statsListeners: ((data: { stats: any }) => void)[] = [];
 	public set onStatsData(listener: (data: { stats: any }) => void) {
@@ -98,11 +108,19 @@ export class OnlineManager {
 		});
 
 		// Server will reply with assigned/confirmed userId
-		this.socket.on('identified', (data: { userId: string; profile: any }) => {
+		this.socket.on('identified', (data: { userId: string; profile: any; version?: string }) => {
 			try {
 				localStorage.setItem(FARKLE_USER_ID, data.userId);
 				this.currentUserProfile = data.profile;
 				console.log('Identified. User:', data.userId, 'Profile:', data.profile);
+
+				if (data.version && data.version !== APP_VERSION) {
+					console.warn(`Version mismatch: Server=${data.version}, Client=${APP_VERSION}`);
+					this.versionMismatchData = { serverVersion: data.version, clientVersion: APP_VERSION };
+					if (this._onVersionMismatch) {
+						this._onVersionMismatch(this.versionMismatchData);
+					}
+				}
 
 				this.profileListeners.forEach((l) => l(this.currentUserProfile));
 			} catch (err) {

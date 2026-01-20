@@ -102,6 +102,25 @@ export class OverlayManager {
 		});
 	}
 
+	public showUpdateRequired(serverVersion: string, clientVersion: string) {
+		const overlaysHtml = `
+			<div id="updateRequiredOverlay" class="overlay">
+				<div class="overlay-content" style="max-width: 400px; text-align: center;">
+					<h2 style="color: var(--p-color-1);">¡Actualización requerida!</h2>
+					<p>Tu versión: <b>${clientVersion}</b></p>
+					<p>Versión del servidor: <b>${serverVersion}</b></p>
+					<p style="margin: 20px 0;">Es necesario actualizar la aplicación para continuar jugando.</p>
+					<button id="updateBtn" class="primary-btn">Actualizar ahora</button>
+				</div>
+			</div>
+		`;
+		this.parent.insertAdjacentHTML('beforeend', overlaysHtml);
+		const updateBtn = this.parent.querySelector('#updateBtn') as HTMLButtonElement;
+		updateBtn.addEventListener('click', () => {
+			window.location.reload();
+		});
+	}
+
 	public showFarkle() {
 		this.farkleOverlay.classList.remove('hidden');
 	}

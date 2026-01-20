@@ -16,6 +16,7 @@ import {
 	unlockAchievement,
 } from './db';
 import crypto from 'crypto';
+import { APP_VERSION } from './version';
 
 const app = express();
 const httpServer = createServer(app);
@@ -144,6 +145,7 @@ io.on('connection', (socket: Socket) => {
 		// Acknowledge identification and return full profile
 		socket.emit('identified', {
 			userId,
+			version: APP_VERSION,
 			profile: {
 				displayName: freshUser.display_name,
 				wins: freshUser.wins,
