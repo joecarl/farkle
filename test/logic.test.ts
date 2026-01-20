@@ -145,6 +145,7 @@ describe('FarkleLogic', () => {
 			// but they are private.
 			// We can test calculateScore returning 0.
 			expect(game.calculateScore([2, 3, 4, 6]).score).toBe(0);
+			expect(game.calculateScore([4]).score).toBe(0);
 		});
 
 		it('should lock selected dice and accumulate score on re-roll', () => {

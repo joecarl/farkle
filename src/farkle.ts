@@ -228,6 +228,7 @@ export class FarkleGame {
 	private startNewGame(config: GameConfig = {}) {
 		this.stopTimer();
 		this.logic = new FarkleLogic(config.players, config.scoreGoal);
+		this.achievementManager.updateLogicInstance(this.logic);
 		this.roomId = config.roomId || null;
 		this.isOnline = !!config.roomId;
 		this.finalRoundIndicator.classList.add('hidden');

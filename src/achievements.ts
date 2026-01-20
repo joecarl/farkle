@@ -141,20 +141,32 @@ export class AchievementManager {
 		ids.forEach((id) => this.unlockedIds.add(id));
 	}
 
+	public updateLogicInstance(logic: FarkleLogic) {
+		this.logic = logic;
+		// Reset internal state when switching to a new game
+		this.lastRolledCount = 0;
+		this.consecutiveFarkles = 0;
+		this.turnWasWinning = false;
+		this.hotDiceCount = 0;
+	}
+
 	public unlock(id: string) {
-		if (this.unlockedIds.has(id)) {
-			console.log(`Achievement ${id} already unlocked.`); // IGNORE
-			return;
-		}
 		const achievement = ACHIEVEMENTS.find((a) => a.id === id);
 		if (!achievement) return;
-
-		this.unlockedIds.add(id);
-		this.showNotification(achievement);
 
 		if (this.onlineManager) {
 			this.onlineManager.unlockAchievement(id);
 		}
+
+		if (this.unlockedIds.has(id)) {
+			console.log(`Achievement ${id} already unlocked.`); // Skip notification
+			return;
+		}
+
+		this.unlockedIds.add(id);
+		setTimeout(() => {
+			this.showNotification(achievement);
+		}, 1000);
 	}
 
 	public checkAchievements(context: string, data: any = {}) {
@@ -167,8 +179,12 @@ export class AchievementManager {
 
 		if (context !== 'gameOver') {
 			const activePlayerId = gs.players[gs.currentPlayerIndex]?.id;
+			if (!activePlayerId) {
+				console.warn('No active player ID found in game state.');
+				return;
+			}
 			// If it's not our turn, we generally don't process achievements
-			if (activePlayerId && activePlayerId !== currentUserId) {
+			if (activePlayerId !== currentUserId) {
 				return;
 			}
 		}
@@ -215,6 +231,7 @@ export class AchievementManager {
 					if (sorted === '111111') this.unlock('SIX_ONES');
 					if (sorted === '123456') this.unlock('LUCKY_CLOVER');
 				}
+				// SURVIVOR_1: Score points with only 1 die
 				if (diceCount === 1 && !gs.isFarkle) {
 					this.unlock('SURVIVOR_1');
 				}

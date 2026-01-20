@@ -33,10 +33,6 @@ export class FarkleLogic {
 			}));
 	}
 
-	public addPlayer(name: string) {
-		this.players.push({ name, score: 0, maxTurnScore: 0, maxRollScore: 0 });
-	}
-
 	public getGameState(): GameState {
 		const selectedDice = this.dice.filter((d) => d.selected);
 		const scoring = this.calculateScore(selectedDice.map((d) => d.value));

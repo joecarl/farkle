@@ -46,8 +46,7 @@ db.exec(`
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		player_id TEXT,
 		achievement_key TEXT,
-		unlocked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		UNIQUE(player_id, achievement_key)
+		unlocked_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 `);
 
@@ -213,7 +212,7 @@ export const endGameRecord = (gameId: number | bigint, winnerName: string | null
 };
 
 export const unlockAchievement = (playerId: string, achievementKey: string) => {
-	const stmt = db.prepare('INSERT OR IGNORE INTO achievements (player_id, achievement_key) VALUES (?, ?)');
+	const stmt = db.prepare('INSERT INTO achievements (player_id, achievement_key) VALUES (?, ?)');
 	return stmt.run(playerId, achievementKey).changes > 0;
 };
 
