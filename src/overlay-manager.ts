@@ -15,6 +15,7 @@ export class OverlayManager {
 	private promptOverlay!: HTMLDivElement;
 	private promptTitle!: HTMLHeadingElement;
 	private promptMessage!: HTMLHeadingElement;
+	private promptInput!: HTMLInputElement;
 	private promptAcceptBtn!: HTMLButtonElement;
 	private promptCancelBtn!: HTMLButtonElement;
 
@@ -45,6 +46,7 @@ export class OverlayManager {
 				<div class="overlay-content" style="max-width: 400px; text-align: center;">
 					<h2 id="promptTitle" style="color: var(--p-color-1); ">Prompt title</h2>
 					<div id="promptMessage" style="font-size: 1.2em; margin: 20px 0;">Prompt message</div>
+					<input id="promptInput" type="text" class="hidden" style="width: 100%; padding: 10px; margin-bottom: 20px; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid #555; color: white; border-radius: 4px; font-size: 1.1em;" />
 					<div id="promptButtons" style="margin-top: 20px;">
 						<button id="promptAcceptBtn" class="primary-btn">Sí</button>
 						<button id="promptCancelBtn" class="secondary-btn">No</button>
@@ -77,6 +79,7 @@ export class OverlayManager {
 		this.promptOverlay = this.parent.querySelector('#promptOverlay')!;
 		this.promptTitle = this.parent.querySelector('#promptTitle')!;
 		this.promptMessage = this.parent.querySelector('#promptMessage')!;
+		this.promptInput = this.parent.querySelector('#promptInput')!;
 		this.promptAcceptBtn = this.parent.querySelector('#promptAcceptBtn')!;
 		this.promptCancelBtn = this.parent.querySelector('#promptCancelBtn')!;
 
@@ -86,9 +89,13 @@ export class OverlayManager {
 		});
 	}
 
-	public async prompt(title: string, message: string) {
+	public async confirm(title: string, message: string) {
 		this.promptTitle.textContent = title;
-		this.promptMessage.textContent = message;
+		this.promptMessage.innerHTML = message;
+		this.promptInput.classList.add('hidden');
+		this.promptCancelBtn.classList.remove('hidden');
+		this.promptAcceptBtn.textContent = 'Sí';
+		this.promptCancelBtn.textContent = 'No';
 		this.promptOverlay.classList.remove('hidden');
 		return new Promise<boolean>((resolve) => {
 			this.promptAcceptBtn.onclick = () => {
@@ -98,6 +105,42 @@ export class OverlayManager {
 			this.promptCancelBtn.onclick = () => {
 				this.promptOverlay.classList.add('hidden');
 				resolve(false);
+			};
+		});
+	}
+
+	public async alert(title: string, message: string) {
+		this.promptTitle.textContent = title;
+		this.promptMessage.innerHTML = message;
+		this.promptInput.classList.add('hidden');
+		this.promptCancelBtn.classList.add('hidden');
+		this.promptAcceptBtn.textContent = 'OK';
+		this.promptOverlay.classList.remove('hidden');
+		return new Promise<void>((resolve) => {
+			this.promptAcceptBtn.onclick = () => {
+				this.promptOverlay.classList.add('hidden');
+				resolve();
+			};
+		});
+	}
+
+	public async prompt(title: string, message: string, defaultValue: string = '') {
+		this.promptTitle.textContent = title;
+		this.promptMessage.innerHTML = message;
+		this.promptInput.value = defaultValue;
+		this.promptInput.classList.remove('hidden');
+		this.promptCancelBtn.classList.remove('hidden');
+		this.promptAcceptBtn.textContent = 'OK';
+		this.promptCancelBtn.textContent = 'Cancelar';
+		this.promptOverlay.classList.remove('hidden');
+		return new Promise<string | null>((resolve) => {
+			this.promptAcceptBtn.onclick = () => {
+				this.promptOverlay.classList.add('hidden');
+				resolve(this.promptInput.value);
+			};
+			this.promptCancelBtn.onclick = () => {
+				this.promptOverlay.classList.add('hidden');
+				resolve(null);
 			};
 		});
 	}

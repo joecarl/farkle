@@ -2,6 +2,7 @@ import type { GameConfig, Player } from './types';
 import { generateNameFromSyllables, mobileDelayedClick } from './utils';
 import { OnlineManager } from './online-manager';
 import { DEFAULT_SCORE_GOAL } from './logic';
+import type { OverlayManager } from './overlay-manager';
 
 const FARKLE_SUGGESTED_NAMES = 'farkle.suggestedNames';
 const FARKLE_USERNAME = 'farkle.username';
@@ -12,9 +13,11 @@ export class NewGameMenu {
 	private suggestedNames: string[] = [];
 	private onStartGame: (config: GameConfig) => void;
 	private onlineManager: OnlineManager;
+	private overlayManager: OverlayManager;
 	private scoreGoalSetup: number = DEFAULT_SCORE_GOAL;
 
-	constructor(onStartGame: (config: GameConfig) => void) {
+	constructor(overlayManager: OverlayManager, onStartGame: (config: GameConfig) => void) {
+		this.overlayManager = overlayManager;
 		this.onStartGame = onStartGame;
 		this.onlineManager = OnlineManager.getInstance();
 		this.setupOnlineListeners();
@@ -58,7 +61,7 @@ export class NewGameMenu {
 		};
 
 		this.onlineManager.onError = (data) => {
-			alert(data.message);
+			this.overlayManager.alert('Error', data.message);
 		};
 
 		this.onlineManager.onRoomsUpdated = (rooms) => {

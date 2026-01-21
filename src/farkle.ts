@@ -8,6 +8,8 @@ import { OnlineManager } from './online-manager';
 import { ReactionManager } from './reaction-manager';
 import { ProfileManager } from './profile-manager';
 import { AchievementManager, type AchievementRecord } from './achievements';
+// import { RpgManager } from './rpg/rpg-manager';
+// import { RpgUi } from './rpg/rpg-ui';
 import { interval, sleep } from './utils';
 
 // Visual representation of a die, extending the logical state
@@ -30,6 +32,8 @@ export class FarkleGame {
 	private reactionManager!: ReactionManager;
 	private profileManager!: ProfileManager;
 	private achievementManager!: AchievementManager;
+	// private rpgManager!: RpgManager;
+	// private rpgUi!: RpgUi;
 
 	private newGameMenu!: NewGameMenu;
 
@@ -176,13 +180,24 @@ export class FarkleGame {
 		this.profileBtn = document.querySelector('#profileBtn')!;
 		this.chatBtn = document.querySelector('#chatBtn')!;
 
-		this.newGameMenu = new NewGameMenu((cfg) => this.startNewGame(cfg));
-
 		const gameContainer = this.container.querySelector('.game-container') as HTMLElement;
 		this.overlayManager = new OverlayManager(gameContainer, () => this.openNewGameMenu());
 
+		this.newGameMenu = new NewGameMenu(this.overlayManager, (cfg) => this.startNewGame(cfg));
+
+		// TODO: RPG
+		// this.rpgManager = new RpgManager(
+		// 	() => this.rpgUi?.render(),
+		// 	(config) => {
+		// 		this.rpgUi.close();
+		// 		this.startNewGame(config);
+		// 	}
+		// );
+		// this.rpgUi = new RpgUi(gameContainer, this.rpgManager, this.overlayManager);
+
 		this.reactionManager = new ReactionManager(gameContainer);
-		this.profileManager = new ProfileManager(gameContainer);
+		this.profileManager = new ProfileManager(gameContainer, () => {});
+		//this.profileManager = new ProfileManager(gameContainer, () => this.rpgUi.open());
 
 		this.profileBtn.addEventListener('click', () => this.profileManager.open());
 		this.chatBtn.addEventListener('click', () => this.reactionManager.openReactionPicker());
@@ -203,7 +218,7 @@ export class FarkleGame {
 
 	private async openNewGameMenu() {
 		if (this.onlineManager.isInGame) {
-			const res = await this.overlayManager.prompt('¿Abandonar partida?', 'Hay una partida online en curso. ¿Deseas abandonarla para crear una nueva?');
+			const res = await this.overlayManager.confirm('¿Abandonar partida?', 'Hay una partida online en curso. ¿Deseas abandonarla para crear una nueva?');
 			if (!res) return;
 
 			this.onlineManager.leaveRoom();
@@ -250,7 +265,7 @@ export class FarkleGame {
 
 		this.onlineManager.onRejoinPrompt = async (data) => {
 			// Simple confirm for now. In a real app, use a nice modal.
-			const res = await this.overlayManager.prompt('Reconectar', `Tienes una partida en curso en la sala ${data.roomId}. ¿Quieres volver a unirte?`);
+			const res = await this.overlayManager.confirm('Reconectar', `Tienes una partida en curso en la sala ${data.roomId}. ¿Quieres volver a unirte?`);
 			if (res) {
 				this.roomId = data.roomId;
 				this.isOnline = true;
@@ -970,6 +985,13 @@ export class FarkleGame {
 
 		if (this.logic.hasGameFinished()) {
 			const winner = this.logic.getWinner()!;
+
+			// TODO: RPG
+			// if (this.rpgManager.getActiveMatch() && winner.id) {
+			// 	this.rpgUi.handleMatchEnd({ winnerId: winner.id, gameState });
+			// 	this.startNewGame();
+			// 	return;
+			// }
 
 			// Achievement Checks for Winner
 			// Note: All clients evaluate gameOver locally. The achievement logic checks if winnerId matches current user.

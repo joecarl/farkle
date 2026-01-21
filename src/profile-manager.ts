@@ -6,11 +6,13 @@ export class ProfileManager {
 	private parent: HTMLElement;
 	private onlineManager: OnlineManager;
 	private savedPhrases: string[] = ['', '', '', ''];
+	private onOpenRpg: () => void;
 
 	private profileOverlay!: HTMLDivElement;
 
-	constructor(parent: HTMLElement) {
+	constructor(parent: HTMLElement, onOpenRpg: () => void) {
 		this.parent = parent;
+		this.onOpenRpg = onOpenRpg;
 		this.onlineManager = OnlineManager.getInstance();
 		this.injectHtml();
 		this.setupElements();
@@ -28,6 +30,7 @@ export class ProfileManager {
 						<button class="tab-btn active" data-tab="phrases">Mis Frases</button>
 						<button class="tab-btn" data-tab="profile">Estadísticas</button>
 						<button class="tab-btn" data-tab="achievements">Logros</button>
+						<button class="tab-btn" data-rpg-trigger>Aventura</button>
 					</div>
 
 					<div id="tab-phrases" class="tab-content active">
@@ -107,12 +110,17 @@ export class ProfileManager {
 		const closeProfileMgrBtn = document.getElementById('closeProfileMgrBtn')!;
 
 		saveBtn.addEventListener('click', () => this.saveSettings());
-		closeProfileMgrBtn.addEventListener('click', () => this.profileOverlay.classList.add('hidden'));
+		closeProfileMgrBtn.addEventListener('click', () => this.close());
 
 		// Tab switching
 		const tabButtons = this.profileOverlay.querySelectorAll('.tab-btn');
 		tabButtons.forEach((btn) => {
 			btn.addEventListener('click', () => {
+				if (btn.hasAttribute('data-rpg-trigger')) {
+					this.close();
+					this.onOpenRpg();
+					return;
+				}
 				const tab = btn.getAttribute('data-tab');
 				if (tab) this.switchTab(tab);
 			});
@@ -248,7 +256,7 @@ export class ProfileManager {
 		this.profileOverlay.classList.add('hidden');
 	}
 
-	public open() {
+	public open(tab?: string) {
 		this.updateSettingsInputs();
 		this.profileOverlay.classList.remove('hidden');
 		const tabPhrases = document.getElementById('tab-phrases')!;
@@ -261,8 +269,12 @@ export class ProfileManager {
 		// Ensure the currently visible tab updates its data when the overlay opens.
 		// If the "phrases" tab is disabled while it was previously active, switch to "profile".
 		const activeBtn = this.profileOverlay.querySelector('.tab-btn.active') as HTMLButtonElement | null;
-		let activeTab = activeBtn?.dataset.tab ?? 'phrases';
+		let activeTab = tab ?? activeBtn?.dataset.tab ?? 'phrases';
 
 		this.switchTab(activeTab);
+	}
+
+	public close() {
+		this.profileOverlay.classList.add('hidden');
 	}
 }
