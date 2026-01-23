@@ -15,6 +15,7 @@ import {
 	getPlayerStats,
 	unlockAchievement,
 } from './db';
+import rpgRoutes from './rpg_api';
 import crypto from 'crypto';
 import { APP_VERSION } from './version';
 
@@ -42,6 +43,9 @@ app.get('/api/rooms', (req, res) => {
 		}));
 	res.json(list);
 });
+
+// RPG API
+app.use('/api/rpg', rpgRoutes);
 
 const MAX_PLAYERS_PER_ROOM = 8;
 

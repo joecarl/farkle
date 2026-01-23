@@ -1,0 +1,40 @@
+<div class="overlay hidden" data-cb="overlayRoot">
+	<div class="overlay-content menu-container rpg-overlay-content">
+		<div class="rpg-top-bar">
+
+			<button class="close-btn" data-cb="closeBtn">×</button>
+		</div>
+		<div id="rpg-container" class="rpg-layout">
+			<div class="rpg-dashboard-layout" data-cb="dashboard">
+				<!-- Sidebar -->
+				<div class="rpg-sidebar-left">
+					<div class="sidebar-header">
+						<div class="sidebar-stat"><strong>📍</strong> <span data-cb="locationName"></span></div>
+
+						<div class="sidebar-desc">🗺️<span data-cb="locationCoordinates"></span></div>
+						<div class="sidebar-desc" data-cb="locationDescription"></div>
+					</div>
+
+					<div class="sidebar-stat"><strong>💰</strong> <span data-cb="goldAmount"></span></div>
+					<div class="sidebar-section">
+						<h4>Acciones</h4>
+						<div class="rpg-actions-list">
+							<button class="action-btn rpg-action-btn" data-cb="exploreBtn">Explorar</button>
+							<button class="action-btn rpg-action-btn" data-cb="shopBtn">Inventario / Tienda</button>
+						</div>
+					</div>
+
+					<div class="sidebar-section">
+						<h4>Personajes</h4>
+						<div class="npc-list" data-cb="npcList"></div>
+					</div>
+				</div>
+
+				<!-- Main Content -->
+				<div class="rpg-main-content" data-cb="mainContentBg">
+					<div data-cb="contentView"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

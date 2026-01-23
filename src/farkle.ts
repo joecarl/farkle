@@ -185,13 +185,10 @@ export class FarkleGame {
 
 		this.newGameMenu = new NewGameMenu(this.overlayManager, (cfg) => this.startNewGame(cfg));
 
-		this.rpgManager = new RpgManager(
-			() => this.rpgUi?.render(),
-			(config) => {
-				this.rpgUi.close();
-				this.startNewGame(config);
-			}
-		);
+		this.rpgManager = new RpgManager((config) => {
+			this.rpgUi.close();
+			this.startNewGame(config);
+		});
 		this.rpgUi = new RpgUi(gameContainer, this.rpgManager, this.overlayManager);
 
 		this.reactionManager = new ReactionManager(gameContainer);

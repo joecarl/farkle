@@ -3,8 +3,6 @@ import { DEFAULT_SCORE_GOAL } from './logic';
 import { getPathname } from './utils';
 import { APP_VERSION } from '../server/version';
 
-const SERVER_URL = import.meta.env.DEV ? 'http://localhost:3000' : location.origin;
-
 const FARKLE_USER_ID = 'farkle.userId';
 
 export class OnlineManager {
@@ -62,18 +60,14 @@ export class OnlineManager {
 
 	private constructor() {
 		const socketPath = getPathname() + '/socket.io';
-		this.socket = io(SERVER_URL, { path: socketPath });
+		this.socket = io({ path: socketPath });
 		this.setupListeners();
-	}
-
-	private apiFetch(path: string, options?: RequestInit) {
-		return fetch(SERVER_URL + getPathname() + path, options);
 	}
 
 	// Fetch current public rooms via REST API
 	public async fetchRooms() {
 		try {
-			const res = await this.apiFetch('/api/rooms');
+			const res = await fetch('/api/rooms');
 			if (!res.ok) return;
 			const data = await res.json();
 			if (this.onRoomsUpdated) this.onRoomsUpdated(data);
