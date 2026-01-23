@@ -24,7 +24,11 @@
 		"noUnusedParameters": true,
 		"erasableSyntaxOnly": true,
 		"noFallthroughCasesInSwitch": true,
-		"noUncheckedSideEffectImports": true
+		"noUncheckedSideEffectImports": true,
+		"rootDirs": [
+			".",
+			".chispa/types"
+		]
 	},
 	"include": [
 		"src",
