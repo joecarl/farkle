@@ -1,0 +1,33 @@
+<div class="online-setup lobby-layout">
+	<button class="back-btn" data-cb="backBtn"></button>
+	<div class="lobby-header">
+		<h2 data-cb="title"></h2>
+	</div>
+
+	<div class="lobby-columns">
+		<div class="lobby-left">
+			<h3>Jugadores</h3>
+			<div class="players-list-container">
+				<ul class="players-list" id="lobbyPlayersList" data-cb="playersList">
+					<li data-cb="playerItem">
+						<span data-cb="playerName"></span>
+						<span class="status" data-cb="playerStatus"></span>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<div class="lobby-right">
+			<div class="room-info">
+				<span class="label">Meta:</span>
+				<span class="value" data-cb="scoreGoal"></span>
+			</div>
+
+			<div class="lobby-actions">
+				<p data-cb="waitingMsg" class="hidden">Esperando a otro jugador...</p>
+				<button data-cb="readyBtn" class="secondary-btn" style="font-size: 1.2em;">Marcar como Listo</button>
+				<button data-cb="startBtn" class="primary-btn hidden">Comenzar partida</button>
+			</div>
+		</div>
+	</div>
+</div>

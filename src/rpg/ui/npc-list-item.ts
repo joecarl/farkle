@@ -17,17 +17,15 @@ export const NpcListItem = component<Props>(({ npc, isSelected, onClick }) => {
 			classes: { selected: isSelected },
 			onclick: onClick,
 			dataset: { npcId: npc.id.toString() },
-			nodes: {
-				avatar: {
-					style: {
-						backgroundImage: computed(() => avatarStyle.get().backgroundImage || ''),
-						backgroundPosition: computed(() => avatarStyle.get().backgroundPosition || ''),
-						backgroundSize: computed(() => avatarStyle.get().backgroundSize || ''),
-						backgroundRepeat: computed(() => avatarStyle.get().backgroundRepeat || ''),
-					},
-				},
-				name: { inner: npc.name },
+		},
+		avatar: {
+			style: {
+				backgroundImage: computed(() => avatarStyle.get().backgroundImage || ''),
+				backgroundPosition: computed(() => avatarStyle.get().backgroundPosition || ''),
+				backgroundSize: computed(() => avatarStyle.get().backgroundSize || ''),
+				backgroundRepeat: computed(() => avatarStyle.get().backgroundRepeat || ''),
 			},
 		},
+		name: { inner: npc.name },
 	});
 });

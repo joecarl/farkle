@@ -1,0 +1,55 @@
+<div class="local-game-setup">
+	<button class="back-btn" data-cb="backBtn"></button>
+	<h2>Configurar Jugadores</h2>
+
+	<div class="setup-columns">
+		<div class="left-column">
+			<div class="players-list-container">
+				<div class="no-players-warning" data-cb="noPlayersMsg">No hay jugadores añadidos</div>
+				<ul id="newGamePlayersList" data-cb="playersList">
+					<li data-cb="playerItem">
+						<span data-cb="playerName"></span>
+						<button class="delete-player-btn" data-cb="deletePlayerBtn">×</button>
+					</li>
+				</ul>
+			</div>
+
+		</div>
+
+		<div class="right-column">
+			<div style="flex: 1 1 auto;">
+				<div class="add-player-group">
+					<input type="text" placeholder="Nombre" data-cb="nameInput">
+					<button type="button" data-cb="addBtn">
+						<div class="inline-icon beer-icon-small"></div> Añadir
+					</button>
+				</div>
+				<div class="add-bot-group">
+					<button type="button" class="secondary-btn"
+						style="width: 100%; margin-top: 0.4em; font-size: 2.2cqw;" data-cb="botBtn">🤖 Añadir
+						Bot</button>
+				</div>
+			</div>
+			<div class="suggested-names-section">
+				<h4>Sugerencias</h4>
+				<span class="no-suggestions" data-cb="noSuggestionsMsg">No hay sugerencias disponibles</span>
+				<div class="suggested-list" data-cb="suggestedList">
+					<div class="suggested-name-tag" data-cb="suggestionItem">
+						<span class="name-text" data-cb="suggestionName"></span>
+						<span class="delete-suggestion-btn" title="Eliminar sugerencia" data-cb="deleteSuggestionBtn">×</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="setup-footer">
+
+		<div class="game-settings-section" style="font-size: 2cqw;">
+			<label style="display: block; margin-bottom: 0.5cqw; font-size: 1.1em;">Puntuación Objetivo</label>
+			<div data-cb="scoreControl"></div>
+		</div>
+		<div style="flex: 1 1 auto;"></div>
+		<button class="primary-btn" data-cb="startBtn">Comenzar partida</button>
+	</div>
+</div>

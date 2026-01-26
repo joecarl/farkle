@@ -1,13 +1,20 @@
+import { signal } from 'chispa';
 import { io, Socket } from 'socket.io-client';
 import { DEFAULT_SCORE_GOAL } from './logic';
 import { getPathname } from './utils';
 import { APP_VERSION } from '../server/version';
+import type { AchievementRecord } from './achievements';
 
 const FARKLE_USER_ID = 'farkle.userId';
 
 export class OnlineManager {
 	private socket: Socket;
 	private static instance: OnlineManager;
+
+	public readonly state = {
+		stats: signal<any>(null),
+		achievements: signal<AchievementRecord[]>([]),
+	};
 
 	public currentRoomId: string | null = null;
 	public isHost: boolean = false;
@@ -27,7 +34,7 @@ export class OnlineManager {
 	public onStateSync?: (data: { state: any; targetId: string }) => void;
 	public onPhrasesUpdated?: (data: { phrases: string[] }) => void;
 	public onReactionReceived?: (data: { senderId: string; senderName: string; content: string; type: 'text' | 'emoji' }) => void;
-	public onAchievementsData?: (data: { achievements: any[] }) => void;
+	public onAchievementsData?: (data: { achievements: AchievementRecord[] }) => void;
 
 	private _onVersionMismatch?: (data: { serverVersion: string; clientVersion: string }) => void;
 	private versionMismatchData: { serverVersion: string; clientVersion: string } | null = null;
@@ -148,10 +155,12 @@ export class OnlineManager {
 
 		this.socket.on('achievements_data', (data) => {
 			if (this.onAchievementsData) this.onAchievementsData(data);
+			this.state.achievements.set(data.achievements);
 		});
 
 		this.socket.on('stats_data', (data) => {
 			this.statsListeners.forEach((l) => l(data));
+			this.state.stats.set(data.stats);
 		});
 
 		this.socket.on('reaction_received', (data) => {

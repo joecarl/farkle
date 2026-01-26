@@ -1,16 +1,20 @@
-import type { DicePositions, DieState, GameConfig } from './types';
+import type { DicePositions, DieState, GameConfig, Player } from './types';
 import { addVectors, Dice3D, distance, subVectors, type Vector3D } from './dice3D';
 import { FarkleLogic } from './logic';
 import { AudioManager } from './audio';
-import { NewGameMenu } from './new-game-menu';
 import { OverlayManager } from './overlay-manager';
 import { OnlineManager } from './online-manager';
 import { ReactionManager } from './reaction-manager';
-import { ProfileManager } from './profile-manager';
-import { AchievementManager, type AchievementRecord } from './achievements';
+import { ProfileOverlay } from './profile/profile-overlay';
+import { AchievementManager } from './achievements';
 import { RpgManager } from './rpg/rpg-manager';
 import { RpgUi } from './rpg/rpg-ui';
 import { interval, sleep } from './utils';
+import { appendChild, signal } from 'chispa';
+import { GameUi } from './game-ui';
+import { GameInfoOverlay } from './info-overlay';
+import { BotLogic } from './bot-logic';
+import { MainMenu } from './menu/main-menu';
 
 // Visual representation of a die, extending the logical state
 interface VisualDie extends DieState {
@@ -22,32 +26,41 @@ export class FarkleGame {
 	private ctx: CanvasRenderingContext2D;
 	private dice: VisualDie[] = [];
 	private isRolling = false;
-	private rollBtn!: HTMLButtonElement;
-	private bankBtn!: HTMLButtonElement;
-	private newGameBtn!: HTMLButtonElement;
-	private profileBtn!: HTMLButtonElement;
-	private chatBtn!: HTMLButtonElement;
+	// UI Signals
+	private ui = {
+		playerName: signal('Player 1'),
+		totalScore: signal('0'),
+		turnScore: signal('0'),
+		timer: signal('50'),
+		timerLow: signal(false),
+		scoreGoal: signal('---'),
+		isFinalRound: signal(false),
+		players: signal<Player[]>([]),
+		currentPlayerIndex: signal<number>(0),
+		canRoll: signal(true),
+		canBank: signal(false),
+		isDebugVisible: signal(false),
+		isOnline: signal(false),
+		isMusicMuted: signal(false),
+		scorePop: signal(false),
+		scoreTransferSource: signal(false),
+		scoreTransferTarget: signal(false),
+		isInfoVisible: signal(false),
+		isMenuVisible: signal(false),
+		isProfileVisible: signal(false),
+		easterEggMeta: signal<any | null>(null),
+	};
 
 	private overlayManager!: OverlayManager;
 	private reactionManager!: ReactionManager;
-	private profileManager!: ProfileManager;
 	private achievementManager!: AchievementManager;
 	private rpgManager!: RpgManager;
 	private rpgUi!: RpgUi;
 
-	private newGameMenu!: NewGameMenu;
-
-	private topBarPlayerName!: HTMLElement;
-	private topBarTurnScore!: HTMLElement;
-	private topBarTotalScore!: HTMLElement;
-	private turnTimerDisplay!: HTMLElement;
-	private scoreGoalValue!: HTMLElement;
-	private finalRoundIndicator!: HTMLElement;
-	private playersList!: HTMLUListElement;
-
 	private canvas3D!: HTMLCanvasElement;
 	private dice3D!: Dice3D;
 	private logic: FarkleLogic;
+	private botLogic: BotLogic;
 	private audioManager?: AudioManager;
 
 	private draggedDieIndex = -1;
@@ -70,16 +83,17 @@ export class FarkleGame {
 
 	constructor(container: HTMLDivElement) {
 		this.container = container;
-		this.injectHtml();
+		this.mountUi();
 		this.canvas = this.container.querySelector('#gameCanvas')!;
 		this.ctx = this.canvas.getContext('2d')!;
 		this.logic = new FarkleLogic();
+		this.botLogic = new BotLogic(this.logic);
 		this.onlineManager = OnlineManager.getInstance();
 		this.achievementManager = new AchievementManager(this.onlineManager, this.logic);
 	}
 
 	init() {
-		this.setupButtons();
+		this.setupAuxiliaryUi();
 		this.setupOnlineListeners();
 		this.initializeDice();
 		this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
@@ -103,55 +117,35 @@ export class FarkleGame {
 		}, 2000);
 	}
 
-	private injectHtml() {
-		this.container.innerHTML = `
-			<div class="game-container">
+	private mountUi() {
+		this.container.innerHTML = '';
+		appendChild(
+			this.container,
+			GameUi({
+				...this.ui,
+				onRoll: () => this.rollDice(),
+				onBank: () => this.bankPoints(),
+				onNewGame: () => this.openNewGameMenu(),
+				onProfile: () => this.ui.isProfileVisible.set(true),
+				onChat: () => this.reactionManager.openReactionPicker(),
+				onInfo: () => this.ui.isInfoVisible.set(true),
+				onDebug: () => {},
+				onMusic: () => {
+					const isMuted = this.audioManager?.toggleMute();
+					this.ui.isMusicMuted.set(!!isMuted);
+					// Ensure it plays if it wasn't playing (first interaction)
+					this.audioManager?.play();
+				},
+				onEasterEgg: () => {
+					this.audioManager?.toggleEasterEggTrack();
+				},
+			})
+		);
+		appendChild(document.body, GameInfoOverlay({ isVisible: this.ui.isInfoVisible }));
+	}
 
-				<div class="top-bar">
-					<button id="infoBtn" class="icon-btn" type="button" title="Información"></button>
-					<button id="debugBtn" class="icon-btn hidden" type="button" title="Herramientas de Debug"></button>
-					<button id="musicBtn" class="icon-btn" type="button" title="Música"></button>
-					<div class="score-display">
-						<span id="topBarPlayerName" class="score-label player-name">Player 1</span>
-						<span id="topBarTotalScore" class="score-value">0</span>
-						<span class="separator">|</span>
-						<span class="score-label">Turno</span>
-						<span id="topBarTurnScore" class="score-value">0</span>
-						<span class="separator">|</span>
-						<span id="turnTimer" class="score-value timer-value">50</span>
-					</div>
-					<div id="finalRoundIndicator" class="hidden">Ronda final</div>
-					
-					<div style="flex: 1 1 auto"></div>
-					
-					<button id="easterEggBtn" class="icon-btn hidden" type="button"></button>
-					<button id="profileBtn" class="icon-btn" type="button" title="Configuración"></button>
-					<button id="newGameBtn" class="icon-btn" type="button" title="Nuevo Juego"></button>
-					<div class="right-floating-area">
-						<div class="score-goal-display">Meta: <span id="scoreGoalValue">---</span></div>
-						<button id="chatBtn" class="icon-btn hidden" type="button" title="Enviar Reacción"></button>							
-					</div>
-				</div>		
-				<canvas id="gameCanvas"></canvas>
-
-				<div class="players-overlay">
-					<h3>Jugadores</h3>
-					<ul id="playersList"></ul>
-				</div>
-
-				<div class="game-controls">
-					<button id="rollBtn" class="icon-btn" type="button" title="Tirar Dados"></button>
-					<button id="bankBtn" class="icon-btn" type="button" disabled title="Terminar turno"></button>
-				</div>
-					
-			</div>			
-
-			<div class="disco-lights hidden" style="z-index: 1000;">
-				<div class="haz rojo"></div>
-				<div class="haz azul"></div>
-				<div class="haz verde"></div>
-			</div>
-		`;
+	setEasterEggMeta(meta: any) {
+		this.ui.easterEggMeta.set(meta);
 	}
 
 	private handleResize() {
@@ -173,17 +167,19 @@ export class FarkleGame {
 		}
 	}
 
-	private setupButtons() {
-		this.rollBtn = document.querySelector('#rollBtn')!;
-		this.bankBtn = document.querySelector('#bankBtn')!;
-		this.newGameBtn = document.querySelector('#newGameBtn')!;
-		this.profileBtn = document.querySelector('#profileBtn')!;
-		this.chatBtn = document.querySelector('#chatBtn')!;
-
+	private setupAuxiliaryUi() {
 		const gameContainer = this.container.querySelector('.game-container') as HTMLElement;
 		this.overlayManager = new OverlayManager(gameContainer, () => this.openNewGameMenu());
 
-		this.newGameMenu = new NewGameMenu(this.overlayManager, (cfg) => this.startNewGame(cfg));
+		appendChild(
+			document.body,
+			MainMenu({
+				isVisible: this.ui.isMenuVisible,
+				onClose: () => this.ui.isMenuVisible.set(false),
+				onStartGame: (cfg) => this.startNewGame(cfg),
+				overlayManager: this.overlayManager,
+			})
+		);
 
 		this.rpgManager = new RpgManager((config) => {
 			this.rpgUi.close();
@@ -192,23 +188,14 @@ export class FarkleGame {
 		this.rpgUi = new RpgUi(gameContainer, this.rpgManager, this.overlayManager);
 
 		this.reactionManager = new ReactionManager(gameContainer);
-		this.profileManager = new ProfileManager(gameContainer, () => this.rpgUi.open());
 
-		this.profileBtn.addEventListener('click', () => this.profileManager.open());
-		this.chatBtn.addEventListener('click', () => this.reactionManager.openReactionPicker());
-
-		this.topBarPlayerName = document.querySelector('#topBarPlayerName')!;
-		this.topBarTurnScore = document.querySelector('#topBarTurnScore')!;
-		this.topBarTotalScore = document.querySelector('#topBarTotalScore')!;
-		this.turnTimerDisplay = document.querySelector('#turnTimer')!;
-		this.finalRoundIndicator = document.querySelector('#finalRoundIndicator')!;
-		this.scoreGoalValue = document.querySelector('#scoreGoalValue')!;
-
-		this.playersList = document.querySelector('#playersList')!;
-
-		this.rollBtn.addEventListener('click', () => this.rollDice());
-		this.bankBtn.addEventListener('click', () => this.bankPoints());
-		this.newGameBtn.addEventListener('click', () => this.openNewGameMenu());
+		appendChild(
+			document.body,
+			ProfileOverlay({
+				isVisible: this.ui.isProfileVisible,
+				onOpenRpg: () => this.rpgUi.open(),
+			})
+		);
 	}
 
 	private async openNewGameMenu() {
@@ -218,30 +205,27 @@ export class FarkleGame {
 
 			this.onlineManager.leaveRoom();
 			this.isOnline = false;
+			this.ui.isOnline.set(false);
 			this.roomId = null;
 			this.updateUI();
 		}
-		this.newGameMenu.show();
+		this.ui.isMenuVisible.set(true);
 	}
 
 	public setAudioManager(audioManager: AudioManager) {
 		this.audioManager = audioManager;
-		const musicBtn = document.getElementById('musicBtn') as HTMLButtonElement;
-		musicBtn.addEventListener('click', () => {
-			const isMuted = audioManager.toggleMute();
-			musicBtn.style.opacity = isMuted ? '0.5' : '1';
-			// Ensure it plays if it wasn't playing (first interaction)
-			audioManager.play();
-		});
+		// GameUi onMusic handler uses this.audioManager
 	}
 
 	private startNewGame(config: GameConfig = {}) {
 		this.stopTimer();
 		this.logic = new FarkleLogic(config.players, config.scoreGoal);
+		this.botLogic = new BotLogic(this.logic);
 		this.achievementManager.updateLogicInstance(this.logic);
 		this.roomId = config.roomId || null;
 		this.isOnline = !!config.roomId;
-		this.finalRoundIndicator.classList.add('hidden');
+		this.ui.isOnline.set(this.isOnline);
+		this.ui.isFinalRound.set(false);
 		this.updateUI();
 		this.startNextTurn();
 	}
@@ -253,7 +237,6 @@ export class FarkleGame {
 
 		this.onlineManager.addStatsListener((data) => {
 			if (data.stats) {
-				this.achievementManager.setUnlocked(data.stats.achievements.map((a: AchievementRecord) => a.achievement_key));
 				this.achievementManager.checkStats(data.stats);
 			}
 		});
@@ -266,7 +249,7 @@ export class FarkleGame {
 				this.isOnline = true;
 				this.onlineManager.rejoinGame(data.roomId);
 				// Hide new game menu if open
-				this.newGameMenu.hide();
+				this.ui.isMenuVisible.set(false);
 			}
 		};
 
@@ -447,22 +430,22 @@ export class FarkleGame {
 
 		// Don't start timer if it's a bot turn or if game is over
 		if (this.currentPlayerIsBot() || this.logic.hasGameFinished()) {
-			this.turnTimerDisplay.textContent = '50';
+			this.ui.timer.set('50');
 			return;
 		}
 
 		this.turnTimer = 50;
-		this.turnTimerDisplay.textContent = this.turnTimer.toString();
-		this.turnTimerDisplay.classList.remove('timer-low');
+		this.ui.timer.set(this.turnTimer.toString());
+		this.ui.timerLow.set(false);
 
 		this.turnTimerInterval = setInterval(() => {
 			if (this.isRolling || this.isBanking) return;
 
 			this.turnTimer--;
-			this.turnTimerDisplay.textContent = this.turnTimer.toString();
+			this.ui.timer.set(this.turnTimer.toString());
 
 			if (this.turnTimer <= 10) {
-				this.turnTimerDisplay.classList.add('timer-low');
+				this.ui.timerLow.set(true);
 			}
 
 			if (this.turnTimer <= 0) {
@@ -670,8 +653,8 @@ export class FarkleGame {
 		}
 
 		if (anyAnimating) {
-			this.bankBtn.disabled = true;
-			this.rollBtn.disabled = true;
+			this.ui.canBank.set(false);
+			this.ui.canRoll.set(false);
 		} else {
 			this.updateButtonsState();
 		}
@@ -727,19 +710,19 @@ export class FarkleGame {
 
 	private async animateFarkleLoss() {
 		// Add red color class
-		this.topBarTurnScore.classList.add('score-transfer-source');
+		this.ui.scoreTransferSource.set(true);
 
-		let currentScore = parseInt(this.topBarTurnScore.textContent || '0');
+		let currentScore = parseInt(this.ui.turnScore.get() || '0');
 		const step = Math.max(10, Math.floor(currentScore / 20));
 
 		await interval((endInterval) => {
 			currentScore -= step;
 			if (currentScore <= 0) {
 				currentScore = 0;
-				this.topBarTurnScore?.classList.remove('score-transfer-source');
+				this.ui.scoreTransferSource.set(false);
 				endInterval();
 			}
-			this.topBarTurnScore!.textContent = currentScore.toString();
+			this.ui.turnScore.set(currentScore.toString());
 		}, 30);
 	}
 
@@ -938,8 +921,8 @@ export class FarkleGame {
 		// Disable buttons during animation
 		this.actionsDisabled = true;
 
-		this.topBarTurnScore.classList.add('score-transfer-source');
-		this.topBarTotalScore.classList.add('score-transfer-target');
+		this.ui.scoreTransferSource.set(true);
+		this.ui.scoreTransferTarget.set(true);
 
 		let currentTurnDisplay = startTurnScore;
 		let currentTotalDisplay = startTotalScore;
@@ -954,12 +937,12 @@ export class FarkleGame {
 				endInterval();
 				currentTurnDisplay = 0;
 				currentTotalDisplay = startTotalScore + startTurnScore;
-				this.topBarTurnScore.classList.remove('score-transfer-source');
-				this.topBarTotalScore.classList.remove('score-transfer-target');
+				this.ui.scoreTransferSource.set(false);
+				this.ui.scoreTransferTarget.set(false);
 			}
 
-			this.topBarTurnScore.textContent = currentTurnDisplay.toString();
-			this.topBarTotalScore.textContent = currentTotalDisplay.toString();
+			this.ui.turnScore.set(currentTurnDisplay.toString());
+			this.ui.totalScore.set(currentTotalDisplay.toString());
 		}, 25);
 
 		this.isBanking = false;
@@ -1008,7 +991,7 @@ export class FarkleGame {
 		}
 
 		if (this.logic.isFinalRound()) {
-			this.finalRoundIndicator.classList.remove('hidden');
+			this.ui.isFinalRound.set(true);
 		}
 
 		this.updateScoreDisplay(previousPlayerIndex);
@@ -1060,55 +1043,51 @@ export class FarkleGame {
 	}
 
 	private async botDecision() {
-		const dice = this.logic.getDice();
-		const unlockedDice = dice.map((d, i) => ({ ...d, index: i })).filter((d) => !d.locked && !d.selected);
-		const values = unlockedDice.map((d) => d.value);
+		const gameState = this.logic.getGameState();
+		const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+		const personality = currentPlayer.personality || BotLogic.getRandomPersonality();
 
-		// Use logic to find best scoring combination
-		const result = this.logic.calculateScore(values);
+		// 1. Decide which dice to select
+		const selectedIndices = this.botLogic.decideSelection(personality);
 
-		// Select dice
-		const usedValues = [...result.usedDice];
-		const lockedDiceCount = dice.filter((d) => d.locked).length;
-
+		// Select dice visually and logically
+		const lockedDiceCount = this.dice.filter((d) => d.locked).length;
 		let d = 0;
-		for (const val of usedValues) {
-			const dieToSelect = unlockedDice.find((d) => d.value === val && !this.logic.getDice()[d.index].selected);
-			if (dieToSelect) {
-				this.logic.toggleSelection(dieToSelect.index);
+
+		for (const index of selectedIndices) {
+			if (!this.logic.getDice()[index].selected) {
+				this.logic.toggleSelection(index);
 
 				// Move visual die to selection zone
-				const visualDie = this.dice[dieToSelect.index];
+				const visualDie = this.dice[index];
 				visualDie.selected = true;
 
 				const pos = this.dice3D.getPosition(visualDie.diceIndex);
 				if (!pos) continue;
 				const targetPos = { ...pos };
-				// Truquito para evitar solapamientos: distribuir en X y Z según índice
+				// Distribution logic for visual selection
 				const i = lockedDiceCount + d++;
-				targetPos.x = i * 0.2 - 5.0 + Math.random() * 0.5;
-				targetPos.z = i * 1.5 - 3.5 + Math.random() * 0.5;
+				targetPos.x = i * 0.2 - 5.0 - Math.random() * 3.0;
+				targetPos.z = i * 1.6 - 3.5 + Math.random() * 0.4;
 
 				this.dice3D.setTargetPosition(visualDie.diceIndex, targetPos);
 				this.dice3D.setSettle(visualDie.diceIndex, true);
 
 				this.draw();
-				this.updateScoreDisplay(); // Update to new player
+				this.updateScoreDisplay();
 				await sleep(800);
 			}
 		}
 
 		await sleep(800);
-		// Re-evaluate state
-		const gameState = this.logic.getGameState();
 
-		if (gameState.canRoll && gameState.dice.every((d) => d.locked || d.selected)) {
-			// Hot dice, must roll
+		// 2. Decide whether to roll again or bank
+		const shouldRoll = this.botLogic.shouldRollAgain(personality);
+
+		if (shouldRoll) {
 			this.rollDice();
-		} else if (gameState.turnScore >= 300) {
-			this.bankPoints();
 		} else {
-			this.rollDice();
+			this.bankPoints();
 		}
 	}
 
@@ -1123,8 +1102,8 @@ export class FarkleGame {
 		const gameState = this.logic.getGameState();
 		const forceDisabled = this.actionsDisabled || !this.isControlableTurn();
 
-		this.bankBtn.disabled = !gameState.canBank || forceDisabled;
-		this.rollBtn.disabled = !gameState.canRoll || forceDisabled;
+		this.ui.canBank.set(gameState.canBank && !forceDisabled);
+		this.ui.canRoll.set(gameState.canRoll && !forceDisabled);
 	}
 
 	private collectDice() {
@@ -1138,10 +1117,10 @@ export class FarkleGame {
 
 	public updateUI() {
 		this.updateScoreDisplay();
-		this.scoreGoalValue.textContent = this.logic.scoreGoal.toString();
+		this.ui.scoreGoal.set(this.logic.scoreGoal.toString());
 
-		if (this.isOnline) this.chatBtn.classList.remove('hidden');
-		else this.chatBtn.classList.add('hidden');
+		if (this.isOnline) this.ui.isOnline.set(true);
+		else this.ui.isOnline.set(false);
 	}
 
 	private updateScoreDisplay(playerIndex?: number) {
@@ -1150,25 +1129,23 @@ export class FarkleGame {
 		const currentPlayer = gameState.players[activeIndex];
 
 		// Update top bar display
-		this.topBarPlayerName.textContent = currentPlayer.name;
-		this.topBarTotalScore.textContent = currentPlayer.score.toString();
+		this.ui.playerName.set(currentPlayer.name);
+		this.ui.totalScore.set(currentPlayer.score.toString());
 
 		if (gameState.turnScore > this.previousTurnScore) {
-			this.topBarTurnScore.classList.remove('score-pop');
-			void (this.topBarTurnScore as HTMLElement).offsetWidth; // Trigger reflow
-			this.topBarTurnScore.classList.add('score-pop');
+			this.ui.scorePop.set(false);
+			setTimeout(() => {
+				requestAnimationFrame(() => {
+					this.ui.scorePop.set(true);
+				});
+			}, 0);
 		}
-		this.topBarTurnScore.textContent = gameState.turnScore.toString();
+		this.ui.turnScore.set(gameState.turnScore.toString());
 
 		this.previousTurnScore = gameState.turnScore;
 
-		this.playersList.innerHTML = gameState.players
-			.map(
-				(p, i) => `<li style="${i === activeIndex ? 'font-weight: bold; color: var(--p-color-1);' : ''}">
-				<span class="players-list-player-name">${p.name}</span> <span>${p.score} p</span>
-			</li>`
-			)
-			.join('');
+		this.ui.players.set(gameState.players);
+		this.ui.currentPlayerIndex.set(activeIndex);
 	}
 
 	private draw() {

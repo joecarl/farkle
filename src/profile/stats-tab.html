@@ -1,0 +1,62 @@
+<div class="stats-tab-root">
+	<div class="stats-container">
+		<div class="stats-container-row">
+			<div class="stat-card">
+				<span class="stat-label">Victorias</span>
+				<span class="stat-value" data-cb="statWins">-</span>
+			</div>
+			<div class="stat-card">
+				<span class="stat-label">Derrotas</span>
+				<span class="stat-value" data-cb="statLosses">-</span>
+			</div>
+			<div class="stat-card">
+				<span class="stat-label">Partidas</span>
+				<span class="stat-value" data-cb="statTotalGames">-</span>
+			</div>
+		</div>
+		<div class="stats-container-row">
+			<div class="stat-card hidden">
+				<span class="stat-label">Record Personal</span>
+				<span class="stat-value" data-cb="statMaxScore">-</span>
+			</div>
+			<div class="stat-card">
+				<span class="stat-label">Mejor Turno</span>
+				<span class="stat-value" data-cb="statMaxTurn">-</span>
+			</div>
+			<div class="stat-card">
+				<span class="stat-label">Mejor Tirada</span>
+				<span class="stat-value" data-cb="statMaxRoll">-</span>
+			</div>
+		</div>
+		<div class="stats-container-row">
+			<div class="stat-card">
+				<span class="stat-label">Puntos Totales</span>
+				<span class="stat-value" data-cb="statTotalScore">-</span>
+			</div>
+		</div>
+	</div>
+	<div class="recent-games">
+		<h3>Partidas Recientes</h3>
+		<div data-cb="noGamesMsg">No hay partidas recientes.</div>
+		<div class="recent-games-list" data-cb="listContainer">
+			<!-- Template -->
+			<div data-cb="recentGameItem" class="recent-game-item">
+				<div class="game-left">
+					<div class="game-date" data-cb="gameDate"></div>
+					<div class="game-goal" data-cb="gameGoal"></div>
+				</div>
+				<div class="game-players" data-cb="gamePlayers">
+					<div data-cb="playerChip" class="player-chip">
+						<span data-cb="playerWinnerIcon"></span>
+						<span class="player-name" data-cb="playerName"></span>
+						<span class="player-score" data-cb="playerScore"></span>
+					</div>
+					<div data-cb="morePlayersChip" class="player-chip"></div>
+				</div>
+				<div class="game-status">
+					<div class="game-status" data-cb="gameStatus"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

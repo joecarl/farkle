@@ -157,9 +157,6 @@
 	width: 3cqw;
 	height: 3cqw;
 	background-image: url('../assets/icons/beer.png');
-	background-size: contain;
-	background-repeat: no-repeat;
-	background-position: center;
 }
 
 .add-player-group {
@@ -171,11 +168,14 @@
 	flex-grow: 1;
 	padding: 1.5cqw;
 	font-size: 2.2cqw;
-	color: black;
-	border: none;
 	border-radius: 5px 0 0 5px;
 	outline: none;
 	max-width: 70%;
+
+	border: 1px solid #d7a237;
+	background: rgba(0, 0, 0, 0.53);
+	color: white;
+	font-family: inherit;
 }
 
 .add-player-group button {
@@ -485,13 +485,13 @@
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	gap: 1.5cqw;
+	gap: 2.5cqw;
 }
 
 .input-group {
 	display: flex;
 	flex-direction: column;
-	gap: 0.5cqw;
+	gap: 0.2cqw;
 	width: 100%;
 	max-width: 400px;
 	text-align: left;
@@ -507,8 +507,10 @@
 	padding: 1cqw;
 	font-size: 3cqw;
 	border-radius: 5px;
-	border: 1px solid #ccc;
-	background: rgba(255, 255, 255, 0.9);
+	border: 1px solid #d7a237;
+	background: rgba(0, 0, 0, 0.5);
+	color: white;
+	font-family: inherit;
 }
 
 ul.rooms-list {

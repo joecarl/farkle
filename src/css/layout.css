@@ -101,7 +101,7 @@
 	bottom: 2vh;
 	right: 3vw;
 	display: flex;
-	gap: 4vw;
+	gap: 6vw;
 	flex-wrap: wrap;
 	justify-content: flex-end;
 	pointer-events: none; /* Let clicks pass through container */

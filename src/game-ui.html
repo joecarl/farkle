@@ -1,0 +1,50 @@
+<div class="game-container">
+	<div class="top-bar">
+		<button id="infoBtn" class="icon-btn" type="button" title="Información" data-cb="infoBtn"></button>
+		<button id="debugBtn" class="icon-btn" type="button" title="Herramientas de Debug" data-cb="debugBtn"></button>
+		<button id="musicBtn" class="icon-btn" type="button" title="Música" data-cb="musicBtn"></button>
+		<div class="score-display">
+			<span id="topBarPlayerName" class="score-label player-name" data-cb="topBarPlayerName">Player 1</span>
+			<span id="topBarTotalScore" class="score-value" data-cb="topBarTotalScore">0</span>
+			<span class="separator">|</span>
+			<span class="score-label">Turno</span>
+			<span id="topBarTurnScore" class="score-value" data-cb="topBarTurnScore">0</span>
+			<span class="separator">|</span>
+			<span id="turnTimer" class="score-value timer-value" data-cb="turnTimer">50</span>
+		</div>
+		<div id="finalRoundIndicator" class="hidden" data-cb="finalRoundIndicator">Ronda final</div>
+
+		<div style="flex: 1 1 auto"></div>
+
+		<button id="easterEggBtn" class="icon-btn" type="button" data-cb="easterEggBtn"></button>
+		<button id="profileBtn" class="icon-btn" type="button" title="Configuración" data-cb="profileBtn"></button>
+		<button id="newGameBtn" class="icon-btn" type="button" title="Nuevo Juego" data-cb="newGameBtn"></button>
+		<div class="right-floating-area">
+			<div class="score-goal-display">Meta: <span id="scoreGoalValue" data-cb="scoreGoalValue">---</span></div>
+			<button id="chatBtn" class="icon-btn hidden" type="button" title="Enviar Reacción"
+				data-cb="chatBtn"></button>
+		</div>
+	</div>
+	<canvas id="gameCanvas" data-cb="gameCanvas"></canvas>
+
+	<div class="players-overlay">
+		<h3>Jugadores</h3>
+		<ul id="playersList" data-cb="playersList">
+			<li data-cb="playerItem">
+				<span class="players-list-player-name" data-cb="itemName"></span>
+				<span class="player-score" data-cb="itemScore"></span>
+			</li>
+		</ul>
+	</div>
+
+	<div class="game-controls">
+		<button id="rollBtn" class="icon-btn" type="button" title="Tirar Dados" data-cb="rollBtn"></button>
+		<button id="bankBtn" class="icon-btn" type="button" disabled title="Terminar turno" data-cb="bankBtn"></button>
+	</div>
+</div>
+
+<div class="disco-lights hidden" style="z-index: 1000;" data-cb="discoLights">
+	<div class="haz rojo"></div>
+	<div class="haz azul"></div>
+	<div class="haz verde"></div>
+</div>

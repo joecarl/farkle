@@ -103,34 +103,29 @@ export const RpgView = component<RpgViewProps>((props) => {
 	return tpl.fragment({
 		overlayRoot: {
 			classes: { hidden: computed(() => !isVisible.get()) },
+		},
+		closeBtn: { onclick: onClose },
+		dashboard: {},
+		locationName: { inner: tileName },
+		locationCoordinates: { inner: tileCoordinates },
+		locationDescription: { inner: tileDescription },
+		goldAmount: { inner: gold },
+		npcList: { inner: renderNpcList },
+		mainContentBg: {
+			style: {
+				backgroundImage: computed(() => {
+					const bg = bgStyleData.get().backgroundImage;
+					return bg ? `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), ${bg}` : '';
+				}),
+				backgroundPosition: computed(() => bgStyleData.get().backgroundPosition || ''),
+				backgroundSize: computed(() => bgStyleData.get().backgroundSize || ''),
+				backgroundRepeat: computed(() => bgStyleData.get().backgroundRepeat || ''),
+			},
 			nodes: {
-				closeBtn: { onclick: onClose },
-				dashboard: {
-					nodes: {
-						locationName: { inner: tileName },
-						locationCoordinates: { inner: tileCoordinates },
-						locationDescription: { inner: tileDescription },
-						goldAmount: { inner: gold },
-						npcList: { inner: renderNpcList },
-						mainContentBg: {
-							style: {
-								backgroundImage: computed(() => {
-									const bg = bgStyleData.get().backgroundImage;
-									return bg ? `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), ${bg}` : '';
-								}),
-								backgroundPosition: computed(() => bgStyleData.get().backgroundPosition || ''),
-								backgroundSize: computed(() => bgStyleData.get().backgroundSize || ''),
-								backgroundRepeat: computed(() => bgStyleData.get().backgroundRepeat || ''),
-							},
-							nodes: {
-								contentView: { inner: renderContent },
-							},
-						},
-						exploreBtn: { onclick: onExplore },
-						shopBtn: { onclick: () => console.log('Shop not impl') },
-					},
-				},
+				contentView: { inner: renderContent },
 			},
 		},
+		exploreBtn: { onclick: onExplore },
+		shopBtn: { onclick: () => console.log('Shop not impl') },
 	});
 });

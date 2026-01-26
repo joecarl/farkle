@@ -17,6 +17,13 @@ export interface Player {
 	id?: string;
 	maxTurnScore?: number;
 	maxRollScore?: number;
+	personality?: BotPersonality;
+}
+
+export interface BotPersonality {
+	intelligence: number; // 0-1 (making better decisions)
+	riskTaking: number; // 0-1 (rolling more frequently with fewer dice)
+	madness: number; // 0-1 (randomizing choices)
 }
 
 export interface GameState {

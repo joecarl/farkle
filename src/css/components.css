@@ -205,6 +205,14 @@
 	background-image: url('../assets/icons/next.png');
 }
 
+.roll-icon {
+	background-image: url('../assets/icons/dice.png');
+}
+
+.bank-icon {
+	background-image: url('../assets/icons/next.png');
+}
+
 .players-list-player-name {
 	display: inline-flex;
 	background-color: rgba(129, 110, 14, 0.235);
@@ -218,6 +226,9 @@
 	vertical-align: middle;
 	margin: 0 2px;
 	display: inline-block;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
 }
 
 /* Score Animations */
@@ -280,7 +291,9 @@
 
 /* Easter Egg */
 .easter-egg-festive {
-	animation: easterEggPulse var(--track-pulse) ease-in-out infinite, easterEggHueRotate 5s linear infinite;
+	animation:
+		easterEggPulse var(--track-pulse) ease-in-out infinite,
+		easterEggHueRotate 5s linear infinite;
 }
 
 @keyframes easterEggPulse {
